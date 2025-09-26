@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { AdminSetup } from '../../lib/admin-setup'
+import { AdminSetupJWT } from '../../lib/admin-setup-jwt'
 import { Button } from '../../components/Button'
 
 export const AdminSetupPage: React.FC = () => {
@@ -12,7 +13,8 @@ export const AdminSetupPage: React.FC = () => {
       setLoading(true)
       setResult(null)
       
-      const setupResult = await AdminSetup.setupSuperAdmin()
+      // Usar o setup JWT que funciona com autenticação JWT
+      const setupResult = await AdminSetupJWT.setupSuperAdminJWT()
       setResult(setupResult)
       
       if (setupResult.success) {
@@ -31,8 +33,12 @@ export const AdminSetupPage: React.FC = () => {
 
   const checkStatus = async () => {
     try {
-      const status = await AdminSetup.checkAdminSetup()
-      setAdminStatus(status)
+      const status = await AdminSetupJWT.checkSystemStatus()
+      setAdminStatus({
+        isSetup: status.isSetup,
+        adminCount: status.adminCount,
+        error: status.error
+      })
     } catch (error) {
       console.error('Erro ao verificar status:', error)
       setAdminStatus({ isSetup: false, adminCount: 0, error: 'Erro ao verificar status' })
@@ -132,13 +138,16 @@ export const AdminSetupPage: React.FC = () => {
 
           {/* Manual Setup */}
           <div className="bg-yellow-50 rounded-lg p-4">
-            <h4 className="font-semibold text-yellow-900 mb-2">Setup Manual:</h4>
+            <h4 className="font-semibold text-yellow-900 mb-2">Setup Manual (JWT):</h4>
             <p className="text-sm text-yellow-800 mb-2">
               Se o setup automático não funcionar, execute no console do navegador:
             </p>
-            <code className="block bg-yellow-100 p-2 rounded text-xs text-yellow-900">
-              setupAdmin()
+            <code className="block bg-yellow-100 p-2 rounded text-xs text-yellow-900 mb-2">
+              setupAdminJWT()
             </code>
+            <p className="text-xs text-yellow-700">
+              Ou para verificar status: <code>checkAdminStatus()</code>
+            </p>
           </div>
         </div>
       </div>

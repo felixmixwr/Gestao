@@ -13,23 +13,27 @@ export class AdminSetup {
     try {
       const adminEmail = 'tavaresambroziovinicius@gmail.com'
       
-      // 1. Verificar se o usuário já existe no auth.users
-      const { data: authUser, error: authError } = await supabase.auth.admin.getUserByEmail(adminEmail)
+      // 1. Verificar se o usuário atual está logado
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
       
       if (authError) {
-        console.error('Erro ao buscar usuário:', authError)
-        return { success: false, error: 'Erro ao buscar usuário no sistema de autenticação' }
+        console.error('Erro ao verificar usuário logado:', authError)
+        return { success: false, error: 'Erro ao verificar usuário logado' }
       }
       
-      if (!authUser.user) {
-        return { success: false, error: 'Usuário não encontrado no sistema de autenticação. Certifique-se de que o usuário já fez login pelo menos uma vez.' }
+      if (!user) {
+        return { success: false, error: 'Usuário não está logado. Faça login primeiro.' }
+      }
+      
+      if (user.email !== adminEmail) {
+        return { success: false, error: `Apenas o usuário ${adminEmail} pode ser configurado como super admin.` }
       }
       
       // 2. Verificar se já é admin
       const { data: existingAdmin, error: adminCheckError } = await supabase
         .from('admin_users')
         .select('*')
-        .eq('user_id', authUser.user.id)
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .single()
       
@@ -46,7 +50,7 @@ export class AdminSetup {
       const { data: newAdmin, error: insertError } = await supabase
         .from('admin_users')
         .insert({
-          user_id: authUser.user.id,
+          user_id: user.id,
           email: adminEmail,
           role: 'super_admin',
           is_active: true,
@@ -67,7 +71,7 @@ export class AdminSetup {
       
       // 4. Log da ação
       await supabase.rpc('log_audit_event', {
-        p_user_id: authUser.user.id,
+        p_user_id: user.id,
         p_user_email: adminEmail,
         p_action: 'CREATE_ADMIN',
         p_resource_type: 'admin_user',
