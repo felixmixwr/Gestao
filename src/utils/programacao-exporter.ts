@@ -15,8 +15,11 @@ export interface ProgramacaoExportData {
 export class ProgramacaoExporter {
   static async exportToXLSX(data: ProgramacaoExportData): Promise<void> {
     try {
+      console.log('🚀 Iniciando exportação XLSX...');
+      
       // Preparar dados para o Excel
       const excelData = this.prepareExcelData(data);
+      console.log('📊 Dados preparados:', excelData.length, 'registros');
       
       // Criar workbook
       const wb = XLSX.utils.book_new();
@@ -32,30 +35,64 @@ export class ProgramacaoExporter {
       
       // Gerar nome do arquivo
       const fileName = this.generateFileName(data, 'xlsx');
+      console.log('📁 Nome do arquivo:', fileName);
       
-      // Salvar arquivo
-      XLSX.writeFile(wb, fileName);
+      // Tentar diferentes métodos de download
+      try {
+        // Método 1: XLSX.writeFile (padrão)
+        XLSX.writeFile(wb, fileName);
+        console.log('✅ Arquivo salvo com XLSX.writeFile');
+      } catch (writeError) {
+        console.warn('⚠️ XLSX.writeFile falhou, tentando método alternativo:', writeError);
+        
+        // Método 2: Download manual via blob
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/octet-stream' });
+        
+        // Criar link de download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        // Adicionar ao DOM e clicar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Limpar URL
+        window.URL.revokeObjectURL(url);
+        console.log('✅ Arquivo salvo com método alternativo');
+      }
       
     } catch (error) {
-      console.error('Erro ao exportar para XLSX:', error);
-      throw new Error('Erro ao exportar para Excel');
+      console.error('❌ Erro ao exportar para XLSX:', error);
+      throw new Error(`Erro ao exportar para Excel: ${error.message}`);
     }
   }
 
   static async exportToPDF(data: ProgramacaoExportData, elementId: string): Promise<void> {
     try {
+      console.log('🚀 Iniciando exportação PDF...');
+      
       const element = document.getElementById(elementId);
       if (!element) {
         throw new Error('Elemento não encontrado para exportação PDF');
       }
+
+      console.log('📄 Elemento encontrado:', elementId);
 
       // Capturar o elemento como canvas
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        logging: true // Para debug
       });
+
+      console.log('🖼️ Canvas criado:', canvas.width, 'x', canvas.height);
 
       // Criar PDF
       const imgData = canvas.toDataURL('image/png');
@@ -82,13 +119,37 @@ export class ProgramacaoExporter {
 
       // Gerar nome do arquivo
       const fileName = this.generateFileName(data, 'pdf');
+      console.log('📁 Nome do arquivo PDF:', fileName);
       
-      // Salvar arquivo
-      pdf.save(fileName);
+      // Tentar diferentes métodos de download
+      try {
+        // Método 1: pdf.save (padrão)
+        pdf.save(fileName);
+        console.log('✅ PDF salvo com pdf.save');
+      } catch (saveError) {
+        console.warn('⚠️ pdf.save falhou, tentando método alternativo:', saveError);
+        
+        // Método 2: Download manual via blob
+        const pdfBlob = pdf.output('blob');
+        const url = window.URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        
+        // Adicionar ao DOM e clicar
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Limpar URL
+        window.URL.revokeObjectURL(url);
+        console.log('✅ PDF salvo com método alternativo');
+      }
 
     } catch (error) {
-      console.error('Erro ao exportar para PDF:', error);
-      throw new Error('Erro ao exportar para PDF');
+      console.error('❌ Erro ao exportar para PDF:', error);
+      throw new Error(`Erro ao exportar para PDF: ${error.message}`);
     }
   }
 

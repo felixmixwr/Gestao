@@ -9,6 +9,7 @@ import { toast } from '../../lib/toast';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
 import { ProgramacaoExportData } from '../../utils/programacao-exporter';
+import { DownloadTest } from '../../components/DownloadTest';
 import { getWeekBoundsBrasilia, formatDateBR, getDayOfWeekBR, toBrasiliaISOString } from '../../utils/date-utils';
 
 interface ProgramacaoCard {
@@ -218,6 +219,11 @@ export function ProgramacaoGridBoard() {
             elementId="programacao-grid"
             className="mr-4"
           />
+        </div>
+
+        {/* Componente de Teste de Download */}
+        <div className="mb-6">
+          <DownloadTest />
         </div>
 
         {/* Grid Layout */}
