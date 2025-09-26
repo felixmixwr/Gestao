@@ -160,11 +160,16 @@ export default function NewClient() {
   }
 
   async function doInsert(values: FormValues) {
-    // Inserir dados sem company_id para evitar FK constraint
-    const insertData = values
+    // Preparar dados para inserção, garantindo que o campo 'name' seja preenchido
+    const insertData = {
+      ...values,
+      // Garantir que o campo 'name' seja preenchido com company_name ou rep_name
+      name: values.company_name || values.rep_name || 'Cliente sem nome'
+    }
     
     console.log('Inserindo cliente:', insertData) // Debug log
     console.log('Campos específicos:', {
+      name: insertData.name,
       company_name: insertData.company_name,
       email: insertData.email,
       rep_name: insertData.rep_name,

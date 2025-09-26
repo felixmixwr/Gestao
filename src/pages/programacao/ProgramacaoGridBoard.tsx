@@ -7,6 +7,8 @@ import { Loading } from '../../components/Loading';
 import { Button } from '../../components/Button';
 import { toast } from '../../lib/toast';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { ExportButtons } from '../../components/ExportButtons';
+import { ProgramacaoExportData } from '../../utils/programacao-exporter';
 import { getWeekBoundsBrasilia, formatDateBR, getDayOfWeekBR, toBrasiliaISOString } from '../../utils/date-utils';
 
 interface ProgramacaoCard {
@@ -204,8 +206,22 @@ export function ProgramacaoGridBoard() {
           </div>
         </div>
 
+        {/* Botões de Exportação */}
+        <div className="flex justify-end mb-4">
+          <ExportButtons
+            data={{
+              programacoes,
+              bombas,
+              weekStart,
+              weekEnd
+            }}
+            elementId="programacao-grid"
+            className="mr-4"
+          />
+        </div>
+
         {/* Grid Layout */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div id="programacao-grid" className="bg-white rounded-lg shadow overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               {/* Header com dias da semana */}
