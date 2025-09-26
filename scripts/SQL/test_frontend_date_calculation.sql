@@ -120,3 +120,4 @@ SELECT
 -- Remover função de teste após uso
 DROP FUNCTION IF EXISTS simular_calculo_frontend(DATE);
 
+

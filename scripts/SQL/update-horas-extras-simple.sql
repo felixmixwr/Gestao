@@ -26,3 +26,4 @@ JOIN colaboradores c ON c.id = he.colaborador_id
 ORDER BY he.created_at DESC;
 
 
+

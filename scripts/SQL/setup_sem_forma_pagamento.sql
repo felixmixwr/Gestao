@@ -131,3 +131,4 @@ BEGIN
     RAISE NOTICE '🎉 Configuração completa!';
     RAISE NOTICE '💡 Agora os pagamentos chegarão com "sem_forma" e poderão ser atualizados via interface';
 END $$;
+

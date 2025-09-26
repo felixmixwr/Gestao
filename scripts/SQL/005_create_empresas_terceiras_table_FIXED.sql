@@ -111,3 +111,4 @@ COMMENT ON COLUMN public.empresas_terceiras.razao_social IS 'Razão social da em
 COMMENT ON COLUMN public.empresas_terceiras.cnpj IS 'CNPJ da empresa terceira (formato: XX.XXX.XXX/XXXX-XX)';
 COMMENT ON COLUMN public.empresas_terceiras.contato_responsavel IS 'Nome do responsável pela empresa terceira';
 
+

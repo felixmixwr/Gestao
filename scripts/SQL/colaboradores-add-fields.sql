@@ -37,3 +37,4 @@ ORDER BY column_name;
 SELECT 'Campos CPF, telefone e email adicionados com sucesso à tabela colaboradores!' as status;
 
 
+

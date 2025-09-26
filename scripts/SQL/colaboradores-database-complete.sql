@@ -134,3 +134,4 @@ CREATE POLICY "Allow all operations for authenticated users on horas_extras" ON 
   FOR ALL USING (auth.role() = 'authenticated');
 
 
+

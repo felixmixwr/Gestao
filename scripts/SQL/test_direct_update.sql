@@ -129,3 +129,4 @@ DO $$
 BEGIN
     RAISE NOTICE '🎉 Teste de atualização direta concluído!';
 END $$;
+

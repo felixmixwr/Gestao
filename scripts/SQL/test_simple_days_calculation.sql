@@ -80,3 +80,4 @@ SELECT
     'Resumo dos testes:' as info,
     'Se todos os testes mostram ✅ CORRETO, a função está funcionando!' as status;
 
+

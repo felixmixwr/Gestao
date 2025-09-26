@@ -252,3 +252,4 @@ const total = horas * valorHoraExtra
 O sistema está pronto para uso e integração com os demais módulos do sistema.
 
 
+

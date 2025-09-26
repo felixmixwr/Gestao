@@ -108,3 +108,4 @@ BEGIN
     RAISE NOTICE '🎉 Verificação concluída!';
     RAISE NOTICE '💡 Se o status não está como "pago", pode ser um problema de transação ou RLS';
 END $$;
+

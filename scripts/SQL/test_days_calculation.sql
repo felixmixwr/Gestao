@@ -115,3 +115,4 @@ SELECT
 -- Remover função de teste após uso
 DROP FUNCTION IF EXISTS testar_calculo_dias();
 
+

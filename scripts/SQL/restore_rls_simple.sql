@@ -54,3 +54,4 @@ BEGIN
     RAISE NOTICE '🔒 Apenas usuários autenticados podem acessar';
     RAISE NOTICE '💡 Teste criar uma programação novamente';
 END $$;
+

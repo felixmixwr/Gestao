@@ -65,3 +65,4 @@ WHERE tc.table_name = 'colaboradores_horas_extras'
   AND cc.check_clause IS NOT NULL;
 
 
+

@@ -44,3 +44,4 @@ WHERE tablename = 'colaboradores_dependentes';
 SELECT 'Políticas RLS da tabela colaboradores_dependentes corrigidas com sucesso!' as status;
 
 
+

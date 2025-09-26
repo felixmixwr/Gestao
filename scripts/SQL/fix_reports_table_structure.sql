@@ -191,3 +191,4 @@ ORDER BY ordinal_position;
 -- 5. Verificar se há registros na tabela
 SELECT COUNT(*) as total_reports FROM public.reports;
 
+

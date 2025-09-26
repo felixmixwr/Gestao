@@ -82,3 +82,4 @@ BEGIN
     RAISE NOTICE '🎉 Correção aplicada!';
     RAISE NOTICE '💡 Agora teste criar uma programação novamente';
 END $$;
+

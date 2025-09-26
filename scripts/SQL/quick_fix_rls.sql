@@ -21,3 +21,4 @@ BEGIN
     RAISE NOTICE '🧪 TESTE: Tente criar uma programação agora';
     RAISE NOTICE '⚠️ IMPORTANTE: Reabilite o RLS após confirmar que funciona';
 END $$;
+

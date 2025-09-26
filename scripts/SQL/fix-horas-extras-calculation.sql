@@ -56,3 +56,4 @@ JOIN colaboradores c ON c.id = he.colaborador_id
 LIMIT 1;
 
 
+

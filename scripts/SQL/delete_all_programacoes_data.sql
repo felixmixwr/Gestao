@@ -206,3 +206,4 @@ SELECT
 -- ✅ Dados órfãos foram limpos
 -- ✅ Banco de dados está limpo de dados de programações
 
+

@@ -52,3 +52,4 @@ COMMENT ON COLUMN colaboradores.nome IS 'Nome completo do colaborador';
 COMMENT ON COLUMN colaboradores.cargo IS 'Cargo/função do colaborador';
 COMMENT ON COLUMN colaboradores.ativo IS 'Indica se o colaborador está ativo na empresa';
 
+

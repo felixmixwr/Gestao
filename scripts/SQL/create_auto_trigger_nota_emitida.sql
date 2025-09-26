@@ -169,3 +169,4 @@ SELECT
   'Agora todos os relatórios que mudarem para NOTA_EMITIDA serão automaticamente movidos para Pagamentos a receber' as funcionalidade,
   'O status do relatório será atualizado para AGUARDANDO_PAGAMENTO' as comportamento;
 
+

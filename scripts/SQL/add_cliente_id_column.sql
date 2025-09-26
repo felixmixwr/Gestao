@@ -61,3 +61,4 @@ BEGIN
     RAISE NOTICE '🎉 Script executado com sucesso!';
 END $$;
 
+

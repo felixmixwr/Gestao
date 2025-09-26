@@ -57,3 +57,4 @@ FROM pg_rules
 WHERE tablename = 'colaboradores_horas_extras';
 
 
+

@@ -16,3 +16,4 @@ WHERE tablename = 'colaboradores';
 SELECT 'RLS desabilitado na tabela colaboradores com sucesso!' as status;
 
 
+

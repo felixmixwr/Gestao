@@ -209,3 +209,4 @@ SELECT
   'Índices criados para otimizar consultas' as performance,
   'Você pode agora criar novos relatórios sem problemas!' as resultado;
 
+

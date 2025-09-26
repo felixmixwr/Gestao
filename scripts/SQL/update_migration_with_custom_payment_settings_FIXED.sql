@@ -241,3 +241,4 @@ SELECT
   'Agora você pode configurar forma de pagamento e data de vencimento personalizadas' as funcionalidade,
   'Use a função migrar_nota_emitida_com_configuracoes() para migrar com configurações específicas' as uso;
 
+

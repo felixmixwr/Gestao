@@ -94,3 +94,4 @@ BEGIN
     RAISE NOTICE '💡 Agora teste o botão "Marcar como pago" no frontend';
     RAISE NOTICE '⚠️ IMPORTANTE: Configure políticas mais restritivas em produção!';
 END $$;
+

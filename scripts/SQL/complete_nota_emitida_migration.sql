@@ -212,3 +212,4 @@ SELECT
   (SELECT COUNT(*) FROM public.reports WHERE status = 'NOTA_EMITIDA') as relatorios_nota_emitida_restantes,
   (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_name = 'trigger_nota_emitida_to_pagamentos_receber') as trigger_ativo;
 
+

@@ -186,3 +186,4 @@ COMMENT ON COLUMN public.pagamentos_receber.prazo_data IS 'Data limite para paga
 COMMENT ON COLUMN public.pagamentos_receber.prazo_dias IS 'Número de dias para pagamento (usado quando prazo_data não está definido)';
 COMMENT ON COLUMN public.pagamentos_receber.status IS 'Status automático baseado na data: aguardando, proximo_vencimento, vencido, pago';
 
+

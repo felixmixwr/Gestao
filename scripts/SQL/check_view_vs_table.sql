@@ -119,3 +119,4 @@ BEGIN
     RAISE NOTICE '🎉 Verificação concluída!';
     RAISE NOTICE '💡 Se os dados são diferentes entre tabela e view, pode ser necessário recriar a view';
 END $$;
+

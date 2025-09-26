@@ -63,3 +63,4 @@ WHERE colaborador_id = (
 AND data = '2025-01-03';
 
 
+

@@ -21,3 +21,4 @@ JOIN colaboradores c ON c.id = he.colaborador_id
 WHERE c.nome = 'VINICIUS TAVARES AMBROZIO';
 
 
+
