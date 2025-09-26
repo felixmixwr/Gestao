@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ProgramacaoAPI } from '../../lib/programacao-api';
-import { useProgramacaoSubscription } from '../../hooks/useSupabaseSubscription';
+// import { useProgramacaoSubscription } from '../../hooks/useSupabaseSubscription';
 import { Programacao, ProgramacaoFilters } from '../../types/programacao';
 import { toast } from '../../lib/toast';
 import { Layout } from '../../components/Layout';
@@ -132,15 +132,15 @@ export default function ProgramacaoBoard() {
   }, [loadProgramacoes]);
 
   // Subscription para atualizações em tempo real
-  useEffect(() => {
-    const { unsubscribe } = useProgramacaoSubscription((programacao, event) => {
-      console.log(`Programação ${event}:`, programacao);
-      // Recarregar dados quando houver mudanças
-      loadProgramacoes();
-    });
+  // useEffect(() => {
+  //   const { unsubscribe } = useProgramacaoSubscription((programacao, event) => {
+  //     console.log(`Programação ${event}:`, programacao);
+  //     // Recarregar dados quando houver mudanças
+  //     loadProgramacoes();
+  //   });
 
-    return unsubscribe;
-  }, [loadProgramacoes]);
+  //   return unsubscribe;
+  // }, [loadProgramacoes]);
 
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;

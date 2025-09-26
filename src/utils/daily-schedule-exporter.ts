@@ -312,9 +312,10 @@ export class DailyScheduleExporter {
   /**
    * Exporta para Excel (XLSX) - versão simplificada para programação diária
    */
-  static async exportToXLSX(_data: DailyScheduleExportData): Promise<void> {
+  static async exportToXLSX(data: DailyScheduleExportData): Promise<void> {
     // Esta função pode ser implementada futuramente se necessário
     // Por enquanto, focamos na exportação PDF que é o principal requisito
+    console.log('Dados para exportação:', data)
     throw new Error('Exportação para Excel não implementada para programação diária');
   }
 }
