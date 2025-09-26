@@ -106,6 +106,11 @@ export function ProgramacaoGridBoard() {
     setCurrentWeek(new Date());
   };
 
+  const goToToday = () => {
+    const today = new Date();
+    setCurrentWeek(today);
+  };
+
   // Obter programações para uma bomba e dia específicos
   const getProgramacoesForBombaAndDay = (bombaId: string, dayOfWeek: number) => {
     return programacoes.filter(p => {
@@ -196,8 +201,9 @@ export function ProgramacaoGridBoard() {
               onClick={goToCurrentWeek}
               variant="outline"
               size="sm"
+              className="bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100"
             >
-              Hoje
+              📅 Semana Atual
             </Button>
             
             <Button
@@ -233,13 +239,13 @@ export function ProgramacaoGridBoard() {
         </div>
 
         {/* Grid Layout */}
-        <div id="programacao-grid" className="bg-white rounded-lg shadow overflow-hidden">
+        <div id="programacao-grid" className="bg-white rounded-lg shadow overflow-hidden print-friendly">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse print-table">
               {/* Header com dias da semana */}
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="w-32 p-4 text-left font-semibold text-gray-700 border-r border-gray-200">
+                <tr className="bg-gray-50 print-header">
+                  <th className="w-32 p-4 text-left font-semibold text-gray-700 border-r border-gray-200 print-cell">
                     Bomba
                   </th>
                   {DAYS_OF_WEEK.map((day, index) => {
@@ -247,8 +253,8 @@ export function ProgramacaoGridBoard() {
                     dayDate.setDate(dayDate.getDate() + index);
                     
                     return (
-                      <th key={index} className="w-48 p-4 text-center font-semibold text-gray-700 border-r border-gray-200 last:border-r-0">
-                        <div className="text-sm">{day}</div>
+                      <th key={index} className="w-48 p-4 text-center font-semibold text-gray-700 border-r border-gray-200 last:border-r-0 print-cell">
+                        <div className="text-sm font-bold">{day}</div>
                         <div className="text-xs text-gray-500 mt-1">
                           {dayDate.getDate().toString().padStart(2, '0')}
                         </div>
@@ -261,9 +267,9 @@ export function ProgramacaoGridBoard() {
               {/* Corpo da tabela com bombas */}
               <tbody>
                 {bombas.map((bomba, bombaIndex) => (
-                  <tr key={bomba.id} className={bombaIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={bomba.id} className={`${bombaIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} print-row`}>
                     {/* Coluna da bomba */}
-                    <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit">
+                    <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit print-cell">
                       <div className="text-sm font-semibold">{bomba.prefix}</div>
                       <div className="text-xs text-gray-500">{bomba.model}</div>
                     </td>
@@ -273,12 +279,12 @@ export function ProgramacaoGridBoard() {
                       const dayProgramacoes = getProgramacoesForBombaAndDay(bomba.id, dayIndex);
                       
                       return (
-                        <td key={dayIndex} className="w-48 p-2 border-r border-gray-200 last:border-r-0 align-top">
+                        <td key={dayIndex} className="w-48 p-2 border-r border-gray-200 last:border-r-0 align-top print-cell">
                           <div className="space-y-2 min-h-[100px]">
                             {dayProgramacoes.map((programacao) => (
                               <div
                                 key={programacao.id}
-                                className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors"
+                                className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors print-programacao"
                                 onClick={() => navigate(`/programacao/${programacao.id}`)}
                               >
                                 {/* Hora */}
@@ -312,7 +318,7 @@ export function ProgramacaoGridBoard() {
                                     e.stopPropagation();
                                     handleDeleteClick(programacao);
                                   }}
-                                  className="mt-2 text-red-500 hover:text-red-700 text-xs"
+                                  className="mt-2 text-red-500 hover:text-red-700 text-xs print-hidden"
                                 >
                                   Excluir
                                 </button>
@@ -321,7 +327,7 @@ export function ProgramacaoGridBoard() {
                             
                             {/* Espaço vazio se não há programações */}
                             {dayProgramacoes.length === 0 && (
-                              <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center">
+                              <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center print-empty">
                                 <span className="text-xs text-gray-400">Vazio</span>
                               </div>
                             )}

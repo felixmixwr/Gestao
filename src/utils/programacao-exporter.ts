@@ -311,7 +311,7 @@ export class ProgramacaoExporter {
     const margin = 15;
     
     // Título principal
-    pdf.setFontSize(20);
+    pdf.setFontSize(22);
     pdf.setFont('helvetica', 'bold');
     pdf.text('PROGRAMAÇÃO SEMANAL', pageWidth / 2, 20, { align: 'center' });
     
@@ -320,67 +320,76 @@ export class ProgramacaoExporter {
     const endDate = data.weekEnd instanceof Date ? data.weekEnd : new Date(data.weekEnd);
     const periodo = `${startDate.toLocaleDateString('pt-BR')} a ${endDate.toLocaleDateString('pt-BR')}`;
     
-    pdf.setFontSize(14);
+    pdf.setFontSize(16);
     pdf.setFont('helvetica', 'normal');
     pdf.text(periodo, pageWidth / 2, 30, { align: 'center' });
     
     // Informações da empresa
-    pdf.setFontSize(12);
+    pdf.setFontSize(14);
     pdf.text('Felix Mix / WorldRental', pageWidth / 2, 40, { align: 'center' });
     
+    // Estatísticas rápidas
+    const totalProgramacoes = data.programacoes.length;
+    const totalBombas = new Set(data.programacoes.map(p => p.bomba_id).filter(Boolean)).size;
+    const volumeTotal = data.programacoes.reduce((sum, p) => sum + (p.volume_previsto || 0), 0);
+    
+    pdf.setFontSize(10);
+    pdf.text(`Total: ${totalProgramacoes} programações | ${totalBombas} bombas | ${volumeTotal}m³`, pageWidth / 2, 48, { align: 'center' });
+    
     // Linha separadora
-    pdf.setLineWidth(0.5);
-    pdf.line(margin, 45, pageWidth - margin, 45);
+    pdf.setLineWidth(0.8);
+    pdf.line(margin, 52, pageWidth - margin, 52);
   }
 
   private static async addPDFTableContent(pdf: jsPDF, data: ProgramacaoExportData, element: HTMLElement): Promise<void> {
-    // Capturar o elemento como canvas
+    // Capturar o elemento como canvas com melhor qualidade
     const canvas = await html2canvas(element, {
-      scale: 1.5,
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
       width: element.scrollWidth,
-      height: element.scrollHeight
+      height: element.scrollHeight,
+      scrollX: 0,
+      scrollY: 0
     });
 
-    console.log('🖼️ Canvas criado:', canvas.width, 'x', canvas.height);
-
     // Converter para imagem
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/png', 1.0);
     
     // Calcular dimensões para caber na página
     const pageWidth = 297; // A4 landscape width
     const pageHeight = 210; // A4 landscape height
-    const margin = 15;
-    const headerHeight = 50; // Espaço para cabeçalho
-    const footerHeight = 20; // Espaço para rodapé
+    const margin = 10;
+    const headerHeight = 50;
+    const footerHeight = 20;
     const availableHeight = pageHeight - headerHeight - footerHeight;
     
-    const imgWidth = pageWidth - (margin * 2);
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    // Calcular dimensões da imagem mantendo proporção
+    const maxWidth = pageWidth - (margin * 2);
+    const maxHeight = availableHeight;
+    
+    let imgWidth = maxWidth;
+    let imgHeight = (canvas.height * imgWidth) / canvas.width;
     
     // Se a imagem for muito alta, ajustar escala
-    let finalWidth = imgWidth;
-    let finalHeight = imgHeight;
-    
-    if (imgHeight > availableHeight) {
-      finalHeight = availableHeight;
-      finalWidth = (canvas.width * finalHeight) / canvas.height;
+    if (imgHeight > maxHeight) {
+      imgHeight = maxHeight;
+      imgWidth = (canvas.width * imgHeight) / canvas.height;
     }
     
     // Centralizar a imagem
-    const x = (pageWidth - finalWidth) / 2;
+    const x = (pageWidth - imgWidth) / 2;
     const y = headerHeight + 5;
     
     // Adicionar a imagem
-    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight);
+    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
     
     // Se a imagem não couber em uma página, adicionar nova página
     if (imgHeight > availableHeight) {
       pdf.addPage();
-      pdf.addImage(imgData, 'PNG', x, 10, finalWidth, finalHeight);
+      pdf.addImage(imgData, 'PNG', x, 10, imgWidth, imgHeight);
     }
   }
 

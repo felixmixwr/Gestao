@@ -5,6 +5,7 @@ import { router } from './routes'
 import { AuthProvider } from './lib/auth'
 import { ToastProvider } from './lib/toast'
 import './styles/globals.css'
+import './styles/print.css'
 
 // Diagnóstico de variáveis de ambiente
 console.log('=== DIAGNÓSTICO DE VARIÁVEIS DE AMBIENTE ===');

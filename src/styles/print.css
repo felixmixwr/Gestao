@@ -1,0 +1,80 @@
+/* Estilos para melhorar a formatação do PDF */
+.print-friendly {
+  font-family: 'Arial', 'Helvetica', sans-serif;
+}
+
+.print-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.print-header {
+  background-color: #f8f9fa !important;
+}
+
+.print-cell {
+  border: 1px solid #dee2e6 !important;
+  padding: 8px !important;
+  font-size: 12px !important;
+}
+
+.print-row {
+  page-break-inside: avoid;
+}
+
+.print-programacao {
+  background-color: #e3f2fd !important;
+  border: 1px solid #2196f3 !important;
+  margin-bottom: 4px !important;
+  padding: 6px !important;
+  font-size: 11px !important;
+  line-height: 1.3 !important;
+}
+
+.print-programacao:hover {
+  background-color: #e3f2fd !important;
+}
+
+.print-hidden {
+  display: none !important;
+}
+
+.print-empty {
+  background-color: #f8f9fa !important;
+  border: 1px dashed #dee2e6 !important;
+  color: #6c757d !important;
+}
+
+/* Melhorar legibilidade */
+.print-programacao div {
+  margin-bottom: 2px !important;
+}
+
+.print-programacao div:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Garantir que o texto não seja cortado */
+.print-programacao {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Estilos específicos para elementos importantes */
+.print-programacao .text-blue-800 {
+  color: #1565c0 !important;
+  font-weight: bold !important;
+}
+
+.print-programacao .text-gray-900 {
+  color: #212529 !important;
+  font-weight: 500 !important;
+}
+
+.print-programacao .text-gray-600 {
+  color: #495057 !important;
+}
+
+.print-programacao .text-gray-500 {
+  color: #6c757d !important;
+}
