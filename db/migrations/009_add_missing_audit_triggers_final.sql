@@ -51,6 +51,8 @@ $$ LANGUAGE plpgsql;
 -- 2. Create a function to safely get table count
 CREATE OR REPLACE FUNCTION safe_table_count(p_table_name TEXT)
 RETURNS INTEGER AS $$
+DECLARE
+    result INTEGER;
 BEGIN
     -- Check if table exists
     IF NOT EXISTS (
