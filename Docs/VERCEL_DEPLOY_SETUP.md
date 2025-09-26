@@ -65,6 +65,11 @@ git push origin main
 - Verifique se o secret `VERCEL_TOKEN` está configurado no GitHub
 - Certifique-se de que o nome do secret está exatamente como `VERCEL_TOKEN`
 
+### Erro: "fatal: not a git repository"
+- **RESOLVIDO**: Adicionado checkout do código no job de deploy
+- O workflow agora faz checkout do repositório antes do deploy
+- Desabilitado github-comment e github-deployment para evitar conflitos
+
 ### Erro: "Organization not found"
 - Verifique se o `VERCEL_ORG_ID` está correto
 - Certifique-se de que o token tem permissões para a organização
