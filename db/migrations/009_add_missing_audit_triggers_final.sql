@@ -147,7 +147,10 @@ FROM audit_logs_comprehensive al
 ORDER BY al.timestamp DESC;
 
 -- 5. Update the system statistics view to include new tables (with safe checks)
-CREATE OR REPLACE VIEW system_statistics AS
+-- First drop the existing view to avoid column name conflicts
+DROP VIEW IF EXISTS system_statistics;
+
+CREATE VIEW system_statistics AS
 SELECT 
     -- Counts (with safe table existence checks)
     (SELECT COUNT(*) FROM clients) as total_clients,
