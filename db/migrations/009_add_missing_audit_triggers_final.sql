@@ -251,8 +251,72 @@ GRANT EXECUTE ON FUNCTION add_audit_trigger_safe(TEXT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION safe_table_count(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION get_monitored_tables() TO authenticated;
 
--- 8. Clean up the temporary functions
+-- 8. Clean up the temporary functions (in correct order)
+-- First drop the view that depends on safe_table_count
+DROP VIEW IF EXISTS system_statistics;
+
+-- Then drop the functions
 DROP FUNCTION IF EXISTS add_audit_trigger_safe(TEXT, TEXT);
 DROP FUNCTION IF EXISTS safe_table_count(TEXT);
+
+-- Recreate the view without the temporary function
+CREATE VIEW system_statistics AS
+SELECT 
+    -- Counts (with safe table existence checks)
+    (SELECT COUNT(*) FROM clients) as total_clients,
+    (SELECT COUNT(*) FROM companies) as total_companies,
+    (SELECT COUNT(*) FROM bombas) as total_bombas,
+    COALESCE((SELECT COUNT(*) FROM pumps), 0) as total_pumps,
+    (SELECT COUNT(*) FROM reports) as total_reports,
+    (SELECT COUNT(*) FROM notas_fiscais) as total_notas_fiscais,
+    COALESCE((SELECT COUNT(*) FROM notes), 0) as total_notes,
+    (SELECT COUNT(*) FROM colaboradores) as total_colaboradores,
+    COALESCE((SELECT COUNT(*) FROM colaboradores_dependentes), 0) as total_dependentes,
+    COALESCE((SELECT COUNT(*) FROM colaboradores_documentos), 0) as total_documentos,
+    COALESCE((SELECT COUNT(*) FROM colaboradores_horas_extras), 0) as total_horas_extras,
+    COALESCE((SELECT COUNT(*) FROM empresas_terceiras), 0) as total_empresas_terceiras,
+    COALESCE((SELECT COUNT(*) FROM pagamentos_receber), 0) as total_pagamentos_receber,
+    COALESCE((SELECT COUNT(*) FROM bombas_terceiras), 0) as total_bombas_terceiras,
+    COALESCE((SELECT COUNT(*) FROM invoices), 0) as total_invoices,
+    COALESCE((SELECT COUNT(*) FROM users), 0) as total_users,
+    (SELECT COUNT(*) FROM programacao) as total_programacao,
+    (SELECT COUNT(*) FROM admin_users WHERE is_active = true) as total_admins,
+    (SELECT COUNT(*) FROM banned_users WHERE is_active = true) as total_banned_users,
+    
+    -- Recent activity (last 24 hours)
+    (SELECT COUNT(*) FROM audit_logs_comprehensive WHERE timestamp >= NOW() - INTERVAL '24 hours') as activity_24h,
+    (SELECT COUNT(*) FROM audit_logs_comprehensive WHERE timestamp >= NOW() - INTERVAL '7 days') as activity_7d,
+    (SELECT COUNT(*) FROM audit_logs_comprehensive WHERE timestamp >= NOW() - INTERVAL '30 days') as activity_30d,
+    
+    -- Most active users (last 7 days)
+    (SELECT json_agg(
+        json_build_object(
+            'email', user_email,
+            'count', count
+        )
+    ) FROM (
+        SELECT user_email, COUNT(*) as count
+        FROM audit_logs_comprehensive
+        WHERE timestamp >= NOW() - INTERVAL '7 days'
+        AND user_email IS NOT NULL
+        GROUP BY user_email
+        ORDER BY count DESC
+        LIMIT 5
+    ) top_users) as top_users_7d,
+    
+    -- Most modified tables (last 7 days)
+    (SELECT json_agg(
+        json_build_object(
+            'table', table_name,
+            'count', count
+        )
+    ) FROM (
+        SELECT table_name, COUNT(*) as count
+        FROM audit_logs_comprehensive
+        WHERE timestamp >= NOW() - INTERVAL '7 days'
+        GROUP BY table_name
+        ORDER BY count DESC
+        LIMIT 5
+    ) top_tables) as top_tables_7d;
 
 COMMENT ON FUNCTION get_monitored_tables() IS 'Get list of all tables being monitored by audit system';
