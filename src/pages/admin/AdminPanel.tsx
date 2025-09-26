@@ -3,6 +3,7 @@ import { AdminAPI } from '../../lib/admin-api'
 import { AdminDashboard } from './AdminDashboard'
 import { AdminUsers } from './AdminUsers'
 import { AdminLogs } from './AdminLogs'
+import { AdminAudit } from './AdminAudit'
 import { AdminSetupPage } from './AdminSetup'
 
 export const AdminPanel: React.FC = () => {
@@ -48,6 +49,8 @@ export const AdminPanel: React.FC = () => {
         return <AdminUsers onNavigate={handleNavigate} />
       case 'logs':
         return <AdminLogs onNavigate={handleNavigate} />
+      case 'audit':
+        return <AdminAudit onNavigate={handleNavigate} />
       case 'banned':
         return <AdminUsers onNavigate={handleNavigate} />
       case 'settings':
@@ -103,6 +106,72 @@ export const AdminPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex">
+              <div className="flex-shrink-0 flex items-center">
+                <h1 className="text-xl font-semibold text-gray-900">Painel Administrativo</h1>
+              </div>
+              <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <button
+                  onClick={() => handleNavigate('dashboard')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentPage === 'dashboard'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Dashboard
+                </button>
+                <button
+                  onClick={() => handleNavigate('users')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentPage === 'users'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Usuários
+                </button>
+                <button
+                  onClick={() => handleNavigate('logs')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentPage === 'logs'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Logs
+                </button>
+                <button
+                  onClick={() => handleNavigate('audit')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentPage === 'audit'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Auditoria
+                </button>
+                <button
+                  onClick={() => handleNavigate('settings')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    currentPage === 'settings'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Configurações
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      
+      {/* Page Content */}
       {renderCurrentPage()}
     </div>
   )

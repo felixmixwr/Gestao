@@ -673,6 +673,50 @@ export type Database = {
         created_at?: string
       }
     }
+    audit_logs_comprehensive: {
+      Row: {
+        id: string
+        table_name: string
+        operation: string
+        old_data: any | null
+        new_data: any | null
+        user_id: string | null
+        user_email: string | null
+        ip_address: string | null
+        user_agent: string | null
+        timestamp: string
+        session_id: string | null
+        metadata: any
+      }
+      Insert: {
+        id?: string
+        table_name: string
+        operation: string
+        old_data?: any | null
+        new_data?: any | null
+        user_id?: string | null
+        user_email?: string | null
+        ip_address?: string | null
+        user_agent?: string | null
+        timestamp?: string
+        session_id?: string | null
+        metadata?: any
+      }
+      Update: {
+        id?: string
+        table_name?: string
+        operation?: string
+        old_data?: any | null
+        new_data?: any | null
+        user_id?: string | null
+        user_email?: string | null
+        ip_address?: string | null
+        user_agent?: string | null
+        timestamp?: string
+        session_id?: string | null
+        metadata?: any
+      }
+    }
     }
   }
 }
