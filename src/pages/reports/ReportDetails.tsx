@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
 // Removido: Badge não é mais usado
 import { FormField } from '../../components/FormField'
-import { NotaFiscalForm } from '../../components/NotaFiscalForm'
 import { NotaFiscalFormSimple } from '../../components/NotaFiscalFormSimple'
 import { NotasFiscaisLista } from '../../components/NotasFiscaisLista'
 import { ReportWithRelations, ReportStatus, NoteData } from '../../types/reports'
@@ -13,7 +12,6 @@ import { formatCurrency } from '../../utils/formatters'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { 
-  getStatusVariant, 
   getStatusOptions
 } from '../../utils/status-utils'
 
@@ -38,13 +36,7 @@ export default function ReportDetails() {
   })
   const [updating, setUpdating] = useState(false)
 
-  useEffect(() => {
-    if (id) {
-      loadReport()
-    }
-  }, [id])
-
-  const loadReport = async () => {
+  const loadReport = useCallback(async () => {
     try {
       setLoading(true)
       console.log('🔍 [REPORT_DETAILS] Carregando relatório:', id)
@@ -112,8 +104,13 @@ export default function ReportDetails() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
 
+  useEffect(() => {
+    if (id) {
+      loadReport()
+    }
+  }, [id, loadReport])
 
   const handleStatusChange = async () => {
     if (!newStatus || !report) return
@@ -121,7 +118,7 @@ export default function ReportDetails() {
     try {
       setUpdating(true)
       
-      const updateData: any = { status: newStatus }
+      const updateData: { status: ReportStatus; paid_at?: string } = { status: newStatus }
       
       if (newStatus === 'PAGO') {
         updateData.paid_at = new Date().toISOString()
