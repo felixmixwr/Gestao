@@ -57,7 +57,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 5. Criar função log_audit_event_comprehensive se não existir
 CREATE OR REPLACE FUNCTION log_audit_event_comprehensive(
-    p_table_name VARCHAR(100),
+    p_table_name NAME,
     p_operation VARCHAR(10),
     p_old_data JSONB DEFAULT NULL,
     p_new_data JSONB DEFAULT NULL,
@@ -78,7 +78,7 @@ BEGIN
         table_name, operation, old_data, new_data, 
         user_id, user_email, metadata
     ) VALUES (
-        p_table_name, p_operation, p_old_data, p_new_data,
+        p_table_name::VARCHAR(100), p_operation, p_old_data, p_new_data,
         current_user_id, current_user_email, p_metadata
     ) RETURNING id INTO log_id;
     
