@@ -145,13 +145,31 @@ FROM pg_proc
 WHERE proname IN ('log_audit_event_comprehensive', 'audit_trigger_function', 'get_current_user_info')
 ORDER BY proname;
 
--- 11. Recriar trigger para clients
+-- 11. Tornar coluna rep_name nullable (se necessário)
+DO $$
+BEGIN
+    -- Verificar se rep_name é NOT NULL
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'clients' 
+        AND column_name = 'rep_name'
+        AND is_nullable = 'NO'
+    ) THEN
+        ALTER TABLE clients ALTER COLUMN rep_name DROP NOT NULL;
+        RAISE NOTICE 'Coluna rep_name tornada nullable';
+    ELSE
+        RAISE NOTICE 'Coluna rep_name já é nullable ou não existe';
+    END IF;
+END $$;
+
+-- 12. Recriar trigger para clients
 DROP TRIGGER IF EXISTS audit_clients_trigger ON clients;
 CREATE TRIGGER audit_clients_trigger
     AFTER INSERT OR UPDATE OR DELETE ON clients
     FOR EACH ROW EXECUTE FUNCTION audit_trigger_function();
 
--- 12. Testar inserção de cliente
+-- 13. Testar inserção de cliente
 DO $$
 DECLARE
     test_company_id UUID;
