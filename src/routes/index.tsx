@@ -22,7 +22,6 @@ import { NotesListSimple as NotesList } from '../pages/notes/NotesListSimple'
 import { NewNote } from '../pages/notes/NewNote'
 import { NotesPendingReports } from '../pages/notes/NotesPendingReports'
 import { NoteDetails } from '../pages/notes/NoteDetails'
-import { AdminPanel } from '../pages/admin/AdminPanel'
 import Colaboradores from '../pages/colaboradores/Colaboradores'
 import NewColaborador from '../pages/colaboradores/NewColaborador'
 import ColaboradorDetails from '../pages/colaboradores/ColaboradorDetails'
@@ -405,16 +404,6 @@ export const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <TestAPI />
-      </RequireAuth>
-    ),
-    errorElement: <GenericError />
-  },
-  // Rota do painel administrativo
-  {
-    path: '/admin',
-    element: (
-      <RequireAuth>
-        <AdminPanel />
       </RequireAuth>
     ),
     errorElement: <GenericError />
