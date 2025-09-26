@@ -37,25 +37,27 @@ VITE_APP_ENV=production
 - Clique em "Environment Variables"
 - Adicione cada variável uma por uma:
 
+**⚠️ IMPORTANTE:** Configure as variáveis ANTES de fazer o deploy!
+
 **Variável 1:**
 - Name: `VITE_SUPABASE_URL`
 - Value: `https://rgsovlqsezjeqohlbyod.supabase.co`
-- Environment: `Production`, `Preview`, `Development`
+- Environment: ✅ `Production` ✅ `Preview` ✅ `Development`
 
 **Variável 2:**
 - Name: `VITE_SUPABASE_ANON_KEY`
 - Value: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnc292bHFzZXpqZXFvaGxieW9kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg2Mzk1ODksImV4cCI6MjA3NDIxNTU4OX0.od07D8mGwg-nYC5-QzzBledOl2FciqxDR5S0Ut8Ah8k`
-- Environment: `Production`, `Preview`, `Development`
+- Environment: ✅ `Production` ✅ `Preview` ✅ `Development`
 
 **Variável 3:**
 - Name: `VITE_OWNER_COMPANY_NAME`
 - Value: `Felix Mix`
-- Environment: `Production`, `Preview`, `Development`
+- Environment: ✅ `Production` ✅ `Preview` ✅ `Development`
 
 **Variável 4:**
 - Name: `VITE_SECOND_COMPANY_NAME`
 - Value: `WorldRental`
-- Environment: `Production`, `Preview`, `Development`
+- Environment: ✅ `Production` ✅ `Preview` ✅ `Development`
 
 ### 4. Deploy
 - Após configurar as variáveis, clique em "Deploy"
