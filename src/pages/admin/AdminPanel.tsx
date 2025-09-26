@@ -3,6 +3,7 @@ import { AdminAPI } from '../../lib/admin-api'
 import { AdminDashboard } from './AdminDashboard'
 import { AdminUsers } from './AdminUsers'
 import { AdminLogs } from './AdminLogs'
+import { AdminSetupPage } from './AdminSetup'
 
 export const AdminPanel: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('dashboard')
@@ -96,33 +97,8 @@ export const AdminPanel: React.FC = () => {
   }
 
   if (error || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="text-red-600 text-6xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
-          <p className="text-gray-600 mb-4">
-            {error || 'Você não tem permissões para acessar o painel administrativo.'}
-          </p>
-          <div className="space-y-2">
-            <p className="text-sm text-gray-500">
-              Apenas usuários com permissões de administrador podem acessar esta área.
-            </p>
-            <p className="text-sm text-gray-500">
-              Se você acredita que deveria ter acesso, entre em contato com o administrador do sistema.
-            </p>
-          </div>
-          <div className="mt-6">
-            <button
-              onClick={() => window.location.href = '/'}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Voltar ao Início
-            </button>
-          </div>
-        </div>
-      </div>
-    )
+    // Se não é admin, mostrar página de setup
+    return <AdminSetupPage />
   }
 
   return (
