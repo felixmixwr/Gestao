@@ -1,5 +1,6 @@
 -- Script para corrigir permissões e RLS da tabela clients
 -- Execute este script no Supabase SQL Editor
+-- IMPORTANTE: Execute primeiro db/fix_audit_functions.sql se houver erro de funções
 
 -- 1. Verificar se RLS está habilitado
 SELECT 
