@@ -17,19 +17,9 @@ export interface SystemStatistics {
   total_clients: number
   total_companies: number
   total_bombas: number
-  total_pumps: number
   total_reports: number
   total_notas_fiscais: number
-  total_notes: number
   total_colaboradores: number
-  total_dependentes: number
-  total_documentos: number
-  total_horas_extras: number
-  total_empresas_terceiras: number
-  total_pagamentos_receber: number
-  total_bombas_terceiras: number
-  total_invoices: number
-  total_users: number
   total_programacao: number
   total_admins: number
   total_banned_users: number

@@ -195,7 +195,7 @@ export const AdminAudit: React.FC<AdminAuditProps> = ({ onNavigate }) => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Bombas</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total_bombas + stats.total_pumps}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total_bombas}</p>
                 </div>
               </div>
             </div>

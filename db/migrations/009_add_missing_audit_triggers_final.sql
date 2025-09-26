@@ -262,23 +262,13 @@ DROP FUNCTION IF EXISTS safe_table_count(TEXT);
 -- Recreate the view without the temporary function
 CREATE VIEW system_statistics AS
 SELECT 
-    -- Counts (with safe table existence checks)
+    -- Counts (only for tables that definitely exist)
     (SELECT COUNT(*) FROM clients) as total_clients,
     (SELECT COUNT(*) FROM companies) as total_companies,
     (SELECT COUNT(*) FROM bombas) as total_bombas,
-    COALESCE((SELECT COUNT(*) FROM pumps), 0) as total_pumps,
     (SELECT COUNT(*) FROM reports) as total_reports,
     (SELECT COUNT(*) FROM notas_fiscais) as total_notas_fiscais,
-    COALESCE((SELECT COUNT(*) FROM notes), 0) as total_notes,
     (SELECT COUNT(*) FROM colaboradores) as total_colaboradores,
-    COALESCE((SELECT COUNT(*) FROM colaboradores_dependentes), 0) as total_dependentes,
-    COALESCE((SELECT COUNT(*) FROM colaboradores_documentos), 0) as total_documentos,
-    COALESCE((SELECT COUNT(*) FROM colaboradores_horas_extras), 0) as total_horas_extras,
-    COALESCE((SELECT COUNT(*) FROM empresas_terceiras), 0) as total_empresas_terceiras,
-    COALESCE((SELECT COUNT(*) FROM pagamentos_receber), 0) as total_pagamentos_receber,
-    COALESCE((SELECT COUNT(*) FROM bombas_terceiras), 0) as total_bombas_terceiras,
-    COALESCE((SELECT COUNT(*) FROM invoices), 0) as total_invoices,
-    COALESCE((SELECT COUNT(*) FROM users), 0) as total_users,
     (SELECT COUNT(*) FROM programacao) as total_programacao,
     (SELECT COUNT(*) FROM admin_users WHERE is_active = true) as total_admins,
     (SELECT COUNT(*) FROM banned_users WHERE is_active = true) as total_banned_users,
