@@ -196,7 +196,7 @@ export const TIPOS_DIA_HORA_EXTRA: { value: TipoDiaHoraExtra; label: string }[] 
 export function calcularValorHoraExtra(
   salarioFixo: number,
   horas: number,
-  tipoDia: TipoDiaHoraExtra
+  _tipoDia: TipoDiaHoraExtra
 ): number {
   // Valor base por hora: salário fixo dividido por 220 horas mensais
   const valorHoraBase = salarioFixo / 220

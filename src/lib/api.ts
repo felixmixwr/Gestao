@@ -25,7 +25,7 @@ export class ApiService {
    */
   private static async makeRequest(
     endpoint: string,
-    options: RequestInit = {}
+    options: any = {}
   ): Promise<Response> {
     const token = await this.getAuthToken();
     

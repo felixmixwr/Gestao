@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Badge } from './Badge'
-import { Button } from './Button'
+// import { Button } from './Button'
 import { formatCurrency } from '../utils/formatters'
 import { Database } from '../lib/supabase'
 

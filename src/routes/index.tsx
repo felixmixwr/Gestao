@@ -36,12 +36,12 @@ import PagamentosList from '../pages/pagamentos-receber/PagamentosList'
 import PagamentoDetails from '../pages/pagamentos-receber/PagamentoDetails'
 import PagamentoEdit from '../pages/pagamentos-receber/PagamentoEdit'
 import { NovaProgramacao } from '../pages/programacao'
-import ProgramacaoBoardFixed from '../pages/programacao/ProgramacaoBoardFixed'
-import ProgramacaoWeeklyBoard from '../pages/programacao/ProgramacaoWeeklyBoard'
+// import ProgramacaoBoardFixed from '../pages/programacao/ProgramacaoBoardFixed'
+// import ProgramacaoWeeklyBoard from '../pages/programacao/ProgramacaoWeeklyBoard'
 import { ProgramacaoGridBoard } from '../pages/programacao/ProgramacaoGridBoard'
 import TestConnection from '../pages/programacao/TestConnection'
 import TestAPI from '../pages/programacao/TestAPI'
-import Test from '../pages/Test'
+// import Test from '../pages/Test'
 
 export const router = createBrowserRouter([
   {

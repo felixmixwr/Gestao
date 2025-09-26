@@ -292,18 +292,20 @@ export default function ReportsList() {
         dateFrom = yesterday.toISOString().split('T')[0]
         dateTo = yesterday.toISOString().split('T')[0]
         break
-      case 'last7days':
+      case 'last7days': {
         const last7Days = new Date(today)
         last7Days.setDate(last7Days.getDate() - 7)
         dateFrom = last7Days.toISOString().split('T')[0]
         dateTo = today.toISOString().split('T')[0]
         break
-      case 'last30days':
+      }
+      case 'last30days': {
         const last30Days = new Date(today)
         last30Days.setDate(last30Days.getDate() - 30)
         dateFrom = last30Days.toISOString().split('T')[0]
         dateTo = today.toISOString().split('T')[0]
         break
+      }
       case 'custom':
         // Não alterar as datas, manter as existentes
         return

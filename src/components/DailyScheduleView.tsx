@@ -5,7 +5,7 @@ import { DailyScheduleExporter, DailyScheduleExportData } from '../utils/daily-s
 import { Button } from './Button';
 import { Loading } from './Loading';
 import { toast } from '../lib/toast';
-import { formatDateBR } from '../utils/date-utils';
+// import { formatDateBR } from '../utils/date-utils';
 
 interface DailyScheduleViewProps {
   date?: string; // YYYY-MM-DD format, default to today

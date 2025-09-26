@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Layout } from '../../components/Layout';
 import { Button } from '../../components/Button';
 import { Table } from '../../components/Table';
-import { FileDownloadButton } from '../../components/FileDownloadButton';
+// import { FileDownloadButton } from '../../components/FileDownloadButton';
 import { formatCurrency, formatDate } from '../../utils/format';
 import type { Database } from '../../lib/supabase';
 
@@ -18,7 +18,7 @@ export const NotesList: React.FC = () => {
   const [notas, setNotas] = useState<NotaFiscal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userRole, setUserRole] = useState<string>('');
+  // const [userRole, setUserRole] = useState<string>('');
 
   // Verificar permissões do usuário
   useEffect(() => {
@@ -27,7 +27,7 @@ export const NotesList: React.FC = () => {
       if (user) {
         // TODO: Implementar verificação de role do usuário
         // Por enquanto, assumir que todos podem ver, mas apenas admin/financeiro podem criar
-        setUserRole('admin'); // Mock
+        // setUserRole('admin'); // Mock
       }
     };
     checkUserRole();

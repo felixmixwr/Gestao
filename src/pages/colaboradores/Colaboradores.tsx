@@ -6,7 +6,7 @@ import { Select } from '../../components/Select'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { GenericError } from '../errors/GenericError'
-import { Colaborador, ColaboradorFilters, COLABORADOR_FUNCOES, TIPOS_CONTRATO, getCorFuncao, getCorTipoContrato, formatarSalario } from '../../types/colaboradores'
+import { Colaborador, COLABORADOR_FUNCOES, TIPOS_CONTRATO, getCorFuncao, getCorTipoContrato, formatarSalario } from '../../types/colaboradores'
 
 type ColaboradorRow = Colaborador & {
   equipamento_prefix?: string

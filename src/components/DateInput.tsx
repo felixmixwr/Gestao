@@ -19,12 +19,12 @@ export const DateInput: React.FC<DateInputProps> = ({
   onChange,
   error,
   label,
-  placeholder,
+  placeholder: _placeholder,
   minDate,
   maxDate,
   required = false
 }) => {
-  const today = new Date().toISOString().split('T')[0];
+  // const today = new Date().toISOString().split('T')[0];
 
   return (
     <div className="space-y-1">

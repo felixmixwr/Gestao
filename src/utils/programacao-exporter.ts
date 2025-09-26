@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Programacao } from '../types/programacao';
 import { BombaOption } from '../types/programacao';
-import { formatDateBR } from './date-utils';
+// import { formatDateBR } from './date-utils';
 
 export interface ProgramacaoExportData {
   programacoes: Programacao[];
@@ -14,29 +14,29 @@ export interface ProgramacaoExportData {
 }
 
 export class ProgramacaoExporter {
-  static async exportToXLSX(data: ProgramacaoExportData): Promise<void> {
+  static async exportToXLSX(_data: ProgramacaoExportData): Promise<void> {
     try {
       console.log('🚀 Iniciando exportação XLSX...');
       
       // Validar dados
-      if (!data) {
+      if (!_data) {
         throw new Error('Dados não fornecidos');
       }
       
-      if (!Array.isArray(data.programacoes)) {
+      if (!Array.isArray(_data.programacoes)) {
         throw new Error('Programações não é um array');
       }
       
-      if (!Array.isArray(data.bombas)) {
+      if (!Array.isArray(_data.bombas)) {
         throw new Error('Bombas não é um array');
       }
       
       console.log('✅ Validação dos dados passou');
-      console.log('📊 Programações:', data.programacoes.length);
-      console.log('🚰 Bombas:', data.bombas.length);
+      console.log('📊 Programações:', _data.programacoes.length);
+      console.log('🚰 Bombas:', _data.bombas.length);
       
       // Preparar dados para o Excel
-      const excelData = this.prepareExcelData(data);
+      const excelData = this.prepareExcelData(_data);
       console.log('📊 Dados preparados:', excelData.length, 'registros');
       
       if (excelData.length === 0) {
@@ -75,12 +75,12 @@ export class ProgramacaoExporter {
       XLSX.utils.book_append_sheet(wb, ws, 'Programação');
       
       // Adicionar aba com resumo
-      const summaryData = this.prepareSummaryData(data);
+      const summaryData = this.prepareSummaryData(_data);
       const wsSummary = XLSX.utils.json_to_sheet(summaryData);
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo');
       
       // Gerar nome do arquivo
-      const fileName = this.generateFileName(data, 'xlsx');
+      const fileName = this.generateFileName(_data, 'xlsx');
       console.log('📁 Nome do arquivo:', fileName);
       
       // Tentar diferentes métodos de download
@@ -118,12 +118,12 @@ export class ProgramacaoExporter {
     }
   }
 
-  static async exportToPDF(data: ProgramacaoExportData, elementId: string): Promise<void> {
+  static async exportToPDF(_data: ProgramacaoExportData, elementId: string): Promise<void> {
     try {
       console.log('🚀 Iniciando exportação PDF...');
       
       // Validar dados
-      if (!data) {
+      if (!_data) {
         throw new Error('Dados não fornecidos');
       }
       
@@ -151,16 +151,16 @@ export class ProgramacaoExporter {
       const pdf = new jsPDF('landscape', 'mm', 'a4');
       
       // Adicionar cabeçalho
-      this.addPDFHeader(pdf, data);
+      this.addPDFHeader(pdf, _data);
       
       // Adicionar conteúdo da tabela
-      await this.addPDFTableContent(pdf, data, element);
+      await this.addPDFTableContent(pdf, _data, element);
       
       // Adicionar rodapé
       this.addPDFFooter(pdf);
       
       // Gerar nome do arquivo
-      const fileName = this.generateFileName(data, 'pdf');
+      const fileName = this.generateFileName(_data, 'pdf');
       console.log('📁 Nome do arquivo PDF:', fileName);
       
       // Tentar diferentes métodos de download

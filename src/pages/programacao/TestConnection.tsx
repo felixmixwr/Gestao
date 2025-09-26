@@ -26,7 +26,7 @@ export default function TestConnection() {
       
       // Teste 2: Verificar se a tabela programacao existe
       console.log('Verificando se a tabela programacao existe...');
-      const { data: tableData, error: tableError } = await supabase
+      const { error: tableError } = await supabase
         .from('programacao')
         .select('count')
         .limit(1);

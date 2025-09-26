@@ -7,9 +7,9 @@ interface ImportMetaEnv {
   readonly VITE_SECOND_COMPANY_NAME: string
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+// interface ImportMeta {
+//   readonly env: ImportMetaEnv
+// }
 
 
 

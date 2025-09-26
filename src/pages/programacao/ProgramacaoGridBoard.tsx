@@ -8,30 +8,30 @@ import { Button } from '../../components/Button';
 import { toast } from '../../lib/toast';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
-import { ProgramacaoExportData } from '../../utils/programacao-exporter';
-import { getWeekBoundsBrasilia, formatDateBR, getDayOfWeekBR, toBrasiliaISOString } from '../../utils/date-utils';
+// import { ProgramacaoExportData } from '../../utils/programacao-exporter';
+import { getWeekBoundsBrasilia, getDayOfWeekBR } from '../../utils/date-utils';
 import { DailyScheduleView } from '../../components/DailyScheduleView';
 
-interface ProgramacaoCard {
-  id: string;
-  hora: string;
-  cliente: string;
-  volume: number;
-  local: string;
-  endereco: string;
-  numero: string;
-  bairro: string;
-  cidade: string;
-  estado: string;
-}
+// interface ProgramacaoCard {
+//   id: string;
+//   hora: string;
+//   cliente: string;
+//   volume: number;
+//   local: string;
+//   endereco: string;
+//   numero: string;
+//   bairro: string;
+//   cidade: string;
+//   estado: string;
+// }
 
 const DAYS_OF_WEEK = [
   'Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'
 ];
 
-const DAY_NAMES = [
-  'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
-];
+// const DAY_NAMES = [
+//   'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
+// ];
 
 export function ProgramacaoGridBoard() {
   const navigate = useNavigate();
@@ -108,10 +108,10 @@ export function ProgramacaoGridBoard() {
     setCurrentWeek(new Date());
   };
 
-  const goToToday = () => {
-    const today = new Date();
-    setCurrentWeek(today);
-  };
+  // const goToToday = () => {
+  //   const today = new Date();
+  //   setCurrentWeek(today);
+  // };
 
   // Obter programações para uma bomba e dia específicos
   const getProgramacoesForBombaAndDay = (bombaId: string, dayOfWeek: number) => {
@@ -170,7 +170,7 @@ export function ProgramacaoGridBoard() {
 
   // Obter informações da semana atual
   const { start: weekStart, end: weekEnd } = getWeekBounds(currentWeek);
-  const weekRange = `${formatDateBR(weekStart)} - ${formatDateBR(weekEnd)}`;
+  const weekRange = `${weekStart.toLocaleDateString('pt-BR')} - ${weekEnd.toLocaleDateString('pt-BR')}`;
 
   if (loading) {
     return (

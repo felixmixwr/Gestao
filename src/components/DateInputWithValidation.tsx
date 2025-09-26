@@ -20,7 +20,7 @@ export const DateInputWithValidation: React.FC<DateInputWithValidationProps> = (
   onChange,
   error,
   label,
-  placeholder,
+  placeholder: _placeholder,
   minDate,
   maxDate,
   required = false
@@ -89,21 +89,21 @@ export const DateInputWithValidation: React.FC<DateInputWithValidationProps> = (
     return 'text-red-500';
   };
 
-  const getValidationIcon = () => {
-    if (value.length === 0) return null;
-    if (isValid) {
-      return (
-        <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      );
-    }
-    return (
-      <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    );
-  };
+  // const _getValidationIcon = () => {
+  //   if (value.length === 0) return null;
+  //   if (isValid) {
+  //     return (
+  //       <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  //         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  //       </svg>
+  //     );
+  //   }
+  //   return (
+  //     <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  //     </svg>
+  //   );
+  // };
 
   return (
     <div className="space-y-1">

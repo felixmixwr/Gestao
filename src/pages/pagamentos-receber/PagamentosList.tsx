@@ -8,7 +8,7 @@ import { PagamentoReceberCard } from '../../components/PagamentoReceberCard'
 import { PagamentoReceberStatsComponent } from '../../components/PagamentoReceberStats'
 import { ForceUpdateButton } from '../../components/ForceUpdateButton'
 import { usePagamentosReceber } from '../../lib/pagamentos-receber-api'
-import { PagamentoReceberCompleto, StatusPagamento, FormaPagamento, PagamentoReceberStats } from '../../types/pagamentos-receber'
+import { PagamentoReceberCompleto, FormaPagamento, PagamentoReceberStats } from '../../types/pagamentos-receber'
 import { toast } from '../../lib/toast'
 
 const STATUS_FILTER_OPTIONS = [

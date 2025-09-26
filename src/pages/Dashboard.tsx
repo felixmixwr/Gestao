@@ -68,7 +68,7 @@ export default function Dashboard() {
           start: todayIso,
           end: todayIso
         }
-      case 'ontem':
+      case 'ontem': {
         const yesterday = new Date(now)
         yesterday.setDate(yesterday.getDate() - 1)
         const yesterdayIso = format(yesterday, 'yyyy-MM-dd')
@@ -76,26 +76,30 @@ export default function Dashboard() {
           start: yesterdayIso,
           end: yesterdayIso
         }
-      case 'ultimos-7-dias':
+      }
+      case 'ultimos-7-dias': {
         const weekAgo = new Date(now)
         weekAgo.setDate(weekAgo.getDate() - 7)
         return {
           start: format(weekAgo, 'yyyy-MM-dd'),
           end: todayIso
         }
-      case 'ultimos-30-dias':
+      }
+      case 'ultimos-30-dias': {
         const monthAgo = new Date(now)
         monthAgo.setDate(monthAgo.getDate() - 30)
         return {
           start: format(monthAgo, 'yyyy-MM-dd'),
           end: todayIso
         }
-      case 'personalizado':
+      }
+      case 'personalizado': {
         return {
           start: filters.customDate,
           end: filters.customDate
         }
-      default:
+      }
+      default: {
         // Padrão: mês atual
         const start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1))
         const end = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0))
@@ -103,6 +107,7 @@ export default function Dashboard() {
           start: format(start, 'yyyy-MM-dd'),
           end: format(end, 'yyyy-MM-dd')
         }
+      }
     }
   }, [filters.period, filters.customDate, todayIso])
 
