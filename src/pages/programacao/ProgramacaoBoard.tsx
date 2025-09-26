@@ -10,6 +10,7 @@ import { Loading } from '../../components/Loading';
 import { Button } from '../../components/Button';
 import { Select } from '../../components/Select';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { DailyScheduleView } from '../../components/DailyScheduleView';
 
 interface BoardColumn {
   id: string;
@@ -33,6 +34,7 @@ export default function ProgramacaoBoard() {
     show: false,
     programacao: null
   });
+  const [showDailyView, setShowDailyView] = useState(false);
 
   // Gerar colunas para os próximos 7 dias
   const generateColumns = useCallback((programacoes: Programacao[]): BoardColumn[] => {
@@ -216,9 +218,18 @@ export default function ProgramacaoBoard() {
                 Quadro interativo para gerenciar programações de obras e bombas
               </p>
             </div>
-            <Button onClick={() => navigate('/programacao/nova')}>
-              Nova Programação
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDailyView(true)}
+                className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              >
+                📅 Hoje
+              </Button>
+              <Button onClick={() => navigate('/programacao/nova')}>
+                Nova Programação
+              </Button>
+            </div>
           </div>
 
           {/* Filtros */}
@@ -408,6 +419,13 @@ export default function ProgramacaoBoard() {
           cancelText="Cancelar"
           variant="danger"
         />
+
+        {/* Daily Schedule View */}
+        {showDailyView && (
+          <DailyScheduleView 
+            onClose={() => setShowDailyView(false)}
+          />
+        )}
       </div>
     </Layout>
   );

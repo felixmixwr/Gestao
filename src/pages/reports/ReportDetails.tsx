@@ -5,6 +5,9 @@ import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
 // Removido: Badge não é mais usado
 import { FormField } from '../../components/FormField'
+import { NotaFiscalForm } from '../../components/NotaFiscalForm'
+import { NotaFiscalFormSimple } from '../../components/NotaFiscalFormSimple'
+import { NotasFiscaisLista } from '../../components/NotasFiscaisLista'
 import { ReportWithRelations, ReportStatus, NoteData } from '../../types/reports'
 import { formatCurrency } from '../../utils/formatters'
 import { format } from 'date-fns'
@@ -23,6 +26,9 @@ export default function ReportDetails() {
   const [loading, setLoading] = useState(true)
   // Removido: showStatusDialog não é mais necessário
   const [showNoteDialog, setShowNoteDialog] = useState(false)
+  const [showNotaFiscalForm, setShowNotaFiscalForm] = useState(false)
+  const [refreshNotas, setRefreshNotas] = useState(0) // Estado para forçar refresh
+  const [hasNotaFiscal, setHasNotaFiscal] = useState(false) // Estado para controlar se já existe nota fiscal
   const [newStatus, setNewStatus] = useState<ReportStatus | null>(null)
   const [noteData, setNoteData] = useState<NoteData>({
     nf_number: '',
@@ -289,12 +295,17 @@ export default function ReportDetails() {
             >
               WhatsApp
             </Button>
-            {report.status !== 'NOTA_EMITIDA' && (
-              <Button
-                onClick={() => setShowNoteDialog(true)}
-              >
-                Adicionar NF
-              </Button>
+            <Button
+              onClick={() => setShowNotaFiscalForm(!showNotaFiscalForm)}
+              variant={showNotaFiscalForm ? "secondary" : "primary"}
+              disabled={hasNotaFiscal}
+            >
+              {showNotaFiscalForm ? 'Cancelar' : '+ Adicionar NF'}
+            </Button>
+            {hasNotaFiscal && (
+              <p className="text-sm text-gray-500 mt-2">
+                Este relatório já possui uma nota fiscal
+              </p>
             )}
           </div>
         </div>
@@ -379,6 +390,27 @@ export default function ReportDetails() {
             </div>
           </div>
         </div>
+
+        {/* Formulário de Nota Fiscal */}
+        {showNotaFiscalForm && (
+          <NotaFiscalFormSimple
+            reportId={id!}
+            onSuccess={() => {
+              setShowNotaFiscalForm(false);
+              setRefreshNotas(prev => prev + 1); // Forçar refresh da lista
+            }}
+            onCancel={() => setShowNotaFiscalForm(false)}
+            onRefresh={() => setRefreshNotas(prev => prev + 1)}
+          />
+        )}
+
+        {/* Lista de Notas Fiscais */}
+        <NotasFiscaisLista 
+          reportId={id!}
+          onRefresh={() => setRefreshNotas(prev => prev + 1)}
+          refreshTrigger={refreshNotas}
+          onHasNotaFiscalChange={setHasNotaFiscal}
+        />
 
       </div>
 

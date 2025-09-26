@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
 import { ProgramacaoExportData } from '../../utils/programacao-exporter';
 import { getWeekBoundsBrasilia, formatDateBR, getDayOfWeekBR, toBrasiliaISOString } from '../../utils/date-utils';
+import { DailyScheduleView } from '../../components/DailyScheduleView';
 
 interface ProgramacaoCard {
   id: string;
@@ -41,6 +42,7 @@ export function ProgramacaoGridBoard() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [programacaoToDelete, setProgramacaoToDelete] = useState<Programacao | null>(null);
+  const [showDailyView, setShowDailyView] = useState(false);
 
   // Função para obter os limites da semana (usando fuso horário de Brasília)
   const getWeekBounds = (date: Date) => {
@@ -214,6 +216,14 @@ export function ProgramacaoGridBoard() {
               Próxima Semana →
             </Button>
             
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDailyView(true)}
+              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+            >
+              📅 Hoje
+            </Button>
+            
             <Button
               onClick={() => navigate('/programacao/nova')}
               className="bg-blue-600 hover:bg-blue-700"
@@ -350,6 +360,13 @@ export function ProgramacaoGridBoard() {
           onConfirm={handleDeleteConfirm}
           onCancel={() => setShowDeleteDialog(false)}
         />
+
+        {/* Daily Schedule View */}
+        {showDailyView && (
+          <DailyScheduleView 
+            onClose={() => setShowDailyView(false)}
+          />
+        )}
       </div>
     </Layout>
   );

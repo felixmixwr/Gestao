@@ -225,10 +225,10 @@ export class ProgramacaoAPI {
 
   // Buscar empresas do usuário
   // Buscar clientes disponíveis
-  static async getClientes(): Promise<Array<{ id: string; name: string }>> {
+  static async getClientes(): Promise<Array<{ id: string; name: string; company_name: string | null }>> {
     const { data, error } = await supabase
       .from('clients')
-      .select('id, name')
+      .select('id, name, company_name')
       .order('name');
 
     if (error) {

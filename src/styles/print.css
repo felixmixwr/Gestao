@@ -78,3 +78,138 @@
 .print-programacao .text-gray-500 {
   color: #6c757d !important;
 }
+
+/* ===== ESTILOS PARA VISUALIZAÇÃO DIÁRIA ===== */
+
+/* Estilos gerais de impressão */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #000 !important;
+  }
+  
+  .print:hidden {
+    display: none !important;
+  }
+  
+  /* Layout da página */
+  .print-content {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+  }
+  
+  /* Cards de programação para impressão */
+  .print-content > div > div {
+    page-break-inside: avoid;
+    margin-bottom: 15px !important;
+    border: 2px solid #333 !important;
+    padding: 15px !important;
+    background: white !important;
+  }
+  
+  /* Cabeçalhos */
+  h1, h2, h3, h4 {
+    color: #000 !important;
+    margin-bottom: 10px !important;
+  }
+  
+  /* Grid layout para impressão */
+  .grid {
+    display: block !important;
+  }
+  
+  .grid > div {
+    display: block !important;
+    margin-bottom: 10px !important;
+  }
+  
+  /* Badges e elementos coloridos */
+  .bg-blue-100, .bg-green-100, .bg-purple-100 {
+    background: #f0f0f0 !important;
+    border: 1px solid #666 !important;
+    color: #000 !important;
+  }
+  
+  .bg-gray-50 {
+    background: #f8f8f8 !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Texto */
+  .text-blue-600, .text-green-600, .text-purple-600 {
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+  
+  .text-gray-500, .text-gray-600 {
+    color: #666 !important;
+  }
+  
+  /* Espaçamento */
+  .space-y-3 > * + * {
+    margin-top: 8px !important;
+  }
+  
+  .space-y-4 > * + * {
+    margin-top: 12px !important;
+  }
+  
+  /* Bordas */
+  .border-b {
+    border-bottom: 1px solid #ddd !important;
+  }
+  
+  .border-gray-200 {
+    border-color: #ddd !important;
+  }
+  
+  /* Quebras de página */
+  .print-break-before {
+    page-break-before: always;
+  }
+  
+  .print-break-after {
+    page-break-after: always;
+  }
+  
+  .print-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+}
+
+/* Estilos específicos para o componente DailyScheduleView */
+.daily-schedule-card {
+  transition: none !important;
+}
+
+@media print {
+  .daily-schedule-card {
+    box-shadow: none !important;
+    border: 2px solid #333 !important;
+    margin-bottom: 20px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .daily-schedule-card h4 {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    margin-bottom: 8px !important;
+  }
+  
+  .daily-schedule-card .grid {
+    display: block !important;
+  }
+  
+  .daily-schedule-card .grid > div {
+    margin-bottom: 8px !important;
+  }
+}

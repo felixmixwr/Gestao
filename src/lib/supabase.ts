@@ -521,6 +521,44 @@ export type Database = {
           updated_at?: string
         }
       }
+      notas_fiscais: {
+        Row: {
+          id: string
+          relatorio_id: string
+          numero_nota: string
+          data_emissao: string
+          data_vencimento: string
+          valor: number
+          anexo_url: string | null
+          status: 'Faturada' | 'Paga' | 'Cancelada'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          relatorio_id: string
+          numero_nota: string
+          data_emissao: string
+          data_vencimento: string
+          valor: number
+          anexo_url?: string | null
+          status?: 'Faturada' | 'Paga' | 'Cancelada'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          relatorio_id?: string
+          numero_nota?: string
+          data_emissao?: string
+          data_vencimento?: string
+          valor?: number
+          anexo_url?: string | null
+          status?: 'Faturada' | 'Paga' | 'Cancelada'
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

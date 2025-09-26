@@ -20,7 +20,22 @@ export const formatCurrency = (value: number): string => {
  * @returns String formatada como data brasileira
  */
 export const formatDate = (date: string | Date): string => {
-  return new Intl.DateTimeFormat('pt-BR').format(new Date(date));
+  try {
+    if (!date) return 'N/A';
+    
+    const dateObj = new Date(date);
+    
+    // Verificar se a data é válida
+    if (isNaN(dateObj.getTime())) {
+      console.warn('Data inválida recebida:', date);
+      return 'Data inválida';
+    }
+    
+    return new Intl.DateTimeFormat('pt-BR').format(dateObj);
+  } catch (error) {
+    console.error('Erro ao formatar data:', date, error);
+    return 'Erro na data';
+  }
 };
 
 /**
@@ -29,13 +44,28 @@ export const formatDate = (date: string | Date): string => {
  * @returns String formatada como data e hora brasileira
  */
 export const formatDateTime = (date: string | Date): string => {
-  return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(date));
+  try {
+    if (!date) return 'N/A';
+    
+    const dateObj = new Date(date);
+    
+    // Verificar se a data é válida
+    if (isNaN(dateObj.getTime())) {
+      console.warn('Data inválida recebida:', date);
+      return 'Data inválida';
+    }
+    
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(dateObj);
+  } catch (error) {
+    console.error('Erro ao formatar data/hora:', date, error);
+    return 'Erro na data';
+  }
 };
 
 /**

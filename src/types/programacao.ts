@@ -102,6 +102,7 @@ export interface BombaOption {
 export interface ClienteOption {
   id: string;
   name: string;
+  company_name: string | null;
 }
 
 export interface EmpresaOption {

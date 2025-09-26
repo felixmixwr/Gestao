@@ -350,7 +350,7 @@ function NovaProgramacaoContent() {
                   <option value="">Selecione o cliente</option>
                   {clientes.map(cliente => (
                     <option key={cliente.id} value={cliente.id}>
-                      {cliente.name}
+                      {cliente.company_name || cliente.name}
                     </option>
                   ))}
                 </select>
