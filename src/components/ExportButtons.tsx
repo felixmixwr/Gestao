@@ -19,8 +19,8 @@ export function ExportButtons({ data, elementId, className = '' }: ExportButtons
       await ProgramacaoExporter.exportToXLSX(data);
       toast.success('Programação exportada para Excel com sucesso!');
     } catch (error) {
-      console.error('Erro ao exportar XLSX:', error);
-      toast.error('Erro ao exportar para Excel');
+      console.error('❌ ExportButtons: Erro ao exportar XLSX:', error);
+      toast.error(`Erro ao exportar para Excel: ${error.message}`);
     } finally {
       setExportingXLSX(false);
     }
@@ -32,8 +32,8 @@ export function ExportButtons({ data, elementId, className = '' }: ExportButtons
       await ProgramacaoExporter.exportToPDF(data, elementId);
       toast.success('Programação exportada para PDF com sucesso!');
     } catch (error) {
-      console.error('Erro ao exportar PDF:', error);
-      toast.error('Erro ao exportar para PDF');
+      console.error('❌ ExportButtons: Erro ao exportar PDF:', error);
+      toast.error(`Erro ao exportar para PDF: ${error.message}`);
     } finally {
       setExportingPDF(false);
     }

@@ -9,7 +9,6 @@ import { toast } from '../../lib/toast';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
 import { ProgramacaoExportData } from '../../utils/programacao-exporter';
-import { DownloadTest } from '../../components/DownloadTest';
 import { getWeekBoundsBrasilia, formatDateBR, getDayOfWeekBR, toBrasiliaISOString } from '../../utils/date-utils';
 
 interface ProgramacaoCard {
@@ -38,6 +37,7 @@ export function ProgramacaoGridBoard() {
   const [loading, setLoading] = useState(true);
   const [programacoes, setProgramacoes] = useState<Programacao[]>([]);
   const [bombas, setBombas] = useState<BombaOption[]>([]);
+  const [colaboradores, setColaboradores] = useState<Array<{ id: string; nome: string; funcao: string }>>([]);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [programacaoToDelete, setProgramacaoToDelete] = useState<Programacao | null>(null);
@@ -52,10 +52,20 @@ export function ProgramacaoGridBoard() {
     try {
       const bombasData = await ProgramacaoAPI.getBombas();
       setBombas(bombasData);
-      console.log('🚰 Bombas carregadas:', bombasData.length);
     } catch (error) {
       console.error('Erro ao carregar bombas:', error);
       toast.error('Erro ao carregar bombas');
+    }
+  }, []);
+
+  // Carregar colaboradores disponíveis
+  const loadColaboradores = useCallback(async () => {
+    try {
+      const colaboradoresData = await ProgramacaoAPI.getColaboradores();
+      setColaboradores(colaboradoresData);
+    } catch (error) {
+      console.error('Erro ao carregar colaboradores:', error);
+      toast.error('Erro ao carregar colaboradores');
     }
   }, []);
 
@@ -71,7 +81,6 @@ export function ProgramacaoGridBoard() {
       
       const data = await ProgramacaoAPI.getByPeriod(startDate, endDate);
       setProgramacoes(data);
-      console.log('📅 Programações carregadas:', data.length);
     } catch (error) {
       console.error('Erro ao carregar programações:', error);
       toast.error('Erro ao carregar programações da semana');
@@ -145,7 +154,8 @@ export function ProgramacaoGridBoard() {
   // Efeitos
   useEffect(() => {
     loadBombas();
-  }, [loadBombas]);
+    loadColaboradores();
+  }, [loadBombas, loadColaboradores]);
 
   useEffect(() => {
     loadProgramacoes();
@@ -213,17 +223,13 @@ export function ProgramacaoGridBoard() {
             data={{
               programacoes,
               bombas,
+              colaboradores,
               weekStart,
               weekEnd
             }}
             elementId="programacao-grid"
             className="mr-4"
           />
-        </div>
-
-        {/* Componente de Teste de Download */}
-        <div className="mb-6">
-          <DownloadTest />
         </div>
 
         {/* Grid Layout */}
