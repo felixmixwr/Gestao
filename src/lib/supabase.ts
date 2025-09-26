@@ -521,44 +521,158 @@ export type Database = {
           updated_at?: string
         }
       }
-      notas_fiscais: {
-        Row: {
-          id: string
-          relatorio_id: string
-          numero_nota: string
-          data_emissao: string
-          data_vencimento: string
-          valor: number
-          anexo_url: string | null
-          status: 'Faturada' | 'Paga' | 'Cancelada'
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          relatorio_id: string
-          numero_nota: string
-          data_emissao: string
-          data_vencimento: string
-          valor: number
-          anexo_url?: string | null
-          status?: 'Faturada' | 'Paga' | 'Cancelada'
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          relatorio_id?: string
-          numero_nota?: string
-          data_emissao?: string
-          data_vencimento?: string
-          valor?: number
-          anexo_url?: string | null
-          status?: 'Faturada' | 'Paga' | 'Cancelada'
-          created_at?: string
-          updated_at?: string
-        }
+    notas_fiscais: {
+      Row: {
+        id: string
+        relatorio_id: string
+        numero_nota: string
+        data_emissao: string
+        data_vencimento: string
+        valor: number
+        anexo_url: string | null
+        status: 'Faturada' | 'Paga' | 'Cancelada'
+        created_at: string
+        updated_at: string
       }
+      Insert: {
+        id?: string
+        relatorio_id: string
+        numero_nota: string
+        data_emissao: string
+        data_vencimento: string
+        valor: number
+        anexo_url?: string | null
+        status?: 'Faturada' | 'Paga' | 'Cancelada'
+        created_at?: string
+        updated_at?: string
+      }
+      Update: {
+        id?: string
+        relatorio_id?: string
+        numero_nota?: string
+        data_emissao?: string
+        data_vencimento?: string
+        valor?: number
+        anexo_url?: string | null
+        status?: 'Faturada' | 'Paga' | 'Cancelada'
+        created_at?: string
+        updated_at?: string
+      }
+    }
+    admin_users: {
+      Row: {
+        id: string
+        user_id: string
+        email: string
+        role: 'super_admin' | 'admin' | 'moderator'
+        permissions: any
+        is_active: boolean
+        created_at: string
+        updated_at: string
+      }
+      Insert: {
+        id?: string
+        user_id: string
+        email: string
+        role?: 'super_admin' | 'admin' | 'moderator'
+        permissions?: any
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+      Update: {
+        id?: string
+        user_id?: string
+        email?: string
+        role?: 'super_admin' | 'admin' | 'moderator'
+        permissions?: any
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+    }
+    banned_users: {
+      Row: {
+        id: string
+        user_id: string
+        email: string
+        reason: string | null
+        banned_by: string
+        banned_at: string
+        expires_at: string | null
+        is_active: boolean
+        created_at: string
+        updated_at: string
+      }
+      Insert: {
+        id?: string
+        user_id: string
+        email: string
+        reason?: string | null
+        banned_by: string
+        banned_at?: string
+        expires_at?: string | null
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+      Update: {
+        id?: string
+        user_id?: string
+        email?: string
+        reason?: string | null
+        banned_by?: string
+        banned_at?: string
+        expires_at?: string | null
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+    }
+    audit_logs: {
+      Row: {
+        id: string
+        user_id: string | null
+        user_email: string | null
+        action: string
+        resource_type: string
+        resource_id: string | null
+        old_values: any | null
+        new_values: any | null
+        ip_address: string | null
+        user_agent: string | null
+        metadata: any
+        created_at: string
+      }
+      Insert: {
+        id?: string
+        user_id?: string | null
+        user_email?: string | null
+        action: string
+        resource_type: string
+        resource_id?: string | null
+        old_values?: any | null
+        new_values?: any | null
+        ip_address?: string | null
+        user_agent?: string | null
+        metadata?: any
+        created_at?: string
+      }
+      Update: {
+        id?: string
+        user_id?: string | null
+        user_email?: string | null
+        action?: string
+        resource_type?: string
+        resource_id?: string | null
+        old_values?: any | null
+        new_values?: any | null
+        ip_address?: string | null
+        user_agent?: string | null
+        metadata?: any
+        created_at?: string
+      }
+    }
     }
   }
 }
