@@ -157,7 +157,7 @@ export function getTextoFormaPagamento(forma: FormaPagamento): string {
     case 'a_vista':
       return 'À Vista'
     default:
-      return forma.toUpperCase()
+      return (forma as string).toUpperCase()
   }
 }
 

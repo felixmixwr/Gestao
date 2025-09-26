@@ -93,8 +93,8 @@ export default function ProgramacaoBoard() {
       }
       if (searchTerm) {
         filteredData = filteredData.filter(p => 
-          p.prefixo_obra.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.prefixo_obra?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          p.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           p.endereco.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }

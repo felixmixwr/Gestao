@@ -60,7 +60,7 @@ export const FileDownloadButton: React.FC<FileDownloadButtonProps> = ({
 
   return (
     <Button
-      variant={isDisabled ? 'secondary' : 'default'}
+      variant={isDisabled ? 'secondary' : 'primary'}
       size="sm"
       onClick={handleClick}
       disabled={isDisabled}

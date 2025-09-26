@@ -171,7 +171,7 @@ export default function ProgramacaoWeeklyBoard() {
                 {formatWeekRange()}
               </h2>
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={goToCurrentWeek}
                 className="text-sm text-blue-600 hover:text-blue-700"
               >

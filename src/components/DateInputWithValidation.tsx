@@ -51,13 +51,13 @@ export const DateInputWithValidation: React.FC<DateInputWithValidationProps> = (
     // Verificar se está dentro dos limites
     if (minDateObj && selectedDate < minDateObj) {
       setIsValid(false);
-      setValidationMessage(`Data deve ser posterior a ${formatDate(minDate)}`);
+      setValidationMessage(`Data deve ser posterior a ${formatDate(minDate || '')}`);
       return;
     }
 
     if (maxDateObj && selectedDate > maxDateObj) {
       setIsValid(false);
-      setValidationMessage(`Data deve ser anterior a ${formatDate(maxDate)}`);
+      setValidationMessage(`Data deve ser anterior a ${formatDate(maxDate || '')}`);
       return;
     }
 

@@ -14,7 +14,7 @@ export default function HoraExtraForm({ colaboradorId, salarioFixo, onSave, onCa
   const [formData, setFormData] = useState<CreateHoraExtraData>({
     colaborador_id: colaboradorId,
     data: '',
-    horas: '',
+    horas: 0,
     tipo_dia: 'segunda-sexta'
   })
   const [loading, setLoading] = useState(false)
