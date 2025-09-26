@@ -120,9 +120,19 @@ export const AdminAudit: React.FC<AdminAuditProps> = ({ onNavigate }) => {
       'clients': 'Clientes',
       'companies': 'Empresas',
       'bombas': 'Bombas',
+      'pumps': 'Bombas (Pumps)',
       'reports': 'Relatórios',
       'notas_fiscais': 'Notas Fiscais',
+      'notes': 'Notas',
       'colaboradores': 'Colaboradores',
+      'colaboradores_dependentes': 'Dependentes',
+      'colaboradores_documentos': 'Documentos',
+      'colaboradores_horas_extras': 'Horas Extras',
+      'empresas_terceiras': 'Empresas Terceiras',
+      'pagamentos_receber': 'Pagamentos a Receber',
+      'bombas_terceiras': 'Bombas Terceiras',
+      'invoices': 'Faturas',
+      'users': 'Usuários',
       'programacao': 'Programação',
       'admin_users': 'Usuários Admin',
       'banned_users': 'Usuários Banidos'
@@ -185,7 +195,7 @@ export const AdminAudit: React.FC<AdminAuditProps> = ({ onNavigate }) => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Bombas</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total_bombas}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total_bombas + stats.total_pumps}</p>
                 </div>
               </div>
             </div>
@@ -292,9 +302,19 @@ export const AdminAudit: React.FC<AdminAuditProps> = ({ onNavigate }) => {
                 <option value="clients">Clientes</option>
                 <option value="companies">Empresas</option>
                 <option value="bombas">Bombas</option>
+                <option value="pumps">Bombas (Pumps)</option>
                 <option value="reports">Relatórios</option>
                 <option value="notas_fiscais">Notas Fiscais</option>
+                <option value="notes">Notas</option>
                 <option value="colaboradores">Colaboradores</option>
+                <option value="colaboradores_dependentes">Dependentes</option>
+                <option value="colaboradores_documentos">Documentos</option>
+                <option value="colaboradores_horas_extras">Horas Extras</option>
+                <option value="empresas_terceiras">Empresas Terceiras</option>
+                <option value="pagamentos_receber">Pagamentos a Receber</option>
+                <option value="bombas_terceiras">Bombas Terceiras</option>
+                <option value="invoices">Faturas</option>
+                <option value="users">Usuários</option>
                 <option value="programacao">Programação</option>
                 <option value="admin_users">Usuários Admin</option>
                 <option value="banned_users">Usuários Banidos</option>
