@@ -39,3 +39,4 @@ SELECT '✅ Coluna paid_at adicionada com sucesso!' as resultado;
 
 
 
+

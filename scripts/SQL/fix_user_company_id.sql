@@ -110,3 +110,4 @@ END $$;
 RAISE NOTICE '🎉 Script de verificação executado!';
 
 
+

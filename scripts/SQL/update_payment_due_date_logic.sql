@@ -303,3 +303,4 @@ SELECT
   'Use atualizar_vencimentos_pagamentos_existentes() para corrigir pagamentos existentes' as correcao_existentes;
 
 
+

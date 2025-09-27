@@ -170,3 +170,4 @@ SELECT
   'O status do relatório será atualizado para AGUARDANDO_PAGAMENTO' as comportamento;
 
 
+

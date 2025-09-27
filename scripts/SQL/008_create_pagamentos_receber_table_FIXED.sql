@@ -187,3 +187,4 @@ COMMENT ON COLUMN public.pagamentos_receber.prazo_dias IS 'Número de dias para 
 COMMENT ON COLUMN public.pagamentos_receber.status IS 'Status automático baseado na data: aguardando, proximo_vencimento, vencido, pago';
 
 
+

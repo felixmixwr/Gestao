@@ -192,3 +192,4 @@ ORDER BY ordinal_position;
 SELECT COUNT(*) as total_reports FROM public.reports;
 
 
+

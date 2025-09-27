@@ -22,3 +22,4 @@ BEGIN
     RAISE NOTICE '⚠️ IMPORTANTE: Reabilite o RLS após confirmar que funciona';
 END $$;
 
+

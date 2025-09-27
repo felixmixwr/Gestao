@@ -52,3 +52,4 @@ SELECT 'Políticas RLS da tabela colaboradores corrigidas com sucesso!' as statu
 
 
 
+

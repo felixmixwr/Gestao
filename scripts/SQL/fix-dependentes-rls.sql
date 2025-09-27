@@ -45,3 +45,4 @@ SELECT 'Políticas RLS da tabela colaboradores_dependentes corrigidas com sucess
 
 
 
+

@@ -112,3 +112,4 @@ COMMENT ON COLUMN public.empresas_terceiras.cnpj IS 'CNPJ da empresa terceira (f
 COMMENT ON COLUMN public.empresas_terceiras.contato_responsavel IS 'Nome do responsável pela empresa terceira';
 
 
+

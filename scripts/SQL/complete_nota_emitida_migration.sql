@@ -213,3 +213,4 @@ SELECT
   (SELECT COUNT(*) FROM information_schema.triggers WHERE trigger_name = 'trigger_nota_emitida_to_pagamentos_receber') as trigger_ativo;
 
 
+

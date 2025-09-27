@@ -22,3 +22,4 @@ WHERE c.nome = 'VINICIUS TAVARES AMBROZIO';
 
 
 
+

@@ -118,3 +118,4 @@ BEGIN
     RAISE NOTICE '💡 Agora teste novamente o botão "Marcar como pago" no frontend';
 END $$;
 
+

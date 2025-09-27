@@ -242,3 +242,4 @@ SELECT
   'Use a função migrar_nota_emitida_com_configuracoes() para migrar com configurações específicas' as uso;
 
 
+

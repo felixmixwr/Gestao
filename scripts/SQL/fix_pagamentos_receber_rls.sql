@@ -95,3 +95,4 @@ BEGIN
     RAISE NOTICE '⚠️ IMPORTANTE: Configure políticas mais restritivas em produção!';
 END $$;
 
+

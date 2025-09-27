@@ -105,3 +105,4 @@ VALUES (gen_random_uuid(), 'João Silva', 'Operador', true, (SELECT id FROM comp
 **Última atualização**: $(date)
 
 
+

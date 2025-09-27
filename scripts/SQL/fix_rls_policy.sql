@@ -140,3 +140,4 @@ END $$;
 RAISE NOTICE '🎉 Script de correção RLS executado com sucesso!';
 
 
+

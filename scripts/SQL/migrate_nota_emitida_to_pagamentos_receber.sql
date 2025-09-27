@@ -140,3 +140,4 @@ SELECT
   (SELECT COUNT(*) FROM public.reports WHERE status = 'NOTA_EMITIDA') as relatorios_nota_emitida_restantes;
 
 
+

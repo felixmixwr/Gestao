@@ -135,3 +135,4 @@ CREATE POLICY "Allow all operations for authenticated users on horas_extras" ON 
 
 
 
+
