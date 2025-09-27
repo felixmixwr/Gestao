@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { format, addDays, startOfMonth, endOfMonth } from 'date-fns'
+import { format, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
 
 export interface DashboardStats {
   programacao_hoje: Array<{
@@ -31,6 +31,8 @@ export interface DashboardStats {
     total: number
     por_cliente: Record<string, number>
   }
+  volume_previsto_dia: number
+  volume_bombeado_semana: number
   faturamento_dia: number
   faturamento_mes: number
   colaboradores: number
@@ -58,6 +60,8 @@ export class DashboardApi {
     const tomorrow = format(addDays(new Date(), 1), 'yyyy-MM-dd')
     const startOfCurrentMonth = format(startOfMonth(new Date()), 'yyyy-MM-dd')
     const endOfCurrentMonth = format(endOfMonth(new Date()), 'yyyy-MM-dd')
+    const startOfCurrentWeek = format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd')
+    const endOfCurrentWeek = format(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd')
 
     console.log('🔍 [DashboardAPI] Buscando estatísticas para:', { today, tomorrow })
 
@@ -67,6 +71,8 @@ export class DashboardApi {
         programacaoHojeResult,
         programacaoAmanhaResult,
         bombeadosResult,
+        volumePrevistoResult,
+        volumeBombeadoSemanaResult,
         faturamentoDiaResult,
         faturamentoMesResult,
         colaboradoresResult,
@@ -83,6 +89,12 @@ export class DashboardApi {
         
         // Bombeados do dia
         this.getBombeadosDia(today),
+        
+        // Volume previsto do dia
+        this.getVolumePrevistoDia(today),
+        
+        // Volume bombeado da semana
+        this.getVolumeBombeadoSemana(startOfCurrentWeek, endOfCurrentWeek),
         
         // Faturamento do dia
         this.getFaturamentoDia(today),
@@ -120,6 +132,8 @@ export class DashboardApi {
         programacao_amanha: programacaoAmanhaResult,
         proxima_bomba: proximaBomba,
         bombeados_dia: bombeadosResult,
+        volume_previsto_dia: volumePrevistoResult,
+        volume_bombeado_semana: volumeBombeadoSemanaResult,
         faturamento_dia: faturamentoDiaResult,
         faturamento_mes: faturamentoMesResult,
         colaboradores: colaboradoresResult,
@@ -210,7 +224,7 @@ export class DashboardApi {
         // Buscar nomes dos auxiliares
         const auxiliares = item.auxiliares_bomba && item.auxiliares_bomba.length > 0 ?
           item.auxiliares_bomba
-            .map(id => colaboradoresData?.find(c => c.id === id)?.nome)
+            .map((id: string) => colaboradoresData?.find(c => c.id === id)?.nome)
             .filter(Boolean) || [] :
           []
 
@@ -308,6 +322,49 @@ export class DashboardApi {
     } catch (error) {
       console.error('Erro ao buscar bombeados:', error)
       return { total: 0, por_cliente: {} }
+    }
+  }
+
+  /**
+   * Buscar volume previsto do dia
+   */
+  private static async getVolumePrevistoDia(date: string) {
+    try {
+      const { data, error } = await supabase
+        .from('programacao')
+        .select('volume_previsto')
+        .eq('data', date)
+
+      if (error) throw error
+
+      const total = (data || []).reduce((sum, item) => sum + (Number(item.volume_previsto) || 0), 0)
+      
+      return total
+    } catch (error) {
+      console.error('Erro ao buscar volume previsto:', error)
+      return 0
+    }
+  }
+
+  /**
+   * Buscar volume bombeado da semana
+   */
+  private static async getVolumeBombeadoSemana(startDate: string, endDate: string) {
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('realized_volume')
+        .gte('date', startDate)
+        .lte('date', endDate)
+
+      if (error) throw error
+
+      const total = (data || []).reduce((sum, item) => sum + (Number(item.realized_volume) || 0), 0)
+      
+      return total
+    } catch (error) {
+      console.error('Erro ao buscar volume bombeado da semana:', error)
+      return 0
     }
   }
 

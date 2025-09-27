@@ -100,12 +100,26 @@ export default function Dashboard() {
               }
             />
 
-            {/* Bombeados do dia */}
+            {/* Volume previsto do dia */}
             <DashboardCard
-              title="Bombeados Hoje"
-              value={`${stats?.bombeados_dia.total || 0} m³`}
-              subtitle="volume total bombeado"
+              title="Volume Previsto Bombeado"
+              value={`${stats?.volume_previsto_dia || 0} m³`}
+              subtitle="volume previsto para hoje"
               color="green"
+              loading={loading}
+              icon={
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              }
+            />
+
+            {/* Volume bombeado da semana */}
+            <DashboardCard
+              title="Volume Bombeado na Semana"
+              value={`${stats?.volume_bombeado_semana || 0} m³`}
+              subtitle="volume total da semana"
+              color="blue"
               loading={loading}
               icon={
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">

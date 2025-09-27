@@ -18,7 +18,6 @@ const navigation = [
   { name: 'Relatórios', href: '/reports', icon: '📊' },
   { name: 'Pagamentos a Receber', href: '/pagamentos-receber', icon: '💰' },
   { name: 'Notas', href: '/notes', icon: '📝' },
-  { name: 'Teste', href: '/test', icon: '🧪' },
 ]
 
 export function Layout({ children }: LayoutProps) {
