@@ -248,10 +248,10 @@ export default function ProgramacaoWeeklyBoard() {
                                     e.stopPropagation();
                                     setDeleteId(programacao.id);
                                   }}
-                                  className="text-gray-400 hover:text-red-600 p-1"
-                                  title="Excluir"
+                                  className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium hover:bg-red-200 transition-colors"
+                                  title="Excluir programação"
                                 >
-                                  🗑️
+                                  Excluir
                                 </button>
                               </div>
                             </div>

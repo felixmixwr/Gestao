@@ -6,6 +6,7 @@ export class ProgramacaoAPI {
   static async create(data: ProgramacaoFormData): Promise<Programacao> {
     console.log('🔍 [ProgramacaoAPI] Dados sendo enviados:', data);
     console.log('🔍 [ProgramacaoAPI] company_id:', data.company_id);
+    console.log('🔍 [ProgramacaoAPI] status:', data.status);
     
     const { data: programacao, error } = await supabase
       .from('programacao')
@@ -162,6 +163,18 @@ export class ProgramacaoAPI {
     }
 
     console.log('✅ [ProgramacaoAPI] Programações encontradas:', data?.length || 0);
+    if (data && data.length > 0) {
+      console.log('🔍 [ProgramacaoAPI] Primeira programação:', data[0]);
+      console.log('🔍 [ProgramacaoAPI] Status da primeira:', data[0].status);
+      
+      // Garantir que todas as programações tenham status definido
+      data.forEach(programacao => {
+        if (!programacao.status) {
+          programacao.status = 'programado';
+          console.log('⚠️ [ProgramacaoAPI] Programação sem status, definindo como programado:', programacao.id);
+        }
+      });
+    }
     return data || [];
   }
 

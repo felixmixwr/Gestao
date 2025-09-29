@@ -1,3 +1,5 @@
+export type ProgramacaoStatus = 'programado' | 'reservado';
+
 export interface Programacao {
   id: string;
   prefixo_obra?: string; // Agora opcional
@@ -19,6 +21,7 @@ export interface Programacao {
   motorista_operador?: string;
   auxiliares_bomba?: string[]; // Array de IDs dos auxiliares
   bomba_id?: string;
+  status: ProgramacaoStatus; // Status da programação
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -44,6 +47,7 @@ export interface ProgramacaoFormData {
   motorista_operador?: string;
   auxiliares_bomba?: string[];
   bomba_id?: string;
+  status: ProgramacaoStatus; // Status da programação
   company_id: string;
 }
 

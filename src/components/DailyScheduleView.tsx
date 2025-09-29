@@ -4,6 +4,7 @@ import { ProgramacaoAPI } from '../lib/programacao-api';
 import { DailyScheduleExporter, DailyScheduleExportData } from '../utils/daily-schedule-exporter';
 import { Button } from './Button';
 import { Loading } from './Loading';
+import { ConfirmDialog } from './ConfirmDialog';
 import { toast } from '../lib/toast-hooks';
 // import { formatDateBR } from '../utils/date-utils';
 
@@ -18,6 +19,9 @@ export function DailyScheduleView({ date, onClose }: DailyScheduleViewProps) {
   const [bombas, setBombas] = useState<any[]>([]);
   const [colaboradores, setColaboradores] = useState<any[]>([]);
   const [exporting, setExporting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [programacaoToDelete, setProgramacaoToDelete] = useState<Programacao | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   // Use today's date if not provided
@@ -116,6 +120,33 @@ export function DailyScheduleView({ date, onClose }: DailyScheduleViewProps) {
     }).join(', ');
   };
 
+  // Função para lidar com clique no badge de exclusão
+  const handleDeleteClick = (programacao: Programacao) => {
+    setProgramacaoToDelete(programacao);
+    setShowDeleteDialog(true);
+  };
+
+  // Função para confirmar exclusão
+  const handleDeleteConfirm = async () => {
+    if (!programacaoToDelete) return;
+
+    setDeleting(true);
+    try {
+      await ProgramacaoAPI.delete(programacaoToDelete.id);
+      toast.success('Programação excluída com sucesso!');
+      
+      // Recarregar os dados
+      await loadDailyData();
+    } catch (error) {
+      toast.error('Erro ao excluir programação');
+      console.error(error);
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+      setProgramacaoToDelete(null);
+    }
+  };
+
   const totalVolume = programacoes.reduce((sum, p) => sum + (p.volume_previsto || 0), 0);
   const uniqueBombas = new Set(programacoes.map(p => p.bomba_id).filter(Boolean)).size;
 
@@ -196,10 +227,17 @@ export function DailyScheduleView({ date, onClose }: DailyScheduleViewProps) {
 
               {/* Schedule Cards */}
               <div className="space-y-4">
-                {programacoes.map((programacao, index) => (
+                {programacoes.map((programacao, index) => {
+                  // Determinar cor do card baseado no status
+                  const isReservado = programacao.status === 'reservado';
+                  const cardClasses = isReservado 
+                    ? "daily-schedule-card bg-yellow-100 border-2 border-yellow-300 rounded-lg p-6 print:border-yellow-500 print:mb-4 print:break-inside-avoid"
+                    : "daily-schedule-card bg-white border-2 border-gray-200 rounded-lg p-6 print:border-gray-400 print:mb-4 print:break-inside-avoid";
+                  
+                  return (
                   <div 
                     key={programacao.id} 
-                    className="daily-schedule-card bg-white border-2 border-gray-200 rounded-lg p-6 print:border-gray-400 print:mb-4 print:break-inside-avoid"
+                    className={cardClasses}
                   >
                     {/* Header Row */}
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
@@ -215,6 +253,14 @@ export function DailyScheduleView({ date, onClose }: DailyScheduleViewProps) {
                             🏗️ {programacao.prefixo_obra}
                           </div>
                         )}
+                        {/* Badge de Exclusão */}
+                        <button
+                          onClick={() => handleDeleteClick(programacao)}
+                          className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-red-200 transition-colors print:hidden"
+                          title="Excluir programação"
+                        >
+                          Excluir
+                        </button>
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-gray-500">Bomba</div>
@@ -293,7 +339,8 @@ export function DailyScheduleView({ date, onClose }: DailyScheduleViewProps) {
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Print Footer */}
@@ -305,6 +352,19 @@ export function DailyScheduleView({ date, onClose }: DailyScheduleViewProps) {
           )}
         </div>
       </div>
+
+      {/* Dialog de confirmação de exclusão */}
+      <ConfirmDialog
+        isOpen={showDeleteDialog}
+        onCancel={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Excluir Programação"
+        message={`Tem certeza que deseja excluir a programação de ${programacaoToDelete?.cliente} às ${programacaoToDelete ? formatTime(programacaoToDelete.horario) : ''}?`}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        variant="danger"
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -35,6 +35,16 @@
   background-color: #e3f2fd !important;
 }
 
+/* Card amarelo para status reservado */
+.print-programacao.bg-yellow-100 {
+  background-color: #fef3c7 !important;
+  border: 1px solid #d97706 !important;
+}
+
+.print-programacao.bg-yellow-100:hover {
+  background-color: #fde68a !important;
+}
+
 .print-hidden {
   display: none !important;
 }
@@ -63,6 +73,11 @@
 /* Estilos específicos para elementos importantes */
 .print-programacao .text-blue-800 {
   color: #1565c0 !important;
+  font-weight: bold !important;
+}
+
+.print-programacao .text-yellow-800 {
+  color: #b45309 !important;
   font-weight: bold !important;
 }
 
@@ -189,6 +204,12 @@
 /* Estilos específicos para o componente DailyScheduleView */
 .daily-schedule-card {
   transition: none !important;
+}
+
+/* Card amarelo para status reservado */
+.daily-schedule-card.bg-yellow-100 {
+  background-color: #fef3c7 !important;
+  border: 2px solid #d97706 !important;
 }
 
 @media print {

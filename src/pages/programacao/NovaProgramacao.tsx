@@ -74,6 +74,7 @@ function NovaProgramacaoContent() {
     motorista_operador: '',
     auxiliares_bomba: [''], // Começa com um auxiliar vazio
     bomba_id: '',
+    status: 'programado', // Status padrão
     company_id: '',
   });
 
@@ -160,6 +161,7 @@ function NovaProgramacaoContent() {
           motorista_operador: data.motorista_operador || '',
           auxiliares_bomba: data.auxiliares_bomba && data.auxiliares_bomba.length > 0 ? data.auxiliares_bomba : [''],
           bomba_id: data.bomba_id || '',
+          status: data.status || 'programado', // Status padrão para dados antigos
           company_id: data.company_id,
         });
       } else {
@@ -198,15 +200,15 @@ function NovaProgramacaoContent() {
   const addAssistant = () => {
     setFormData(prev => ({
       ...prev,
-      auxiliares_bomba: [...prev.auxiliares_bomba, '']
+      auxiliares_bomba: [...(prev.auxiliares_bomba || []), '']
     }))
   }
 
   const removeAssistant = (index: number) => {
-    if (formData.auxiliares_bomba.length > 1) {
+    if ((formData.auxiliares_bomba || []).length > 1) {
       setFormData(prev => ({
         ...prev,
-        auxiliares_bomba: prev.auxiliares_bomba.filter((_, i) => i !== index)
+        auxiliares_bomba: (prev.auxiliares_bomba || []).filter((_, i) => i !== index)
       }))
     }
   }
@@ -214,7 +216,7 @@ function NovaProgramacaoContent() {
   const updateAssistant = (index: number, assistantId: string) => {
     setFormData(prev => ({
       ...prev,
-      auxiliares_bomba: prev.auxiliares_bomba.map((assistant, i) => 
+      auxiliares_bomba: (prev.auxiliares_bomba || []).map((assistant, i) => 
         i === index ? assistantId : assistant
       )
     }))
@@ -253,33 +255,43 @@ function NovaProgramacaoContent() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Campos obrigatórios
-    if (!formData.data) {
-      newErrors.data = 'Data é obrigatória';
-    }
-    if (!formData.horario) {
-      newErrors.horario = 'Horário é obrigatório';
-    }
+    // Campos obrigatórios baseados no status
+    const isReservado = formData.status === 'reservado';
+    
+    // Campos sempre obrigatórios
     if (!formData.cliente_id) {
       newErrors.cliente_id = 'Cliente é obrigatório';
     }
-    if (!formData.cep.trim()) {
-      newErrors.cep = 'CEP é obrigatório';
-    }
-    if (!formData.endereco.trim()) {
-      newErrors.endereco = 'Endereço é obrigatório';
-    }
-    if (!formData.numero.trim()) {
-      newErrors.numero = 'Número é obrigatório';
+    if (!formData.responsavel?.trim()) {
+      newErrors.responsavel = 'Responsável é obrigatório';
     }
     if (!formData.company_id) {
       newErrors.company_id = 'Empresa é obrigatória';
     }
 
-    // Validações específicas
-    const auxiliaresSelecionados = formData.auxiliares_bomba?.filter(id => id && id.trim() !== '') || [];
-    if (auxiliaresSelecionados.length < 2) {
-      newErrors.auxiliares_bomba = 'É necessário selecionar pelo menos 2 auxiliares';
+    // Campos obrigatórios apenas para status "programado"
+    if (!isReservado) {
+      if (!formData.data) {
+        newErrors.data = 'Data é obrigatória';
+      }
+      if (!formData.horario) {
+        newErrors.horario = 'Horário é obrigatório';
+      }
+      if (!formData.cep.trim()) {
+        newErrors.cep = 'CEP é obrigatório';
+      }
+      if (!formData.endereco.trim()) {
+        newErrors.endereco = 'Endereço é obrigatório';
+      }
+      if (!formData.numero.trim()) {
+        newErrors.numero = 'Número é obrigatório';
+      }
+
+      // Validação de auxiliares apenas para "programado"
+      const auxiliaresSelecionados = formData.auxiliares_bomba?.filter(id => id && id.trim() !== '') || [];
+      if (auxiliaresSelecionados.length < 1) {
+        newErrors.auxiliares_bomba = 'É necessário selecionar pelo menos 1 auxiliar';
+      }
     }
 
     setErrors(newErrors);
@@ -423,26 +435,49 @@ function NovaProgramacaoContent() {
                   <p className="mt-1 text-sm text-red-600">{errors.company_id}</p>
                 )}
               </div>
+
+              {/* Status da Programação */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status da Programação *
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.status}
+                  onChange={(e) => handleInputChange('status', e.target.value as 'programado' | 'reservado')}
+                >
+                  <option value="programado">Programado (todos os campos obrigatórios)</option>
+                  <option value="reservado">Reservado (apenas cliente, responsável e telefone obrigatórios)</option>
+                </select>
+                {errors.status && (
+                  <p className="mt-1 text-sm text-red-600">{errors.status}</p>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Seção 2 - Data e Horário */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Data e Horário</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+              Data e Horário
+              {formData.status === 'reservado' && (
+                <span className="ml-2 text-sm text-gray-500 font-normal">(opcional para reservas)</span>
+              )}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Data */}
               <DatePicker
                 value={formData.data}
                 onChange={(value) => handleInputChange('data', value)}
-                label="Data"
-                required
+                label={`Data${formData.status === 'programado' ? ' *' : ''}`}
+                required={formData.status === 'programado'}
                 error={errors.data}
               />
 
               {/* Horário */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Horário *
+                  Horário{formData.status === 'programado' ? ' *' : ''}
                 </label>
                 <input
                   type="time"
@@ -459,12 +494,17 @@ function NovaProgramacaoContent() {
 
           {/* Seção 3 - Endereço */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Endereço</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">
+              Endereço
+              {formData.status === 'reservado' && (
+                <span className="ml-2 text-sm text-gray-500 font-normal">(opcional para reservas)</span>
+              )}
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* CEP */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  CEP *
+                  CEP{formData.status === 'programado' ? ' *' : ''}
                 </label>
                 <input
                   type="text"
@@ -486,7 +526,7 @@ function NovaProgramacaoContent() {
               {/* Endereço */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Endereço *
+                  Endereço{formData.status === 'programado' ? ' *' : ''}
                 </label>
                 <input
                   type="text"
@@ -503,7 +543,7 @@ function NovaProgramacaoContent() {
               {/* Número */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Número *
+                  Número{formData.status === 'programado' ? ' *' : ''}
                 </label>
                 <input
                   type="text"
@@ -708,7 +748,7 @@ function NovaProgramacaoContent() {
                 </div>
                 
                 <div className="space-y-3">
-                  {formData.auxiliares_bomba.map((assistant, index) => (
+                  {(formData.auxiliares_bomba || []).map((assistant, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <div className="flex-1">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -729,7 +769,7 @@ function NovaProgramacaoContent() {
                             ))}
                         </select>
                       </div>
-                      {formData.auxiliares_bomba.length > 1 && (
+                      {(formData.auxiliares_bomba || []).length > 1 && (
                         <Button
                           type="button"
                           variant="outline"

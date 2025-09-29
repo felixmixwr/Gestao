@@ -29,7 +29,7 @@ CREATE TABLE programacao (
     slump TEXT,
     equipe TEXT,
     motorista_operador TEXT,
-    auxiliares_bomba TEXT[], -- Array de auxiliares (mínimo 2)
+    auxiliares_bomba TEXT[], -- Array de auxiliares (mínimo 1)
     bomba_id UUID REFERENCES bombas(id),
     empresa_id UUID REFERENCES empresas(id) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

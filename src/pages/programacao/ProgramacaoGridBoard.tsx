@@ -291,14 +291,21 @@ export function ProgramacaoGridBoard() {
                       return (
                         <td key={dayIndex} className="w-48 p-2 border-r border-gray-200 last:border-r-0 align-top print-cell">
                           <div className="space-y-2 min-h-[100px]">
-                            {dayProgramacoes.map((programacao) => (
+                            {dayProgramacoes.map((programacao) => {
+                              // Determinar cor do card baseado no status
+                              const isReservado = programacao.status === 'reservado';
+                              const cardClasses = isReservado 
+                                ? "bg-yellow-100 border border-yellow-300 hover:bg-yellow-200"
+                                : "bg-blue-50 border border-blue-200 hover:bg-blue-100";
+                              
+                              return (
                               <div
                                 key={programacao.id}
-                                className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors print-programacao"
+                                className={`${cardClasses} rounded-lg p-3 cursor-pointer transition-colors print-programacao`}
                                 onClick={() => navigate(`/programacao/${programacao.id}`)}
                               >
                                 {/* Hora */}
-                                <div className="text-sm font-semibold text-blue-800 mb-1">
+                                <div className={`text-sm font-semibold mb-1 ${isReservado ? 'text-yellow-900' : 'text-blue-800'}`}>
                                   {formatTime(programacao.horario)}
                                 </div>
                                 
@@ -322,18 +329,20 @@ export function ProgramacaoGridBoard() {
                                   )}
                                 </div>
 
-                                {/* Botão de deletar */}
+                                {/* Badge de Exclusão */}
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleDeleteClick(programacao);
                                   }}
-                                  className="mt-2 text-red-500 hover:text-red-700 text-xs print-hidden"
+                                  className="mt-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium hover:bg-red-200 transition-colors print-hidden"
+                                  title="Excluir programação"
                                 >
                                   Excluir
                                 </button>
                               </div>
-                            ))}
+                              );
+                            })}
                             
                             {/* Espaço vazio se não há programações */}
                             {dayProgramacoes.length === 0 && (

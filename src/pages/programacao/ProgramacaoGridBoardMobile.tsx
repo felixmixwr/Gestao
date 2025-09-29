@@ -274,19 +274,16 @@ export function ProgramacaoGridBoardMobile() {
                         {formatTime(programacao.horario)}
                       </span>
                     </div>
-                    <Button
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteClick(programacao);
                       }}
-                      variant="outline"
-                      size="sm"
-                      className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+                      className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-red-200 transition-colors"
                       title="Excluir programação"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
                       Excluir
-                    </Button>
+                    </button>
                   </div>
 
                   {/* Informações da Bomba */}
@@ -513,15 +510,33 @@ export function ProgramacaoGridBoardMobile() {
                       return (
                         <td key={dayIndex} className="w-48 p-2 border-r border-gray-200 last:border-r-0 align-top print-cell">
                           <div className="space-y-2 min-h-[100px]">
-                            {dayProgramacoes.map((programacao) => (
+                            {dayProgramacoes.map((programacao) => {
+                              // Determinar cor do card baseado no status
+                              const isReservado = programacao.status === 'reservado';
+                              const cardClasses = isReservado 
+                                ? "bg-yellow-100 border border-yellow-300 hover:bg-yellow-200"
+                                : "bg-blue-50 border border-blue-200 hover:bg-blue-100";
+                              
+                              return (
                               <div
                                 key={programacao.id}
-                                className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors print-programacao"
-                                onClick={() => navigate(`/programacao/${programacao.id}`)}
+                                className={`${cardClasses} rounded-lg p-3 transition-colors print-programacao relative`}
                               >
-                                {/* Hora */}
-                                <div className="text-sm font-semibold text-blue-800 mb-1">
-                                  {formatTime(programacao.horario)}
+                                {/* Header com hora e badge de exclusão */}
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className={`text-sm font-semibold ${isReservado ? 'text-yellow-900' : 'text-blue-800'}`}>
+                                    {formatTime(programacao.horario)}
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteClick(programacao);
+                                    }}
+                                    className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium hover:bg-red-200 transition-colors z-10"
+                                    title="Excluir programação"
+                                  >
+                                    Excluir
+                                  </button>
                                 </div>
                                 
                                 {/* Cliente */}
@@ -544,18 +559,14 @@ export function ProgramacaoGridBoardMobile() {
                                   )}
                                 </div>
 
-                                {/* Botão de deletar */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(programacao);
-                                  }}
-                                  className="mt-2 text-red-500 hover:text-red-700 text-xs print-hidden"
-                                >
-                                  Excluir
-                                </button>
+                                {/* Overlay clicável para navegar */}
+                                <div 
+                                  className="absolute inset-0 cursor-pointer z-0"
+                                  onClick={() => navigate(`/programacao/${programacao.id}`)}
+                                ></div>
                               </div>
-                            ))}
+                              );
+                            })}
                             
                             {/* Espaço vazio se não há programações */}
                             {dayProgramacoes.length === 0 && (
