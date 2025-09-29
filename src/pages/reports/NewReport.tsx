@@ -298,15 +298,15 @@ export default function NewReport() {
   const addAssistant = () => {
     setFormData(prev => ({
       ...prev,
-      assistants: [...prev.assistants, { id: '' }]
+      assistants: [...(prev.assistants || []), { id: '' }]
     }))
   }
 
   const removeAssistant = (index: number) => {
-    if (formData.assistants.length > 1) {
+    if ((formData.assistants?.length || 0) > 1) {
       setFormData(prev => ({
         ...prev,
-        assistants: prev.assistants.filter((_, i) => i !== index)
+        assistants: (prev.assistants || []).filter((_, i) => i !== index)
       }))
     }
   }
@@ -314,7 +314,7 @@ export default function NewReport() {
   const updateAssistant = (index: number, assistantId: string) => {
     setFormData(prev => ({
       ...prev,
-      assistants: prev.assistants.map((assistant, i) => 
+      assistants: (prev.assistants || []).map((assistant, i) => 
         i === index ? { ...assistant, id: assistantId } : assistant
       )
     }))
@@ -334,6 +334,18 @@ export default function NewReport() {
 
   const updatePumpTotalBilled = async (pumpId: string, amount: number) => {
     try {
+      // Verificar se é uma bomba terceira primeiro
+      const { data: bombaTerceira } = await supabase
+        .from('bombas_terceiras')
+        .select('id')
+        .eq('id', pumpId)
+        .single()
+
+      if (bombaTerceira) {
+        console.log('Bomba terceira detectada - pulando atualização de total_billed')
+        return // Bombas terceiras não têm total_billed
+      }
+
       // Tentar usar RPC se existir
       const { error } = await supabase.rpc('increment_pump_total_billed', {
         pump_id: pumpId,
@@ -345,14 +357,17 @@ export default function NewReport() {
       console.log('RPC não disponível, atualizando manualmente')
     }
 
-    // Atualizar manualmente
+    // Atualizar manualmente apenas para bombas internas
     const { data: pump, error: fetchError } = await supabase
       .from('pumps')
       .select('total_billed')
       .eq('id', pumpId)
       .single()
 
-    if (fetchError) throw fetchError
+    if (fetchError) {
+      console.log('Erro ao buscar bomba para atualização:', fetchError)
+      return // Não falhar se não conseguir atualizar
+    }
 
     const newTotal = (pump.total_billed || 0) + amount
 
@@ -361,7 +376,10 @@ export default function NewReport() {
       .update({ total_billed: newTotal })
       .eq('id', pumpId)
 
-    if (updateError) throw updateError
+    if (updateError) {
+      console.log('Erro ao atualizar total_billed:', updateError)
+      // Não falhar se não conseguir atualizar
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -395,7 +413,7 @@ export default function NewReport() {
 
       // Obter nomes dos colaboradores selecionados
       const driver = colaboradores.find(c => c.id === validatedData.driver_id)
-      const assistants = validatedData.assistants.map(assistant => 
+      const assistants = (validatedData.assistants || []).map(assistant => 
         colaboradores.find(c => c.id === assistant.id)
       ).filter(Boolean)
 
@@ -773,7 +791,7 @@ export default function NewReport() {
                 </div>
                 
                 <div className="space-y-3">
-                  {formData.assistants.map((assistant, index) => (
+                  {(formData.assistants || []).map((assistant, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <div className="flex-1">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -792,7 +810,7 @@ export default function NewReport() {
                           ))}
                         </select>
                       </div>
-                      {formData.assistants.length > 1 && (
+                      {(formData.assistants?.length || 0) > 1 && (
                         <Button
                           type="button"
                           variant="outline"

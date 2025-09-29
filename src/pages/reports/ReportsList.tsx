@@ -185,12 +185,29 @@ export default function ReportsList() {
         const pumpIds = [...new Set(reportsData.map(r => r.pump_id).filter(Boolean))]
         console.log('🔍 [DEBUG] Pump IDs únicos:', pumpIds)
         
+        // Buscar bombas internas
         const { data: pumpsData } = await supabase
           .from('pumps')
           .select('*')
           .in('id', pumpIds)
         
-        console.log('📊 [DATA] Bombas carregadas:', pumpsData)
+        console.log('📊 [DATA] Bombas internas carregadas:', pumpsData)
+        
+        // Buscar bombas terceiras para IDs que não foram encontrados nas bombas internas
+        const foundPumpIds = pumpsData?.map(p => p.id) || []
+        const missingPumpIds = pumpIds.filter(id => !foundPumpIds.includes(id))
+        
+        let bombasTerceirasData = []
+        if (missingPumpIds.length > 0) {
+          console.log('🔍 [DEBUG] Buscando bombas terceiras para IDs:', missingPumpIds)
+          const { data: bombasTerceiras } = await supabase
+            .from('view_bombas_terceiras_com_empresa')
+            .select('*')
+            .in('id', missingPumpIds)
+          
+          bombasTerceirasData = bombasTerceiras || []
+          console.log('📊 [DATA] Bombas terceiras carregadas:', bombasTerceirasData)
+        }
         
         // 4. Enriquecer com dados das empresas
         const companyIds = [...new Set(reportsData.map(r => r.company_id).filter(Boolean))]
@@ -204,12 +221,34 @@ export default function ReportsList() {
         console.log('📊 [DATA] Empresas carregadas:', companiesData)
         
         // 5. Combinar os dados
-        const enrichedReports = reportsData.map(report => ({
-          ...report,
-          clients: clientsData?.find(c => c.id === report.client_id),
-          pumps: pumpsData?.find(p => p.id === report.pump_id),
-          companies: companiesData?.find(comp => comp.id === report.company_id)
-        }))
+        const enrichedReports = reportsData.map(report => {
+          // Buscar bomba interna primeiro
+          let pumpData = pumpsData?.find(p => p.id === report.pump_id)
+          
+          // Se não encontrou bomba interna, buscar bomba terceira
+          if (!pumpData) {
+            const bombaTerceira = bombasTerceirasData?.find(bt => bt.id === report.pump_id)
+            if (bombaTerceira) {
+              pumpData = {
+                id: bombaTerceira.id,
+                prefix: bombaTerceira.prefixo,
+                model: bombaTerceira.modelo,
+                brand: `${bombaTerceira.empresa_nome_fantasia} - R$ ${bombaTerceira.valor_diaria || 0}/dia`,
+                owner_company_id: bombaTerceira.empresa_id,
+                is_terceira: true,
+                empresa_nome: bombaTerceira.empresa_nome_fantasia,
+                valor_diaria: bombaTerceira.valor_diaria
+              }
+            }
+          }
+          
+          return {
+            ...report,
+            clients: clientsData?.find(c => c.id === report.client_id),
+            pumps: pumpData,
+            companies: companiesData?.find(comp => comp.id === report.company_id)
+          }
+        })
         
         console.log('✅ [SUCCESS] Dados enriquecidos com sucesso!')
         console.log('📊 [DATA] Primeiro relatório enriquecido:', enrichedReports[0])

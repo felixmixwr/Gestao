@@ -71,14 +71,40 @@ export default function ReportDetails() {
         // 3. Enriquecer com dados da bomba
         if (reportData.pump_id) {
           console.log('🔍 [REPORT_DETAILS] Carregando dados da bomba:', reportData.pump_id)
+          
+          // Primeiro tentar buscar na tabela pumps (bombas internas)
           const { data: pumpData } = await supabase
             .from('pumps')
             .select('*')
             .eq('id', reportData.pump_id)
             .single()
           
-          console.log('📊 [REPORT_DETAILS] Bomba carregada:', pumpData)
-          reportData.pumps = pumpData
+          if (pumpData) {
+            console.log('📊 [REPORT_DETAILS] Bomba interna carregada:', pumpData)
+            reportData.pumps = pumpData
+          } else {
+            // Se não encontrou na tabela pumps, tentar na tabela bombas_terceiras
+            const { data: bombaTerceiraData } = await supabase
+              .from('view_bombas_terceiras_com_empresa')
+              .select('*')
+              .eq('id', reportData.pump_id)
+              .single()
+            
+            if (bombaTerceiraData) {
+              console.log('📊 [REPORT_DETAILS] Bomba terceira carregada:', bombaTerceiraData)
+              // Transformar para o formato esperado
+              reportData.pumps = {
+                id: bombaTerceiraData.id,
+                prefix: bombaTerceiraData.prefixo,
+                model: bombaTerceiraData.modelo,
+                brand: `${bombaTerceiraData.empresa_nome_fantasia} - R$ ${bombaTerceiraData.valor_diaria || 0}/dia`,
+                owner_company_id: bombaTerceiraData.empresa_id,
+                is_terceira: true,
+                empresa_nome: bombaTerceiraData.empresa_nome_fantasia,
+                valor_diaria: bombaTerceiraData.valor_diaria
+              }
+            }
+          }
         }
         
         // 4. Enriquecer com dados da empresa
