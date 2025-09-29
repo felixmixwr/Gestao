@@ -134,3 +134,4 @@ Se encontrar problemas:
 2. Confirme que o path mapping está funcionando
 3. Verifique se o Tailwind CSS está configurado corretamente
 4. Execute `npm run build` para verificar erros de compilação
+

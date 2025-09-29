@@ -228,7 +228,7 @@ export const NotaFiscalFormSimple: React.FC<NotaFiscalFormSimpleProps> = ({
     // Remove pontos e vírgulas, mantém apenas dígitos
     const numericValue = formattedValue.replace(/[^\d]/g, '');
     
-    // Converte para número e divide por 100 para ter o valor real
+    // Converte para número e divide por 100 para compensar a formatação
     return parseFloat(numericValue) / 100;
   };
 

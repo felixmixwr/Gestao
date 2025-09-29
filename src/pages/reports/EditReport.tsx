@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
-import { DatePicker } from '../../components/ui/date-picker';
-import { generateReportNumber } from '../../utils/reportNumberGenerator'
-// import { CreateReportData } from '../../types/reports'
-// import { formatCurrency } from '../../utils/formatters'
+import { DatePicker } from '../../components/ui/date-picker'
+import { formatCurrency } from '../../utils/formatters'
 import { z } from 'zod'
-import { getDefaultStatus } from '../../utils/status-utils'
+import { ReportStatus } from '../../types/reports'
 
 // Função para formatar telefone brasileiro
 const formatPhoneNumber = (phone: string): string => {
@@ -34,8 +33,8 @@ const formatPhoneNumber = (phone: string): string => {
   return phone // Retorna o original se não conseguir formatar
 }
 
-// Função para formatar valor em Real brasileiro
-const formatCurrency = (value: string): string => {
+// Função para formatar valor de entrada (quando usuário digita)
+const formatCurrencyInput = (value: string): string => {
   // Remove todos os caracteres não numéricos
   const numbers = value.replace(/\D/g, '')
   
@@ -63,20 +62,21 @@ const reportSchema = z.object({
   date: z.string().min(1, 'Data é obrigatória'),
   client_id: z.string().min(1, 'Cliente é obrigatório'),
   client_rep_name: z.string().min(1, 'Nome do representante é obrigatório'),
-  client_phone: z.string().min(1, 'Telefone do cliente é obrigatório'),
+  client_phone: z.string().optional(),
   work_address: z.string().min(1, 'Endereço da obra é obrigatório'),
   pump_id: z.string().min(1, 'Bomba é obrigatória'),
   pump_prefix: z.string().min(1, 'Prefixo da bomba é obrigatório'),
   pump_owner_company_id: z.string().min(1, 'Empresa proprietária é obrigatória'),
   service_company_id: z.string().min(1, 'Empresa do serviço é obrigatória'),
-  planned_volume: z.string().min(1, 'Volume planejado é obrigatório'),
+  planned_volume: z.string().optional(),
   realized_volume: z.string().min(1, 'Volume realizado é obrigatório'),
-  driver_id: z.string().min(1, 'Motorista é obrigatório'),
+  driver_id: z.string().optional(),
   assistants: z.array(z.object({
     id: z.string().min(1, 'Auxiliar é obrigatório')
   })).min(1, 'Pelo menos um auxiliar é obrigatório'),
   total_value: z.string().min(1, 'Valor total é obrigatório'),
-  observations: z.string().optional()
+  observations: z.string().optional(),
+  status: z.string().min(1, 'Status é obrigatório')
 })
 
 type ReportFormData = z.infer<typeof reportSchema>
@@ -108,18 +108,11 @@ interface Colaborador {
   funcao: string
 }
 
-// Função para obter a data atual no formato YYYY-MM-DD considerando fuso horário local
-const getCurrentDateString = (): string => {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-export default function NewReport() {
+export default function EditReport() {
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [formData, setFormData] = useState<ReportFormData>({
-    date: getCurrentDateString(),
+    date: '',
     client_id: '',
     client_rep_name: '',
     client_phone: '',
@@ -133,7 +126,8 @@ export default function NewReport() {
     driver_id: '',
     assistants: [{ id: '' }], // Começa com um auxiliar
     total_value: '',
-    observations: ''
+    observations: '',
+    status: 'ENVIADO_FINANCEIRO'
   })
 
   const [clients, setClients] = useState<Client[]>([])
@@ -141,16 +135,166 @@ export default function NewReport() {
   const [companies, setCompanies] = useState<Company[]>([])
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingData, setLoadingData] = useState(true)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  // const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-  // const [selectedPump, setSelectedPump] = useState<Pump | null>(null)
 
   useEffect(() => {
+    if (id) {
+      loadReportData()
+    }
     loadClients()
     loadPumps()
     loadCompanies()
     loadColaboradores()
-  }, [])
+  }, [id])
+
+  const loadReportData = async () => {
+    try {
+      setLoadingData(true)
+      
+      const { data: report, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (error) throw error
+
+      if (report) {
+        // Inicializar dados básicos
+        const initialData = {
+          date: report.date || '',
+          client_id: report.client_id || '',
+          client_rep_name: report.client_rep_name || '',
+          client_phone: '',
+          work_address: report.work_address || '',
+          pump_id: report.pump_id || '',
+          pump_prefix: report.pump_prefix || '',
+          pump_owner_company_id: '',
+          service_company_id: report.service_company_id || '',
+          planned_volume: report.planned_volume?.toString() || '',
+          realized_volume: report.realized_volume?.toString() || '',
+          driver_id: '',
+          assistants: [{ id: '' }], // Começa com um auxiliar vazio
+          total_value: report.total_value ? formatCurrency(report.total_value) : '',
+          observations: '',
+          status: report.status || 'ENVIADO_FINANCEIRO'
+        }
+
+        setFormData(initialData)
+
+        // Carregar dados relacionados em paralelo
+        const promises = []
+
+        // Cliente
+        if (report.client_id) {
+          promises.push(
+            supabase
+              .from('clients')
+              .select('*')
+              .eq('id', report.client_id)
+              .single()
+              .then(({ data: client }) => {
+                if (client) {
+                  setFormData(prev => ({
+                    ...prev,
+                    client_phone: client.phone ? formatPhoneNumber(client.phone) : ''
+                  }))
+                }
+              })
+          )
+        }
+
+        // Bomba
+        if (report.pump_id) {
+          promises.push(
+            supabase
+              .from('pumps')
+              .select('*')
+              .eq('id', report.pump_id)
+              .single()
+              .then(({ data: pump }) => {
+                if (pump) {
+                  setFormData(prev => ({
+                    ...prev,
+                    pump_owner_company_id: pump.owner_company_id || ''
+                  }))
+                }
+              })
+          )
+        }
+
+        // Motorista
+        if (report.driver_name) {
+          promises.push(
+            supabase
+              .from('colaboradores')
+              .select('*')
+              .eq('nome', report.driver_name)
+              .eq('funcao', 'Motorista Operador de Bomba')
+              .single()
+              .then(({ data: driver }) => {
+                if (driver) {
+                  setFormData(prev => ({
+                    ...prev,
+                    driver_id: driver.id
+                  }))
+                }
+              })
+          )
+        }
+
+        // Auxiliares
+        const assistants: { id: string }[] = []
+        if (report.assistant1_name) {
+          promises.push(
+            supabase
+              .from('colaboradores')
+              .select('*')
+              .eq('nome', report.assistant1_name)
+              .eq('funcao', 'Auxiliar de Bomba')
+              .single()
+              .then(({ data: assistant1 }) => {
+                if (assistant1) {
+                  assistants.push({ id: assistant1.id })
+                }
+              })
+          )
+        }
+
+        if (report.assistant2_name) {
+          promises.push(
+            supabase
+              .from('colaboradores')
+              .select('*')
+              .eq('nome', report.assistant2_name)
+              .eq('funcao', 'Auxiliar de Bomba')
+              .single()
+              .then(({ data: assistant2 }) => {
+                if (assistant2) {
+                  assistants.push({ id: assistant2.id })
+                }
+              })
+          )
+        }
+
+        // Aguardar todas as consultas
+        await Promise.all(promises)
+
+        // Atualizar auxiliares
+        if (assistants.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            assistants
+          }))
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados do relatório:', error)
+    } finally {
+      setLoadingData(false)
+    }
+  }
 
   const loadClients = async () => {
     try {
@@ -167,10 +311,6 @@ export default function NewReport() {
 
       if (error) throw error
       
-      console.log('Dados dos clientes:', data)
-      console.log('Primeiro cliente:', data?.[0])
-      
-      // Usar o company_name que já vem da tabela
       const transformedClients = (data || []).map((client: any) => ({
         id: client.id,
         name: client.name,
@@ -179,7 +319,6 @@ export default function NewReport() {
         company_name: client.company_name || 'Sem empresa'
       }))
       
-      console.log('Clientes transformados:', transformedClients)
       setClients(transformedClients)
     } catch (error) {
       console.error('Erro ao carregar clientes:', error)
@@ -236,7 +375,7 @@ export default function NewReport() {
       setFormData(prev => ({
         ...prev,
         client_id: clientId,
-        client_rep_name: client.name, // Nome do representante
+        client_rep_name: client.name,
         client_phone: client.phone ? formatPhoneNumber(client.phone) : ''
       }))
     } else {
@@ -251,7 +390,6 @@ export default function NewReport() {
 
   const handlePumpChange = (pumpId: string) => {
     const pump = pumps.find(p => p.id === pumpId)
-    // setSelectedPump(pump || null)
     
     setFormData(prev => ({
       ...prev,
@@ -286,50 +424,6 @@ export default function NewReport() {
     }))
   }
 
-  const generateReportNumberLocal = async (): Promise<string> => {
-    try {
-      // Usar a nova função utilitária
-      const reportNumber = await generateReportNumber(formData.date)
-      console.log('Número do relatório gerado:', reportNumber)
-      return reportNumber
-    } catch (error) {
-      console.error('Erro ao gerar número do relatório:', error)
-      throw new Error('Não foi possível gerar um número único para o relatório')
-    }
-  }
-
-  const updatePumpTotalBilled = async (pumpId: string, amount: number) => {
-    try {
-      // Tentar usar RPC se existir
-      const { error } = await supabase.rpc('increment_pump_total_billed', {
-        pump_id: pumpId,
-        amount: amount
-      })
-
-      if (!error) return
-    } catch (error) {
-      console.log('RPC não disponível, atualizando manualmente')
-    }
-
-    // Atualizar manualmente
-    const { data: pump, error: fetchError } = await supabase
-      .from('pumps')
-      .select('total_billed')
-      .eq('id', pumpId)
-      .single()
-
-    if (fetchError) throw fetchError
-
-    const newTotal = (pump.total_billed || 0) + amount
-
-    const { error: updateError } = await supabase
-      .from('pumps')
-      .update({ total_billed: newTotal })
-      .eq('id', pumpId)
-
-    if (updateError) throw updateError
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -339,9 +433,6 @@ export default function NewReport() {
 
       // Validar dados
       const validatedData = reportSchema.parse(formData)
-
-      // Gerar número do relatório
-      const reportNumber = await generateReportNumberLocal()
 
       // Obter usuário atual
       const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -365,9 +456,8 @@ export default function NewReport() {
         colaboradores.find(c => c.id === assistant.id)
       ).filter(Boolean)
 
-      // Criar relatório (usando apenas campos que existem na tabela)
+      // Atualizar relatório
       const reportData = {
-        report_number: reportNumber,
         date: validatedData.date,
         client_id: validatedData.client_id,
         client_rep_name: validatedData.client_rep_name,
@@ -377,7 +467,7 @@ export default function NewReport() {
         planned_volume: validatedData.planned_volume ? parseFloat(validatedData.planned_volume) : null,
         realized_volume: parseFloat(validatedData.realized_volume),
         total_value: parseCurrency(validatedData.total_value),
-        status: getDefaultStatus(),
+        status: validatedData.status as ReportStatus,
         driver_name: driver?.nome || null,
         assistant1_name: assistants[0]?.nome || null,
         assistant2_name: assistants[1]?.nome || null,
@@ -385,24 +475,20 @@ export default function NewReport() {
         company_id: companyId
       }
 
-      console.log('Dados do relatório a serem inseridos:', reportData)
-      console.log('Client ID sendo enviado:', validatedData.client_id)
-      console.log('Client ID no reportData:', reportData.client_id)
+      console.log('Dados do relatório a serem atualizados:', reportData)
       
       const { error: reportError } = await supabase
         .from('reports')
-        .insert(reportData)
+        .update(reportData)
+        .eq('id', id)
 
       if (reportError) {
-        console.error('Erro ao inserir relatório:', reportError)
-        throw new Error(`Erro ao inserir relatório: ${reportError.message}`)
+        console.error('Erro ao atualizar relatório:', reportError)
+        throw new Error(`Erro ao atualizar relatório: ${reportError.message}`)
       }
 
-      // Atualizar total faturado da bomba
-      await updatePumpTotalBilled(validatedData.pump_id, parseCurrency(validatedData.total_value))
-
-      // Redirecionar para lista de relatórios
-      window.location.href = '/reports'
+      // Redirecionar para detalhes do relatório
+      navigate(`/reports/${id}`)
       
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -414,9 +500,7 @@ export default function NewReport() {
         })
         setErrors(fieldErrors)
       } else {
-        console.error('Erro ao criar relatório:', error)
-        console.error('Tipo do erro:', typeof error)
-        console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A')
+        console.error('Erro ao atualizar relatório:', error)
         
         let errorMessage = 'Erro desconhecido'
         if (error instanceof Error) {
@@ -425,7 +509,7 @@ export default function NewReport() {
           errorMessage = JSON.stringify(error)
         }
         
-        setErrors({ general: `Erro ao criar relatório: ${errorMessage}` })
+        setErrors({ general: `Erro ao atualizar relatório: ${errorMessage}` })
       }
     } finally {
       setLoading(false)
@@ -456,14 +540,33 @@ export default function NewReport() {
       label: colaborador.nome
     }))
 
+  const statusOptions = [
+    { value: 'ENVIADO_FINANCEIRO', label: 'Enviado Financeiro' },
+    { value: 'RECEBIDO_FINANCEIRO', label: 'Recebido Financeiro' },
+    { value: 'AGUARDANDO_APROVACAO', label: 'Aguardando Aprovação' },
+    { value: 'NOTA_EMITIDA', label: 'Nota Emitida' },
+    { value: 'AGUARDANDO_PAGAMENTO', label: 'Aguardando Pagamento' },
+    { value: 'PAGO', label: 'Pago' }
+  ]
+
+  if (loadingData) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Novo Relatório</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Editar Relatório</h1>
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/reports'}
+            onClick={() => navigate(`/reports/${id}`)}
           >
             Voltar
           </Button>
@@ -526,7 +629,7 @@ export default function NewReport() {
             {/* Telefone do Cliente */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Telefone do Cliente *
+                Telefone do Cliente
               </label>
               <input
                 type="tel"
@@ -631,7 +734,7 @@ export default function NewReport() {
             {/* Volume Planejado */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Volume Planejado (m³) *
+                Volume Planejado (m³)
               </label>
               <input
                 type="number"
@@ -680,13 +783,34 @@ export default function NewReport() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 value={formData.total_value ?? ''}
                 onChange={(e) => {
-                  const formatted = formatCurrency(e.target.value)
+                  const formatted = formatCurrencyInput(e.target.value)
                   setFormData(prev => ({ ...prev, total_value: formatted }))
                 }}
                 placeholder="R$ 0,00"
               />
               {errors.total_value && (
                 <p className="mt-1 text-sm text-red-600">{errors.total_value}</p>
+              )}
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Status *
+              </label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={formData.status}
+                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              >
+                {statusOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.status && (
+                <p className="mt-1 text-sm text-red-600">{errors.status}</p>
               )}
             </div>
           </div>
@@ -700,7 +824,7 @@ export default function NewReport() {
             {/* Motorista */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Motorista Operador da Bomba *
+                Motorista Operador da Bomba
               </label>
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -723,7 +847,7 @@ export default function NewReport() {
             <div>
               <div className="flex justify-between items-center mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Auxiliares *
+                  Auxiliares
                 </label>
                 <Button
                   type="button"
@@ -811,7 +935,7 @@ export default function NewReport() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => window.location.href = '/reports'}
+            onClick={() => navigate(`/reports/${id}`)}
           >
             Cancelar
           </Button>
@@ -819,7 +943,7 @@ export default function NewReport() {
             type="submit"
             loading={loading}
           >
-            Criar Relatório
+            Salvar Alterações
           </Button>
         </div>
       </form>

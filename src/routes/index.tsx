@@ -17,7 +17,7 @@ import PumpEdit from '../pages/pumps/PumpEdit'
 import ReportsList from '../pages/reports/ReportsList'
 import NewReport from '../pages/reports/NewReport'
 import ReportDetails from '../pages/reports/ReportDetails'
-import ReportEdit from '../pages/reports/ReportEdit'
+import EditReport from '../pages/reports/EditReport'
 import { NotesListSimple as NotesList } from '../pages/notes/NotesListSimple'
 import { NewNote } from '../pages/notes/NewNote'
 import { NotesPendingReports } from '../pages/notes/NotesPendingReports'
@@ -166,7 +166,7 @@ export const router = createBrowserRouter([
     path: '/reports/:id/edit',
     element: (
       <RequireAuth>
-        <ReportEdit />
+        <EditReport />
       </RequireAuth>
     ),
     errorElement: <GenericError />

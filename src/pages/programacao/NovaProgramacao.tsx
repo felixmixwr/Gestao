@@ -72,7 +72,7 @@ function NovaProgramacaoContent() {
     brita: '',
     slump: '',
     motorista_operador: '',
-    auxiliares_bomba: [],
+    auxiliares_bomba: [''], // Começa com um auxiliar vazio
     bomba_id: '',
     company_id: '',
   });
@@ -158,7 +158,7 @@ function NovaProgramacaoContent() {
           brita: data.brita || '',
           slump: data.slump || '',
           motorista_operador: data.motorista_operador || '',
-          auxiliares_bomba: data.auxiliares_bomba || [],
+          auxiliares_bomba: data.auxiliares_bomba && data.auxiliares_bomba.length > 0 ? data.auxiliares_bomba : [''],
           bomba_id: data.bomba_id || '',
           company_id: data.company_id,
         });
@@ -194,6 +194,31 @@ function NovaProgramacaoContent() {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
+
+  const addAssistant = () => {
+    setFormData(prev => ({
+      ...prev,
+      auxiliares_bomba: [...prev.auxiliares_bomba, '']
+    }))
+  }
+
+  const removeAssistant = (index: number) => {
+    if (formData.auxiliares_bomba.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        auxiliares_bomba: prev.auxiliares_bomba.filter((_, i) => i !== index)
+      }))
+    }
+  }
+
+  const updateAssistant = (index: number, assistantId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      auxiliares_bomba: prev.auxiliares_bomba.map((assistant, i) => 
+        i === index ? assistantId : assistant
+      )
+    }))
+  }
 
   const handleCEPSearch = async (cep: string) => {
     if (!validarCEP(cep)) {
@@ -640,8 +665,8 @@ function NovaProgramacaoContent() {
           {/* Seção 5 - Equipe e Bomba */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Equipe</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Primeira linha: Motorista + Auxiliar 1 */}
+            <div className="space-y-6">
+              {/* Motorista */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Motorista Operador da Bomba
@@ -665,61 +690,66 @@ function NovaProgramacaoContent() {
                 )}
               </div>
 
+              {/* Auxiliares Dinâmicos */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Auxiliar 1
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.auxiliares_bomba?.[0] || ''}
-                  onChange={(e) => {
-                    const auxiliares = [...(formData.auxiliares_bomba || [])];
-                    auxiliares[0] = e.target.value;
-                    handleInputChange('auxiliares_bomba', auxiliares);
-                  }}
-                >
-                  <option value="">Selecione um auxiliar</option>
-                  {colaboradores
-                    .filter(colaborador => colaborador.funcao === 'Auxiliar de Bomba')
-                    .map(colaborador => (
-                      <option key={colaborador.id} value={colaborador.id}>
-                        {colaborador.nome}
-                      </option>
-                    ))}
-                </select>
+                <div className="flex justify-between items-center mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Auxiliares
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addAssistant}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    + Adicionar Auxiliar
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  {formData.auxiliares_bomba.map((assistant, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Auxiliar {index + 1}
+                        </label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={assistant}
+                          onChange={(e) => updateAssistant(index, e.target.value)}
+                        >
+                          <option value="">Selecione um auxiliar</option>
+                          {colaboradores
+                            .filter(colaborador => colaborador.funcao === 'Auxiliar de Bomba')
+                            .map(colaborador => (
+                              <option key={colaborador.id} value={colaborador.id}>
+                                {colaborador.nome}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      {formData.auxiliares_bomba.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeAssistant(index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 mt-6"
+                        >
+                          🗑️
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
                 {errors.auxiliares_bomba && (
                   <p className="mt-1 text-sm text-red-600">{errors.auxiliares_bomba}</p>
                 )}
               </div>
 
-              {/* Segunda linha: Auxiliar 2 + Bomba */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Auxiliar 2
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.auxiliares_bomba?.[1] || ''}
-                  onChange={(e) => {
-                    const auxiliares = [...(formData.auxiliares_bomba || [])];
-                    auxiliares[1] = e.target.value;
-                    handleInputChange('auxiliares_bomba', auxiliares);
-                  }}
-                >
-                  <option value="">Selecione um auxiliar</option>
-                  {colaboradores
-                    .filter(colaborador => colaborador.funcao === 'Auxiliar de Bomba')
-                    .map(colaborador => (
-                      <option key={colaborador.id} value={colaborador.id}>
-                        {colaborador.nome}
-                      </option>
-                    ))}
-                </select>
-                {errors.auxiliares_bomba && (
-                  <p className="mt-1 text-sm text-red-600">{errors.auxiliares_bomba}</p>
-                )}
-              </div>
-
+              {/* Bomba */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Bomba

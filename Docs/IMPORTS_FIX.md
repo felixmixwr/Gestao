@@ -88,3 +88,5 @@ Os seguintes arquivos já tinham os imports corretos:
 - ✅ Funcionalidade restaurada
 
 O projeto agora deve funcionar corretamente em desenvolvimento!
+
+

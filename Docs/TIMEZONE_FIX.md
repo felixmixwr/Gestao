@@ -136,3 +136,5 @@ const handleRangeChange = (range: any) => {
 - ✅ Funciona em qualquer fuso horário
 
 O calendário agora seleciona exatamente a data que o usuário clica!
+
+

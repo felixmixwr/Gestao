@@ -141,7 +141,18 @@ export default function ReportDetails() {
     }
   }
 
-  const handleWhatsApp = () => {
+  // Função para formatar data considerando fuso horário local
+const formatDateLocal = (dateString: string): string => {
+  if (!dateString) return 'N/A'
+  
+  // Se a data está no formato YYYY-MM-DD, criar Date considerando fuso horário local
+  const [year, month, day] = dateString.split('-').map(Number)
+  const localDate = new Date(year, month - 1, day)
+  
+  return format(localDate, 'dd/MM/yyyy', { locale: ptBR })
+}
+
+const handleWhatsApp = () => {
     if (!report) return
 
     const phone = report.clients?.phone?.replace(/\D/g, '') || ''
@@ -149,7 +160,7 @@ export default function ReportDetails() {
     const repName = report.client_rep_name || 'Cliente'
     const volume = report.realized_volume || 0
     const value = report.total_value || 0
-    const date = report.date ? format(new Date(report.date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'
+    const date = formatDateLocal(report.date)
     
     const template = `Olá ${repName}, aqui é Henrique da ${ownerCompany}. Sobre o bombeamento ${report.report_number} em ${date}: volume ${volume} m³, valor ${formatCurrency(value)}. Confirma a forma de pagamento e se posso emitir a nota? Obrigado.`
     
@@ -195,6 +206,36 @@ export default function ReportDetails() {
       })
     } catch (error) {
       console.error('Erro ao criar nota fiscal:', error)
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const handleDeleteReport = async () => {
+    if (!report) return
+
+    const confirmDelete = window.confirm(
+      `Tem certeza que deseja excluir o relatório ${report.report_number}?\n\nEsta ação não pode ser desfeita.`
+    )
+
+    if (!confirmDelete) return
+
+    try {
+      setUpdating(true)
+
+      // Excluir relatório
+      const { error } = await supabase
+        .from('reports')
+        .delete()
+        .eq('id', report.id)
+
+      if (error) throw error
+
+      // Redirecionar para lista de relatórios
+      navigate('/reports')
+    } catch (error) {
+      console.error('Erro ao excluir relatório:', error)
+      alert('Erro ao excluir relatório. Tente novamente.')
     } finally {
       setUpdating(false)
     }
@@ -293,6 +334,19 @@ export default function ReportDetails() {
               WhatsApp
             </Button>
             <Button
+              variant="outline"
+              onClick={() => navigate(`/reports/${report.id}/edit`)}
+            >
+              Editar
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDeleteReport}
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              Excluir
+            </Button>
+            <Button
               onClick={() => setShowNotaFiscalForm(!showNotaFiscalForm)}
               variant={showNotaFiscalForm ? "secondary" : "primary"}
               disabled={hasNotaFiscal}
@@ -315,7 +369,7 @@ export default function ReportDetails() {
           <div className="space-y-3">
             <div>
               <span className="text-sm font-medium text-gray-700">Data:</span>
-              <p className="text-gray-900">{report.date ? format(new Date(report.date), 'dd/MM/yyyy', { locale: ptBR }) : 'Não informado'}</p>
+              <p className="text-gray-900">{formatDateLocal(report.date)}</p>
             </div>
         <div>
           <span className="text-sm font-medium text-gray-700">Cliente:</span>
@@ -332,6 +386,10 @@ export default function ReportDetails() {
             <div>
               <span className="text-sm font-medium text-gray-700">Email:</span>
               <p className="text-gray-900">{report.clients?.email || 'Não informado'}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-700">Endereço da Obra:</span>
+              <p className="text-gray-900">{report.work_address || 'Não informado'}</p>
             </div>
           </div>
         </div>
@@ -377,14 +435,19 @@ export default function ReportDetails() {
               <span className="text-sm font-medium text-gray-700">Motorista:</span>
               <p className="text-gray-900">{report.driver_name || 'Não informado'}</p>
             </div>
-            <div>
-              <span className="text-sm font-medium text-gray-700">Auxiliar 1:</span>
-              <p className="text-gray-900">{report.assistant1_name || 'Não informado'}</p>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-700">Auxiliar 2:</span>
-              <p className="text-gray-900">{report.assistant2_name || 'Não informado'}</p>
-            </div>
+            {/* Renderizar apenas auxiliares que foram adicionados */}
+            {report.assistant1_name && (
+              <div>
+                <span className="text-sm font-medium text-gray-700">Auxiliar 1:</span>
+                <p className="text-gray-900">{report.assistant1_name}</p>
+              </div>
+            )}
+            {report.assistant2_name && (
+              <div>
+                <span className="text-sm font-medium text-gray-700">Auxiliar 2:</span>
+                <p className="text-gray-900">{report.assistant2_name}</p>
+              </div>
+            )}
           </div>
         </div>
 

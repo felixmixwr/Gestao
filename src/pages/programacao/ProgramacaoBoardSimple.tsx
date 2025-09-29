@@ -6,11 +6,16 @@ import { toast } from '../../lib/toast-hooks';
 import { Layout } from '../../components/Layout';
 import { Loading } from '../../components/Loading';
 import { Button } from '../../components/Button';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 
 export default function ProgramacaoBoardSimple() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [programacoes, setProgramacoes] = useState<Programacao[]>([]);
+  const [deleteDialog, setDeleteDialog] = useState<{ show: boolean; programacao: Programacao | null }>({
+    show: false,
+    programacao: null
+  });
 
   useEffect(() => {
     loadProgramacoes();
@@ -37,6 +42,25 @@ export default function ProgramacaoBoardSimple() {
       toast.error(`Erro ao carregar programações: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteProgramacao = (programacao: Programacao) => {
+    setDeleteDialog({ show: true, programacao });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.programacao) return;
+
+    try {
+      await ProgramacaoAPI.delete(deleteDialog.programacao.id);
+      toast.success('Programação excluída com sucesso!');
+      loadProgramacoes();
+    } catch (error) {
+      toast.error('Erro ao excluir programação');
+      console.error(error);
+    } finally {
+      setDeleteDialog({ show: false, programacao: null });
     }
   };
 
@@ -72,16 +96,53 @@ export default function ProgramacaoBoardSimple() {
           ) : (
             <div className="space-y-4">
               {programacoes.map((programacao) => (
-                <div key={programacao.id} className="border rounded-lg p-4">
-                  <h3 className="font-semibold">{programacao.prefixo_obra}</h3>
-                  <p className="text-gray-600">Cliente: {programacao.cliente}</p>
-                  <p className="text-gray-600">Data: {programacao.data} às {programacao.horario}</p>
-                  <p className="text-gray-600">Endereço: {programacao.endereco}, {programacao.numero}</p>
+                <div key={programacao.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{programacao.prefixo_obra}</h3>
+                      <p className="text-gray-600">Cliente: {programacao.cliente}</p>
+                      <p className="text-gray-600">Data: {programacao.data} às {programacao.horario}</p>
+                      <p className="text-gray-600">Endereço: {programacao.endereco}, {programacao.numero}</p>
+                      {programacao.volume_previsto && (
+                        <p className="text-gray-600">Volume: {programacao.volume_previsto} m³</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/programacao/${programacao.id}`)}
+                        className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteProgramacao(programacao)}
+                        className="text-red-600 border-red-600 hover:bg-red-50"
+                      >
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <ConfirmDialog
+          isOpen={deleteDialog.show}
+          title="Excluir Programação"
+          message={`Tem certeza que deseja excluir a programação "${deleteDialog.programacao?.prefixo_obra}"? Esta ação não pode ser desfeita.`}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleteDialog({ show: false, programacao: null })}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="danger"
+        />
       </div>
     </Layout>
   );

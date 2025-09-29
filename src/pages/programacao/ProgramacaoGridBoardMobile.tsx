@@ -274,16 +274,19 @@ export function ProgramacaoGridBoardMobile() {
                         {formatTime(programacao.horario)}
                       </span>
                     </div>
-                    <button
+                    <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteClick(programacao);
                       }}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
                       title="Excluir programação"
                     >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Excluir
+                    </Button>
                   </div>
 
                   {/* Informações da Bomba */}
@@ -389,7 +392,10 @@ export function ProgramacaoGridBoardMobile() {
           onCancel={() => setDeleteConfirm({ show: false, programacao: null })}
           onConfirm={handleDeleteConfirm}
           title="Excluir Programação"
-          message="Tem certeza que deseja excluir esta programação?"
+          message={`Tem certeza que deseja excluir a programação de ${deleteConfirm.programacao?.cliente || 'cliente não informado'} às ${deleteConfirm.programacao?.horario || 'horário não informado'}? Esta ação não pode ser desfeita.`}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="danger"
         />
       </Layout>
     );
@@ -574,7 +580,10 @@ export function ProgramacaoGridBoardMobile() {
           onCancel={() => setDeleteConfirm({ show: false, programacao: null })}
           onConfirm={handleDeleteConfirm}
           title="Excluir Programação"
-          message="Tem certeza que deseja excluir esta programação?"
+          message={`Tem certeza que deseja excluir a programação de ${deleteConfirm.programacao?.cliente || 'cliente não informado'} às ${deleteConfirm.programacao?.horario || 'horário não informado'}? Esta ação não pode ser desfeita.`}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          variant="danger"
         />
 
         {/* Modal de Visualização Diária */}
