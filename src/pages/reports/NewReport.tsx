@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
 import { DatePicker } from '../../components/ui/date-picker';
+import { generateReportNumber } from '../../utils/reportNumberGenerator'
 // import { CreateReportData } from '../../types/reports'
 // import { formatCurrency } from '../../utils/formatters'
 import { z } from 'zod'
@@ -251,61 +252,16 @@ export default function NewReport() {
     }))
   }
 
-  const generateReportNumber = async (): Promise<string> => {
+  const generateReportNumberLocal = async (): Promise<string> => {
     try {
-      // Tentar usar RPC se existir
-      const { data, error } = await supabase.rpc('create_report_with_number', {
-        date: formData.date,
-        payload_json: formData
-      })
-
-      if (!error && data?.report_number) {
-        return data.report_number
-      }
+      // Usar a nova função utilitária
+      const reportNumber = await generateReportNumber(formData.date)
+      console.log('Número do relatório gerado:', reportNumber)
+      return reportNumber
     } catch (error) {
-      console.log('RPC não disponível, gerando número no frontend')
-    }
-
-    // Gerar número no frontend - formato simples #REL-01, #REL-02, etc.
-    let reportNumber: string
-    let attempts = 0
-    const maxAttempts = 10
-
-    do {
-      // Buscar o último número usado
-      const { data: lastReport } = await supabase
-        .from('reports')
-        .select('report_number')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      let nextNumber = 1
-      if (lastReport?.report_number) {
-        const match = lastReport.report_number.match(/#REL-(\d+)/)
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1
-        }
-      }
-
-      reportNumber = `#REL-${String(nextNumber).padStart(2, '0')}`
-      
-      const { data } = await supabase
-        .from('reports')
-        .select('id')
-        .eq('report_number', reportNumber)
-        .single()
-
-      if (!data) break
-      
-      attempts++
-    } while (attempts < maxAttempts)
-
-    if (attempts >= maxAttempts) {
+      console.error('Erro ao gerar número do relatório:', error)
       throw new Error('Não foi possível gerar um número único para o relatório')
     }
-
-    return reportNumber
   }
 
   const updatePumpTotalBilled = async (pumpId: string, amount: number) => {
@@ -351,7 +307,7 @@ export default function NewReport() {
       const validatedData = reportSchema.parse(formData)
 
       // Gerar número do relatório
-      const reportNumber = await generateReportNumber()
+      const reportNumber = await generateReportNumberLocal()
 
       // Obter usuário atual
       const { data: { user }, error: authError } = await supabase.auth.getUser()

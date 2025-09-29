@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth-hooks'
 import { APP_CONFIG } from '../utils/constants'
 import { Sidebar, SidebarBody, SidebarLink } from './ui/sidebar'
+import { BottomTabs } from './layout/BottomTabs'
+import { NotificationManager } from './NotificationManager'
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -20,6 +22,11 @@ import { motion } from 'framer-motion'
 
 interface LayoutProps {
   children: ReactNode
+}
+
+interface NotificationContextProps {
+  notifications: { [key: string]: number }
+  clearNotification: (tabName: string) => void
 }
 
 const navigation = [
@@ -132,88 +139,76 @@ export function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">
-        <Sidebar open={open} setOpen={setOpen}>
-          <SidebarBody className="justify-between gap-10">
-            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-              {open ? <Logo /> : <LogoIcon />}
-              <div className="mt-8 flex flex-col gap-2">
-                {navigation.map((item, idx) => (
-                  <SidebarLink 
-                    key={idx} 
+    <NotificationManager>
+      {({ notifications, clearNotification }: NotificationContextProps): React.ReactNode => (
+        <div className="min-h-screen bg-gray-50">
+          {/* Sidebar */}
+          <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">
+            <Sidebar open={open} setOpen={setOpen}>
+              <SidebarBody className="justify-between gap-10">
+                <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+                  {open ? <Logo /> : <LogoIcon />}
+                  <div className="mt-8 flex flex-col gap-2">
+                    {navigation.map((item, idx) => (
+                      <SidebarLink 
+                        key={idx} 
+                        link={{
+                          label: item.name,
+                          href: item.href,
+                          icon: item.icon
+                        }} 
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <SidebarLink
                     link={{
-                      label: item.name,
-                      href: item.href,
-                      icon: item.icon
-                    }} 
+                      label: getUserDisplayName(),
+                      href: "/profile",
+                      icon: (
+                        <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white text-xs font-bold">
+                          {getUserDisplayName().charAt(0).toUpperCase()}
+                        </div>
+                      ),
+                    }}
                   />
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <SidebarLink
-                link={{
-                  label: getUserDisplayName(),
-                  href: "/profile",
-                  icon: (
-                    <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white text-xs font-bold">
-                      {getUserDisplayName().charAt(0).toUpperCase()}
-                    </div>
-                  ),
-                }}
-              />
-              <SidebarLink
-                link={{
-                  label: "Sair",
-                  href: "#",
-                  icon: <LogOut className="text-white h-5 w-5 flex-shrink-0" />
-                }}
-                className="cursor-pointer"
-                onClick={handleSignOut}
-              />
-            </div>
-          </SidebarBody>
-        </Sidebar>
-      </div>
-
-      {/* Main content */}
-      <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
-        open 
-          ? 'md:pl-64 lg:pl-64 xl:pl-64 2xl:pl-64' 
-          : 'md:pl-16 lg:pl-16 xl:pl-16 2xl:pl-16'
-      }`}>
-        <div className="sticky top-0 z-10 md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-100">
-          <button
-            type="button"
-            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-          >
-            <span className="sr-only">Abrir sidebar</span>
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-              />
-            </svg>
-          </button>
-        </div>
-        
-        <main className="flex-1">
-          <div className="py-4 md:py-6">
-            <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8">
-              {children}
-            </div>
+                  <SidebarLink
+                    link={{
+                      label: "Sair",
+                      href: "#",
+                      icon: <LogOut className="text-white h-5 w-5 flex-shrink-0" />
+                    }}
+                    className="cursor-pointer"
+                    onClick={handleSignOut}
+                  />
+                </div>
+              </SidebarBody>
+            </Sidebar>
           </div>
-        </main>
-      </div>
-    </div>
+
+          {/* Main content */}
+          <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
+            open 
+              ? 'md:pl-64 lg:pl-64 xl:pl-64 2xl:pl-64' 
+              : 'md:pl-16 lg:pl-16 xl:pl-16 2xl:pl-16'
+          }`}>
+            <main className="flex-1 pb-20 md:pb-0">
+              <div className="py-4 md:py-6">
+                <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8">
+                  {children}
+                </div>
+              </div>
+            </main>
+          </div>
+
+          {/* Bottom Tabs - Mobile Only */}
+          <BottomTabs 
+            notifications={notifications}
+            onTabClick={(tabName) => clearNotification(tabName)}
+          />
+        </div>
+      )}
+    </NotificationManager>
   )
 }
