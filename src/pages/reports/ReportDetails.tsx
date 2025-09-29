@@ -155,7 +155,7 @@ const formatDateLocal = (dateString: string): string => {
 const handleWhatsApp = () => {
     if (!report) return
 
-    const phone = report.clients?.phone?.replace(/\D/g, '') || ''
+    const phone = report.whatsapp_digits?.replace(/\D/g, '') || ''
     const ownerCompany = report.companies?.name || 'empresa'
     const repName = report.client_rep_name || 'Cliente'
     const volume = report.realized_volume || 0
@@ -329,7 +329,7 @@ const handleWhatsApp = () => {
             <Button
               variant="outline"
               onClick={handleWhatsApp}
-              disabled={!report.clients?.phone}
+              disabled={!report.whatsapp_digits}
             >
               WhatsApp
             </Button>
@@ -381,7 +381,7 @@ const handleWhatsApp = () => {
             </div>
             <div>
               <span className="text-sm font-medium text-gray-700">Telefone:</span>
-              <p className="text-gray-900">{report.clients?.phone || 'Não informado'}</p>
+              <p className="text-gray-900">{report.whatsapp_digits || 'Não informado'}</p>
             </div>
             <div>
               <span className="text-sm font-medium text-gray-700">Email:</span>
@@ -484,12 +484,18 @@ const handleWhatsApp = () => {
             <p className="text-gray-600 mb-4">Preencha os dados da nota fiscal:</p>
             
             <div className="space-y-4 mb-6">
-              <FormField
-                label="Número da NF"
-                value={noteData.nf_number}
-                onChange={(e) => setNoteData(prev => ({ ...prev, nf_number: e.target.value }))}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Número da NF <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={noteData.nf_number}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNoteData(prev => ({ ...prev, nf_number: e.target.value }))}
+                  placeholder="Digite o número da nota fiscal"
+                />
+              </div>
               
               <DatePicker
                 value={noteData.nf_date}
@@ -498,17 +504,22 @@ const handleWhatsApp = () => {
                 required
               />
               
-              <FormField
-                label="Valor da NF (R$)"
-                type="number"
-                step="0.01"
-                value={noteData.nf_value}
-                onChange={(e) => setNoteData(prev => ({ 
-                  ...prev, 
-                  nf_value: parseFloat(e.target.value) || 0 
-                }))}
-                required
-              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Valor da NF (R$) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={noteData.nf_value}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNoteData(prev => ({ 
+                    ...prev, 
+                    nf_value: parseFloat(e.target.value) || 0 
+                  }))}
+                  placeholder="0.00"
+                />
+              </div>
             </div>
             
             <div className="flex justify-end space-x-2">

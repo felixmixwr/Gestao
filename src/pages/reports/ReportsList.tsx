@@ -122,7 +122,7 @@ export default function ReportsList() {
       let query = supabase
         .from('reports')
         .select('*')
-        .order('id', { ascending: true })
+        .order('created_at', { ascending: false })
 
       // Aplicar filtros
       if (filters.status && filters.status.length > 0) {

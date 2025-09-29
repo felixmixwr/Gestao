@@ -87,6 +87,7 @@ interface Client {
   email: string | null
   phone: string | null
   company_name: string | null
+  rep_name: string | null
 }
 
 interface Pump {
@@ -95,6 +96,9 @@ interface Pump {
   model: string | null
   brand: string | null
   owner_company_id: string
+  is_terceira?: boolean
+  empresa_nome?: string
+  valor_diaria?: number
 }
 
 interface Company {
@@ -166,7 +170,7 @@ export default function EditReport() {
           date: report.date || '',
           client_id: report.client_id || '',
           client_rep_name: report.client_rep_name || '',
-          client_phone: '',
+          client_phone: report.whatsapp_digits || '',
           work_address: report.work_address || '',
           pump_id: report.pump_id || '',
           pump_prefix: report.pump_prefix || '',
@@ -305,7 +309,8 @@ export default function EditReport() {
           name, 
           email, 
           phone,
-          company_name
+          company_name,
+          rep_name
         `)
         .order('name')
 
@@ -316,7 +321,8 @@ export default function EditReport() {
         name: client.name,
         email: client.email,
         phone: client.phone,
-        company_name: client.company_name || 'Sem empresa'
+        company_name: client.company_name || 'Sem empresa',
+        rep_name: client.rep_name
       }))
       
       setClients(transformedClients)
@@ -327,13 +333,41 @@ export default function EditReport() {
 
   const loadPumps = async () => {
     try {
-      const { data, error } = await supabase
+      // Carregar bombas internas
+      const { data: pumpsData, error: pumpsError } = await supabase
         .from('pumps')
         .select('id, prefix, model, brand, owner_company_id')
         .order('prefix')
 
-      if (error) throw error
-      setPumps(data || [])
+      if (pumpsError) throw pumpsError
+
+      // Carregar bombas de terceiros
+      const { data: bombasTerceirasData, error: bombasTerceirasError } = await supabase
+        .from('view_bombas_terceiras_com_empresa')
+        .select('*')
+        .order('prefixo')
+
+      if (bombasTerceirasError) throw bombasTerceirasError
+
+      // Transformar bombas de terceiros para o formato esperado
+      const bombasTerceirasFormatted = (bombasTerceirasData || []).map((bomba: any) => ({
+        id: bomba.id,
+        prefix: bomba.prefixo,
+        model: bomba.modelo,
+        brand: `${bomba.empresa_nome_fantasia} - R$ ${bomba.valor_diaria || 0}/dia`,
+        owner_company_id: bomba.empresa_id,
+        is_terceira: true,
+        empresa_nome: bomba.empresa_nome_fantasia,
+        valor_diaria: bomba.valor_diaria
+      }))
+
+      // Combinar bombas internas e de terceiros
+      const allPumps = [
+        ...(pumpsData || []).map(pump => ({ ...pump, is_terceira: false })),
+        ...bombasTerceirasFormatted
+      ]
+
+      setPumps(allPumps)
     } catch (error) {
       console.error('Erro ao carregar bombas:', error)
     }
@@ -375,7 +409,7 @@ export default function EditReport() {
       setFormData(prev => ({
         ...prev,
         client_id: clientId,
-        client_rep_name: client.name,
+        client_rep_name: client.rep_name || '',
         client_phone: client.phone ? formatPhoneNumber(client.phone) : ''
       }))
     } else {
@@ -462,6 +496,7 @@ export default function EditReport() {
         client_id: validatedData.client_id,
         client_rep_name: validatedData.client_rep_name,
         work_address: validatedData.work_address,
+        whatsapp_digits: validatedData.client_phone,
         pump_id: validatedData.pump_id,
         pump_prefix: validatedData.pump_prefix,
         planned_volume: validatedData.planned_volume ? parseFloat(validatedData.planned_volume) : null,

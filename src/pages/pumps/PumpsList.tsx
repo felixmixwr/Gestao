@@ -40,7 +40,7 @@ export default function PumpsList() {
   const [sortBy, setSortBy] = useState('total_billed_desc')
   const [statusFilter, setStatusFilter] = useState('')
   const [companyFilter, setCompanyFilter] = useState('')
-  const [showEmpresasTerceiras, setShowEmpresasTerceiras] = useState(false)
+  const [showEmpresasTerceiras] = useState(true) // Sempre mostrar bombas de terceiros
 
   async function fetchPumps() {
     setLoading(true)
@@ -203,21 +203,6 @@ export default function PumpsList() {
               value={companyFilter}
               onChange={setCompanyFilter}
             />
-          </div>
-          
-          {/* Checkbox para mostrar empresas terceiras */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={showEmpresasTerceiras}
-                onChange={(e) => setShowEmpresasTerceiras(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700">
-                🏢 Incluir bombas de empresas terceiras
-              </span>
-            </label>
           </div>
         </div>
 

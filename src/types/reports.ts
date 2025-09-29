@@ -6,6 +6,7 @@ export interface Report {
   date: string
   client_id: string | null
   client_rep_name: string | null
+  work_address: string | null
   pump_prefix: string | null
   realized_volume: number | null
   total_value: number | null
