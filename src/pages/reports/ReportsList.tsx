@@ -254,13 +254,24 @@ export default function ReportsList() {
     }
   }
 
-  const handleWhatsApp = (report: ReportWithRelations) => {
+  // Função para formatar data considerando fuso horário local
+const formatDateLocal = (dateString: string): string => {
+  if (!dateString) return 'N/A'
+  
+  // Se a data está no formato YYYY-MM-DD, criar Date considerando fuso horário local
+  const [year, month, day] = dateString.split('-').map(Number)
+  const localDate = new Date(year, month - 1, day)
+  
+  return format(localDate, 'dd/MM/yyyy', { locale: ptBR })
+}
+
+const handleWhatsApp = (report: ReportWithRelations) => {
     const phone = report.clients?.phone?.replace(/\D/g, '') || ''
     const ownerCompany = report.companies?.name || 'empresa'
     const repName = report.client_rep_name || 'Cliente'
     const volume = report.realized_volume || 0
     const value = report.total_value || 0
-    const date = report.date ? format(new Date(report.date), 'dd/MM/yyyy', { locale: ptBR }) : 'N/A'
+    const date = formatDateLocal(report.date)
     
     const template = `Olá ${repName}, aqui é Henrique da ${ownerCompany}. Sobre o bombeamento ${report.report_number} em ${date}: volume ${volume} m³, valor ${formatCurrency(value)}. Confirma a forma de pagamento e se posso emitir a nota? Obrigado.`
     
@@ -360,7 +371,7 @@ export default function ReportsList() {
       key: 'date' as keyof ReportWithRelations,
       label: 'DATA',
       className: 'w-20',
-      render: (value: string | null) => value ? format(new Date(value), 'dd/MM/yyyy', { locale: ptBR }) : '-'
+      render: (value: string | null) => value ? formatDateLocal(value) : '-'
     },
     {
       key: 'client_rep_name' as keyof ReportWithRelations,
