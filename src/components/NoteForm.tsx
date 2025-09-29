@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '../lib/supabase';
+import { DatePicker } from './ui/date-picker';
 import { ApiService } from '../lib/api';
 import { Button } from './Button';
 import { FormField } from './FormField';
@@ -193,22 +194,23 @@ export const NoteForm: React.FC<NoteFormProps> = ({
         </FormField>
 
         {/* Data da Nota */}
-        <FormField label="Data da Nota" error={errors.nf_date?.message}>
-          <input
-            {...register('nf_date')}
-            type="date"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </FormField>
+        <DatePicker
+          value={watch('nf_date')}
+          onChange={(value) => setValue('nf_date', value)}
+          label="Data da Nota"
+          error={errors.nf_date?.message}
+          required
+        />
 
         {/* Data de Vencimento */}
-        <FormField label="Data de Vencimento" error={errors.nf_due_date?.message}>
-          <input
-            {...register('nf_due_date')}
-            type="date"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </FormField>
+        <DatePicker
+          value={watch('nf_due_date')}
+          onChange={(value) => setValue('nf_due_date', value)}
+          label="Data de Vencimento"
+          minDate={watch('nf_date')}
+          error={errors.nf_due_date?.message}
+          required
+        />
 
         {/* Nome da Empresa */}
         <FormField label="Nome da Empresa" error={errors.company_name?.message}>

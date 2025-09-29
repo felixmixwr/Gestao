@@ -1,29 +1,80 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth-hooks'
 import { APP_CONFIG } from '../utils/constants'
-import clsx from 'clsx'
+import { Sidebar, SidebarBody, SidebarLink } from './ui/sidebar'
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Users, 
+  Settings, 
+  Building2, 
+  UserCheck, 
+  BarChart3, 
+  DollarSign, 
+  FileText,
+  LogOut,
+  Home
+} from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface LayoutProps {
   children: ReactNode
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: '🏠' },
-    { name: 'Programação', href: '/programacao', icon: '📅' },
-  { name: 'Clientes', href: '/clients', icon: '👥' },
-  { name: 'Bombas', href: '/pumps', icon: '⚙️' },
-  { name: 'Bombas Terceiras', href: '/bombas-terceiras/empresas', icon: '🏢' },
-  { name: 'Colaboradores', href: '/colaboradores', icon: '👷' },
-  { name: 'Relatórios', href: '/reports', icon: '📊' },
-  { name: 'Pagamentos a Receber', href: '/pagamentos-receber', icon: '💰' },
-  { name: 'Notas', href: '/notes', icon: '📝' },
+  { 
+    name: 'Dashboard', 
+    href: '/', 
+    icon: <LayoutDashboard className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Programação', 
+    href: '/programacao', 
+    icon: <Calendar className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Clientes', 
+    href: '/clients', 
+    icon: <Users className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Bombas', 
+    href: '/pumps', 
+    icon: <Settings className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Bombas Terceiras', 
+    href: '/bombas-terceiras/empresas', 
+    icon: <Building2 className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Colaboradores', 
+    href: '/colaboradores', 
+    icon: <UserCheck className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Relatórios', 
+    href: '/reports', 
+    icon: <BarChart3 className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Pagamentos a Receber', 
+    href: '/pagamentos-receber', 
+    icon: <DollarSign className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Notas', 
+    href: '/notes', 
+    icon: <FileText className="text-white h-5 w-5 flex-shrink-0" />
+  },
 ]
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const [open, setOpen] = useState(false)
 
   // Extrair primeiro nome do email ou usar o nome completo se disponível
   const getUserDisplayName = () => {
@@ -45,80 +96,94 @@ export function Layout({ children }: LayoutProps) {
     }
   }
 
+  // Componente Logo
+  const Logo = () => {
+    return (
+      <Link
+        to="/"
+        className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
+      >
+        <div className="h-5 w-6 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+          <span className="text-sm font-bold text-blue-600">F</span>
+        </div>
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="font-medium text-white whitespace-pre"
+        >
+          {APP_CONFIG.COMPANY_NAME}
+        </motion.span>
+      </Link>
+    )
+  }
+
+  // Componente LogoIcon (versão compacta)
+  const LogoIcon = () => {
+    return (
+      <Link
+        to="/"
+        className="font-normal flex space-x-2 items-center text-sm text-white py-1 relative z-20"
+      >
+        <div className="h-5 w-6 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
+          <span className="text-sm font-bold text-blue-600">F</span>
+        </div>
+      </Link>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="hidden md:fixed md:inset-y-0 md:flex md:w-64 md:flex-col">
-        <div className="flex min-h-0 flex-1 flex-col shadow-xl" style={{ backgroundColor: '#2663EB' }}>
-          <div className="flex flex-1 flex-col overflow-y-auto pt-6 pb-4">
-            {/* Logo/Brand */}
-            <div className="flex items-center flex-shrink-0 px-6">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                  <span className="text-lg font-bold" style={{ color: '#2663EB' }}>F</span>
-                </div>
-                <div className="ml-3">
-                  <h1 className="text-lg font-bold text-white">
-                    {APP_CONFIG.COMPANY_NAME}
-                  </h1>
-                  <p className="text-xs text-blue-100">
-                    {APP_CONFIG.SECONDARY_COMPANY_NAME}
-                  </p>
-                </div>
+      <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">
+        <Sidebar open={open} setOpen={setOpen}>
+          <SidebarBody className="justify-between gap-10">
+            <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+              {open ? <Logo /> : <LogoIcon />}
+              <div className="mt-8 flex flex-col gap-2">
+                {navigation.map((item, idx) => (
+                  <SidebarLink 
+                    key={idx} 
+                    link={{
+                      label: item.name,
+                      href: item.href,
+                      icon: item.icon
+                    }} 
+                  />
+                ))}
               </div>
             </div>
-            
-            {/* Navigation */}
-            <nav className="mt-8 flex-1 space-y-2 px-4">
-              {navigation.map((item) => {
-                const isActive = location.pathname === item.href
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={clsx(
-                      'group flex items-center px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                      isActive
-                        ? 'bg-white bg-opacity-20 text-white shadow-lg backdrop-blur-sm'
-                        : 'text-blue-100 hover:bg-white hover:bg-opacity-10 hover:text-white'
-                    )}
-                  >
-                    <span className="mr-3 text-lg">{item.icon}</span>
-                    {item.name}
-                  </Link>
-                )
-              })}
-            </nav>
-          </div>
-          
-          {/* User section */}
-          <div className="flex-shrink-0 border-t border-blue-400 border-opacity-30 p-4">
-            <div className="group block w-full flex-shrink-0">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
-                    {getUserDisplayName().charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {getUserDisplayName()}
-                  </p>
-                  <button
-                    onClick={handleSignOut}
-                    className="text-xs text-blue-200 hover:text-white transition-colors duration-200"
-                  >
-                    Sair
-                  </button>
-                </div>
-              </div>
+            <div className="flex flex-col gap-2">
+              <SidebarLink
+                link={{
+                  label: getUserDisplayName(),
+                  href: "/profile",
+                  icon: (
+                    <div className="h-7 w-7 flex-shrink-0 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white text-xs font-bold">
+                      {getUserDisplayName().charAt(0).toUpperCase()}
+                    </div>
+                  ),
+                }}
+              />
+              <SidebarLink
+                link={{
+                  label: "Sair",
+                  href: "#",
+                  icon: <LogOut className="text-white h-5 w-5 flex-shrink-0" />
+                }}
+                className="cursor-pointer"
+                onClick={handleSignOut}
+              />
             </div>
-          </div>
-        </div>
+          </SidebarBody>
+        </Sidebar>
       </div>
 
       {/* Main content */}
-      <div className="md:pl-64 flex flex-col flex-1">
+      <div className={`flex flex-col flex-1 transition-all duration-300 ease-in-out ${
+        open 
+          ? 'md:pl-64 lg:pl-64 xl:pl-64 2xl:pl-64' 
+          : 'md:pl-16 lg:pl-16 xl:pl-16 2xl:pl-16'
+      }`}>
         <div className="sticky top-0 z-10 md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-100">
           <button
             type="button"
@@ -142,8 +207,8 @@ export function Layout({ children }: LayoutProps) {
         </div>
         
         <main className="flex-1">
-          <div className="py-6">
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
+          <div className="py-4 md:py-6">
+            <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6 lg:px-8">
               {children}
             </div>
           </div>

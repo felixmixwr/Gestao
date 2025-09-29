@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { CreateDependenteData } from '../types/colaboradores'
+import { DatePicker } from './ui/date-picker'
 // Ícones substituídos por emojis
 
 interface DependenteFormProps {
@@ -147,18 +148,12 @@ export default function DependenteForm({ colaboradorId, onSave, onCancel }: Depe
           </div>
 
           {/* Data de Nascimento */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de Nascimento *
-            </label>
-            <input
-              type="date"
-              value={formData.data_nascimento}
-              onChange={(e) => handleInputChange('data_nascimento', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
+          <DatePicker
+            value={formData.data_nascimento}
+            onChange={(value) => handleInputChange('data_nascimento', value)}
+            label="Data de Nascimento"
+            required
+          />
 
           {/* Local de Nascimento */}
           <div>

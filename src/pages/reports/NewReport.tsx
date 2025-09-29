@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
+import { DatePicker } from '../../components/ui/date-picker';
 // import { CreateReportData } from '../../types/reports'
 // import { formatCurrency } from '../../utils/formatters'
 import { z } from 'zod'
@@ -482,20 +483,13 @@ export default function NewReport() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Data */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data *
-              </label>
-              <input
-                type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={formData.date}
-                onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-              />
-              {errors.date && (
-                <p className="mt-1 text-sm text-red-600">{errors.date}</p>
-              )}
-            </div>
+            <DatePicker
+              value={formData.date}
+              onChange={(value) => setFormData(prev => ({ ...prev, date: value }))}
+              label="Data"
+              required
+              error={errors.date}
+            />
 
             {/* Cliente */}
             <div>

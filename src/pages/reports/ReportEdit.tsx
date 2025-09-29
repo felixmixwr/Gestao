@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
-import { FormField } from '../../components/FormField'
+import { DatePicker } from '../../components/ui/date-picker';
 import { Select } from '../../components/Select'
 import { ReportWithRelations, ReportStatus } from '../../types/reports'
 import { Loading } from '../../components/Loading'
@@ -266,11 +266,10 @@ export default function ReportEdit() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <h2 className="text-lg font-semibold mb-4">Informações Básicas</h2>
               <div className="space-y-4">
-                <FormField
-                  label="Data"
-                  type="date"
+                <DatePicker
                   value={formData.date}
-                  onChange={(e) => handleInputChange('date', e.target.value)}
+                  onChange={(value) => handleInputChange('date', value)}
+                  label="Data"
                   required
                 />
                 

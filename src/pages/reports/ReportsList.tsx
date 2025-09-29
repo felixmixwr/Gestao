@@ -6,7 +6,7 @@ import { Layout } from '../../components/Layout'
 // Removido: Badge não é mais usado
 import { Button } from '../../components/Button'
 import { Select } from '../../components/Select'
-import { FormField } from '../../components/FormField'
+import { DateRangePicker } from '../../components/ui/date-range-picker';
 import { ReportWithRelations, ReportFilters, ReportStatus } from '../../types/reports'
 import { formatCurrency } from '../../utils/formatters'
 import { format } from 'date-fns'
@@ -514,24 +514,22 @@ export default function ReportsList() {
                 </select>
                 
                 {dateFilterType === 'custom' && (
-                  <div className="mt-2 space-y-2">
-                    <FormField
-                      label="Data Inicial"
-                      type="date"
-                      value={filters.dateFrom || ''}
-                      onChange={(e) => {
-                        setFilters(prev => ({ ...prev, dateFrom: e.target.value || undefined }))
+                  <div className="mt-2">
+                    <DateRangePicker
+                      value={filters.dateFrom && filters.dateTo ? {
+                        start: filters.dateFrom,
+                        end: filters.dateTo
+                      } : null}
+                      onChange={(range) => {
+                        setFilters(prev => ({ 
+                          ...prev, 
+                          dateFrom: range?.start || undefined,
+                          dateTo: range?.end || undefined
+                        }))
                         setCurrentPage(1)
                       }}
-                    />
-                    <FormField
-                      label="Data Final"
-                      type="date"
-                      value={filters.dateTo || ''}
-                      onChange={(e) => {
-                        setFilters(prev => ({ ...prev, dateTo: e.target.value || undefined }))
-                        setCurrentPage(1)
-                      }}
+                      label="Período"
+                      placeholder="Selecionar período"
                     />
                   </div>
                 )}

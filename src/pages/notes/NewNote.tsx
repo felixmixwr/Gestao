@@ -9,7 +9,7 @@ import { Button } from '../../components/Button';
 import { NotePreview } from '../../components/NotePreview';
 import { CompanySelector } from '../../components/CompanySelector';
 import { CurrencyInputWithValidation } from '../../components/CurrencyInputWithValidation';
-import { DateInputWithValidation } from '../../components/DateInputWithValidation';
+import { DatePicker } from '../../components/ui/date-picker';
 import { PhoneInputWithValidation } from '../../components/PhoneInputWithValidation';
 import { CEPInputWithValidation } from '../../components/CEPInputWithValidation';
 import { DocumentInputWithValidation } from '../../components/DocumentInputWithValidation';
@@ -223,7 +223,7 @@ export const NewNote: React.FC = () => {
                 />
 
                 {/* Data da Nota */}
-                <DateInputWithValidation
+                <DatePicker
                   value={watchedValues.nf_date}
                   onChange={(value) => setValue('nf_date', value)}
                   error={errors.nf_date?.message}
@@ -232,7 +232,7 @@ export const NewNote: React.FC = () => {
                 />
 
                 {/* Data de Vencimento */}
-                <DateInputWithValidation
+                <DatePicker
                   value={watchedValues.nf_due_date}
                   onChange={(value) => setValue('nf_due_date', value)}
                   error={errors.nf_due_date?.message}

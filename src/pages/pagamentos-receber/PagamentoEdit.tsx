@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Layout } from '../../components/Layout'
-import { Button } from '../../components/Button'
+import { DatePicker } from '../../components/ui/date-picker';
 import { Select } from '../../components/Select'
 import { usePagamentosReceber } from '../../lib/pagamentos-receber-api'
 import { PagamentoReceberCompleto, FormaPagamento, UpdatePagamentoReceberData } from '../../types/pagamentos-receber'
@@ -313,23 +312,18 @@ export default function PagamentoEdit() {
 
               {/* Data de Vencimento */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data de Vencimento *
-                </label>
-                <input
-                  type="date"
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    (formData.forma_pagamento === 'pix' || formData.forma_pagamento === 'a_vista' || formData.forma_pagamento === 'sem_forma') 
-                      ? 'bg-gray-100 cursor-not-allowed' 
-                      : ''
-                  }`}
+                <DatePicker
                   value={formData.prazo_data}
-                  onChange={(e) => setFormData(prev => ({ 
+                  onChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    prazo_data: e.target.value 
+                    prazo_data: value 
                   }))}
-                  disabled={formData.forma_pagamento === 'pix' || formData.forma_pagamento === 'a_vista'}
+                  label="Data de Vencimento"
                   required
+                  className={formData.forma_pagamento === 'pix' || formData.forma_pagamento === 'a_vista' || formData.forma_pagamento === 'sem_forma' 
+                    ? 'opacity-50 pointer-events-none' 
+                    : ''
+                  }
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Data limite para o pagamento

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from './Button';
+import { DatePicker } from './ui/date-picker';
 
 interface NotaFiscalFormSimpleProps {
   reportId: string;
@@ -287,42 +288,22 @@ export const NotaFiscalFormSimple: React.FC<NotaFiscalFormSimpleProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de Emissão *
-            </label>
-            <input
-              type="date"
-              name="data_emissao"
-              value={formData.data_emissao}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.data_emissao ? 'border-red-300' : 'border-gray-300'
-              }`}
-            />
-            {errors.data_emissao && (
-              <p className="mt-1 text-sm text-red-600">{errors.data_emissao}</p>
-            )}
-          </div>
+          <DatePicker
+            value={formData.data_emissao}
+            onChange={(value) => handleInputChange({ target: { name: 'data_emissao', value } })}
+            label="Data de Emissão"
+            required
+            error={errors.data_emissao}
+          />
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de Vencimento *
-            </label>
-            <input
-              type="date"
-              name="data_vencimento"
-              value={formData.data_vencimento}
-              onChange={handleInputChange}
-              min={formData.data_emissao}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.data_vencimento ? 'border-red-300' : 'border-gray-300'
-              }`}
-            />
-            {errors.data_vencimento && (
-              <p className="mt-1 text-sm text-red-600">{errors.data_vencimento}</p>
-            )}
-          </div>
+          <DatePicker
+            value={formData.data_vencimento}
+            onChange={(value) => handleInputChange({ target: { name: 'data_vencimento', value } })}
+            label="Data de Vencimento"
+            minDate={formData.data_emissao}
+            required
+            error={errors.data_vencimento}
+          />
         </div>
 
         <div>

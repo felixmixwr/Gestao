@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
 // Removido: Badge não é mais usado
-import { FormField } from '../../components/FormField'
+import { DatePicker } from '../../components/ui/date-picker';
 import { NotaFiscalFormSimple } from '../../components/NotaFiscalFormSimple'
 import { NotasFiscaisLista } from '../../components/NotasFiscaisLista'
 import { ReportWithRelations, ReportStatus, NoteData } from '../../types/reports'
@@ -428,11 +428,10 @@ export default function ReportDetails() {
                 required
               />
               
-              <FormField
-                label="Data da NF"
-                type="date"
+              <DatePicker
                 value={noteData.nf_date}
-                onChange={(e) => setNoteData(prev => ({ ...prev, nf_date: e.target.value }))}
+                onChange={(value) => setNoteData(prev => ({ ...prev, nf_date: value }))}
+                label="Data da NF"
                 required
               />
               

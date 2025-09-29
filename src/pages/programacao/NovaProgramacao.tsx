@@ -8,6 +8,7 @@ import { toast } from '../../lib/toast-hooks';
 import { Layout } from '../../components/Layout';
 import { Loading } from '../../components/Loading';
 import { Button } from '../../components/Button';
+import { DatePicker } from '../../components/ui/date-picker';
 // Removidos imports não utilizados após mudança para layout do reports
 import { ColaboradorOption, BombaOption, EmpresaOption, ClienteOption } from '../../types/programacao';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -405,20 +406,13 @@ function NovaProgramacaoContent() {
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Data e Horário</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Data */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Data *
-                </label>
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.data}
-                  onChange={(e) => handleInputChange('data', e.target.value)}
-                />
-                {errors.data && (
-                  <p className="mt-1 text-sm text-red-600">{errors.data}</p>
-                )}
-              </div>
+              <DatePicker
+                value={formData.data}
+                onChange={(value) => handleInputChange('data', value)}
+                label="Data"
+                required
+                error={errors.data}
+              />
 
               {/* Horário */}
               <div>

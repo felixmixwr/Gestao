@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { CreateHoraExtraData, TIPOS_DIA_HORA_EXTRA, calcularValorHoraExtra } from '../types/colaboradores'
+import { DatePicker } from './ui/date-picker'
 // Ícones substituídos por emojis
 
 interface HoraExtraFormProps {
@@ -88,18 +89,12 @@ export default function HoraExtraForm({ colaboradorId, salarioFixo, onSave, onCa
           )}
 
           {/* Data */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data *
-            </label>
-            <input
-              type="date"
-              value={formData.data}
-              onChange={(e) => handleInputChange('data', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
+          <DatePicker
+            value={formData.data}
+            onChange={(value) => handleInputChange('data', value)}
+            label="Data"
+            required
+          />
 
           {/* Horas */}
           <div>

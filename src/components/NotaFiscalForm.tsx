@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from './Button';
 import { FormField } from './FormField';
 import { CurrencyInputWithValidation } from './CurrencyInputWithValidation';
+import { DatePicker } from './ui/date-picker';
 
 // Schema de validação simplificado
 const notaFiscalSchema = z.object({
@@ -182,20 +183,20 @@ export const NotaFiscalForm: React.FC<NotaFiscalFormProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
+          <DatePicker
+            value={watch('data_emissao')}
+            onChange={(value) => setValue('data_emissao', value)}
             label="Data de Emissão"
-            type="date"
-            {...register('data_emissao')}
             error={errors.data_emissao?.message}
             required
           />
           
-          <FormField
+          <DatePicker
+            value={watch('data_vencimento')}
+            onChange={(value) => setValue('data_vencimento', value)}
             label="Data de Vencimento"
-            type="date"
-            {...register('data_vencimento')}
+            minDate={watch('data_emissao')}
             error={errors.data_vencimento?.message}
-            min={watch('data_emissao')}
             required
           />
         </div>
