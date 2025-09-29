@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
-// Removido: Table não é mais usado
-// Removido: Badge não é mais usado
 import { Button } from '../../components/Button'
 import { Select } from '../../components/Select'
 import { DateRangePicker } from '../../components/ui/date-range-picker';
+import { ExportModal } from '../../components/ExportModal'
 import { ReportWithRelations, ReportFilters, ReportStatus } from '../../types/reports'
 import { formatCurrency } from '../../utils/formatters'
 import { format } from 'date-fns'
@@ -34,6 +33,9 @@ export default function ReportsList() {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchType, setSearchType] = useState<'id' | 'date' | 'client' | 'pump' | 'volume' | 'value'>('id')
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
+  
+  // Estados para exportação
+  const [showExportModal, setShowExportModal] = useState(false)
 
   const ITEMS_PER_PAGE = 20
 
@@ -616,13 +618,23 @@ const handleWhatsApp = (report: ReportWithRelations) => {
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
-          <Button 
-            size="sm"
-            onClick={() => window.location.href = '/reports/new'}
-            className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
-          >
-            Novo Relatório
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="sm"
+              onClick={() => setShowExportModal(true)}
+              disabled={reports.length === 0}
+              className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              📊 Exportar
+            </Button>
+            <Button 
+              size="sm"
+              onClick={() => window.location.href = '/reports/new'}
+              className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
+            >
+              Novo Relatório
+            </Button>
+          </div>
         </div>
 
         {/* Card Principal */}
@@ -1025,6 +1037,17 @@ const handleWhatsApp = (report: ReportWithRelations) => {
             </Button>
           </div>
         )}
+
+        {/* Modal de Exportação */}
+        <ExportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          reports={reports}
+          filters={filters}
+          onExport={(format) => {
+            console.log(`Exportação ${format.toUpperCase()} realizada com sucesso!`)
+          }}
+        />
 
       </div>
     </Layout>

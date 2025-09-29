@@ -49,3 +49,4 @@ BEGIN
     RAISE EXCEPTION '❌ Erro na migração 011: Trigger não foi criado';
   END IF;
 END $$;
+

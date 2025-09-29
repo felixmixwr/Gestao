@@ -24,6 +24,8 @@ export interface Report {
 }
 
 export interface ReportWithRelations extends Report {
+  planned_volume?: number | null
+  observations?: string | null
   clients?: {
     id: string
     name: string
@@ -36,6 +38,8 @@ export interface ReportWithRelations extends Report {
     prefix: string
     model: string | null
     brand: string | null
+    is_terceira?: boolean
+    empresa_nome?: string
   }
   companies?: {
     id: string

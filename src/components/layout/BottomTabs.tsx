@@ -5,7 +5,8 @@ import {
   BarChart2, 
   DollarSign, 
   Droplets, 
-  Calendar 
+  Calendar,
+  Calculator
 } from 'lucide-react'
 
 interface TabItem {
@@ -30,8 +31,8 @@ const tabs: TabItem[] = [
   },
   {
     name: 'Financeiro',
-    href: '/pagamentos-receber',
-    icon: DollarSign,
+    href: '/financial',
+    icon: Calculator,
     label: 'Financeiro'
   },
   {

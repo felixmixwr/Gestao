@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { format, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
+import { getFinancialStats } from './financialApi'
 
 export interface DashboardStats {
   programacao_hoje: Array<{
@@ -48,6 +49,14 @@ export interface DashboardStats {
   financeiro: {
     entradas: number
     saidas: number
+    total_despesas_mes: number
+    despesas_por_categoria: Record<string, number>
+    proximas_despesas: Array<{
+      descricao: string
+      valor: number
+      data_vencimento: string
+      categoria: string
+    }>
   }
 }
 
@@ -79,7 +88,8 @@ export class DashboardApi {
         clientesResult,
         relatoriosDiaResult,
         relatoriosMesResult,
-        notasResult
+        notasResult,
+        financialStatsResult
       ] = await Promise.all([
         // Programação de hoje
         this.getProgramacaoDia(today),
@@ -115,7 +125,13 @@ export class DashboardApi {
         this.getRelatoriosMes(startOfCurrentMonth, endOfCurrentMonth),
         
         // Notas fiscais
-        this.getNotasFiscais(startOfCurrentMonth, endOfCurrentMonth)
+        this.getNotasFiscais(startOfCurrentMonth, endOfCurrentMonth),
+        
+        // Estatísticas financeiras do mês atual
+        getFinancialStats({
+          data_inicio: startOfCurrentMonth,
+          data_fim: endOfCurrentMonth
+        })
       ])
 
       // Calcular próxima bomba
@@ -144,8 +160,11 @@ export class DashboardApi {
         },
         notas: notasResult,
         financeiro: {
-          entradas: 0, // Placeholder para futuro
-          saidas: 0    // Placeholder para futuro
+          entradas: faturamentoMesResult, // Usar faturamento como entradas
+          saidas: financialStatsResult.total_despesas,
+          total_despesas_mes: financialStatsResult.total_despesas,
+          despesas_por_categoria: financialStatsResult.total_por_categoria,
+          proximas_despesas: await this.getProximasDespesas()
         }
       }
     } catch (error) {
@@ -502,6 +521,37 @@ export class DashboardApi {
     } catch (error) {
       console.error('Erro ao buscar notas fiscais:', error)
       return { quantidade: 0, valor_total: 0 }
+    }
+  }
+
+  /**
+   * Buscar próximas despesas (próximos 7 dias)
+   */
+  private static async getProximasDespesas() {
+    try {
+      const hoje = new Date()
+      const proximos7Dias = new Date(hoje.getTime() + 7 * 24 * 60 * 60 * 1000)
+      
+      const { data, error } = await supabase
+        .from('expenses')
+        .select('descricao, valor, data_despesa, categoria')
+        .gte('data_despesa', format(hoje, 'yyyy-MM-dd'))
+        .lte('data_despesa', format(proximos7Dias, 'yyyy-MM-dd'))
+        .eq('status', 'pendente')
+        .order('data_despesa', { ascending: true })
+        .limit(5)
+
+      if (error) throw error
+
+      return (data || []).map(expense => ({
+        descricao: expense.descricao,
+        valor: expense.valor,
+        data_vencimento: expense.data_despesa,
+        categoria: expense.categoria
+      }))
+    } catch (error) {
+      console.error('Erro ao buscar próximas despesas:', error)
+      return []
     }
   }
 }

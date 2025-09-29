@@ -221,13 +221,13 @@ export default function Dashboard() {
               }
             />
 
-            {/* Financeiro (placeholder) */}
+            {/* Financeiro */}
             <DashboardCard
               title="Financeiro"
-              value="Em breve"
-              subtitle="entradas e saídas"
-              color="gray"
-              loading={false}
+              value={formatCurrency(stats?.financeiro?.entradas || 0)}
+              subtitle={`Saídas: ${formatCurrency(stats?.financeiro?.saidas || 0)}`}
+              color="green"
+              loading={loading}
               icon={
                 <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
@@ -311,6 +311,45 @@ export default function Dashboard() {
                     </div>
                     <div className="text-sm font-medium text-gray-900 ml-2">
                       {item.hora}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Próximas Despesas */}
+        {stats?.financeiro?.proximas_despesas && stats.financeiro.proximas_despesas.length > 0 && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Próximas Despesas
+                </h3>
+                <Link to="/financial">
+                  <span className="text-sm text-blue-600 hover:text-blue-800">
+                    Ver módulo financeiro →
+                  </span>
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {stats.financeiro.proximas_despesas.map((despesa, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-2 h-2 bg-red-600 rounded-full"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{despesa.descricao}</p>
+                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <span>📅 {despesa.data_vencimento}</span>
+                          <span>🏷️ {despesa.categoria}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium text-red-600 ml-2">
+                      {formatCurrency(despesa.valor)}
                     </div>
                   </div>
                 ))}

@@ -559,6 +559,62 @@ export type Database = {
           updated_at?: string
         }
       }
+      expenses: {
+        Row: {
+          id: string
+          descricao: string
+          categoria: 'Mão de obra' | 'Diesel' | 'Manutenção' | 'Imposto' | 'Outros'
+          valor: number
+          tipo_custo: 'fixo' | 'variável'
+          data_despesa: string
+          pump_id: string
+          company_id: string
+          status: 'pendente' | 'pago' | 'cancelado'
+          quilometragem_atual: number | null
+          quantidade_litros: number | null
+          custo_por_litro: number | null
+          nota_fiscal_id: string | null
+          observacoes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          descricao: string
+          categoria: 'Mão de obra' | 'Diesel' | 'Manutenção' | 'Imposto' | 'Outros'
+          valor: number
+          tipo_custo: 'fixo' | 'variável'
+          data_despesa: string
+          pump_id: string
+          company_id: string
+          status?: 'pendente' | 'pago' | 'cancelado'
+          quilometragem_atual?: number | null
+          quantidade_litros?: number | null
+          custo_por_litro?: number | null
+          nota_fiscal_id?: string | null
+          observacoes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          descricao?: string
+          categoria?: 'Mão de obra' | 'Diesel' | 'Manutenção' | 'Imposto' | 'Outros'
+          valor?: number
+          tipo_custo?: 'fixo' | 'variável'
+          data_despesa?: string
+          pump_id?: string
+          company_id?: string
+          status?: 'pendente' | 'pago' | 'cancelado'
+          quilometragem_atual?: number | null
+          quantidade_litros?: number | null
+          custo_por_litro?: number | null
+          nota_fiscal_id?: string | null
+          observacoes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

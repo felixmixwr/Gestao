@@ -16,7 +16,8 @@ import {
   DollarSign, 
   FileText,
   LogOut,
-  Home
+  Home,
+  Calculator
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -59,6 +60,11 @@ const navigation = [
     name: 'Colaboradores', 
     href: '/colaboradores', 
     icon: <UserCheck className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'Financeiro', 
+    href: '/financial', 
+    icon: <Calculator className="text-white h-5 w-5 flex-shrink-0" />
   },
   { 
     name: 'Relatórios', 

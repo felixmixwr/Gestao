@@ -43,6 +43,9 @@ import TestConnection from '../pages/programacao/TestConnection'
 import TestAPI from '../pages/programacao/TestAPI'
 // import Test from '../pages/Test'
 
+// Import do módulo financeiro
+import { FinancialModule } from '../pages/financial'
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -404,6 +407,16 @@ export const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <TestAPI />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  // Rotas do módulo financeiro
+  {
+    path: '/financial/*',
+    element: (
+      <RequireAuth>
+        <FinancialModule />
       </RequireAuth>
     ),
     errorElement: <GenericError />
