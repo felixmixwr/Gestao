@@ -25,12 +25,15 @@ export default function ReportsList() {
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [pumps, setPumps] = useState<Array<{ id: string; prefix: string }>>([])
-  // const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]) // Removido variável não utilizada
   const [filters, setFilters] = useState<ReportFilters>({})
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
-  // const [updatingStatus, setUpdatingStatus] = useState<string | null>(null) // Removido variável não utilizada
   const [dateFilterType, setDateFilterType] = useState<string>('all')
+  
+  // Estados para busca
+  const [searchTerm, setSearchTerm] = useState('')
+  const [searchType, setSearchType] = useState<'id' | 'date' | 'client' | 'pump' | 'volume' | 'value'>('id')
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
 
   const ITEMS_PER_PAGE = 20
 
@@ -42,7 +45,7 @@ export default function ReportsList() {
 
   useEffect(() => {
     loadReports()
-  }, [filters, currentPage])
+  }, [filters, currentPage, searchTerm, searchType])
 
   const loadClients = async () => {
     try {
@@ -148,6 +151,67 @@ export default function ReportsList() {
       if (filters.client_id) {
         console.log('🔍 [DEBUG] Aplicando filtro de cliente:', filters.client_id)
         query = query.eq('client_id', filters.client_id)
+      }
+
+      // Aplicar filtros de busca
+      if (searchTerm.trim()) {
+        console.log('🔍 [DEBUG] Aplicando busca:', { searchTerm, searchType })
+        
+        switch (searchType) {
+          case 'id':
+            query = query.ilike('report_number', `%${searchTerm}%`)
+            break
+          case 'date':
+            query = query.ilike('date', `%${searchTerm}%`)
+            break
+          case 'client':
+            query = query.ilike('client_rep_name', `%${searchTerm}%`)
+            break
+          case 'pump':
+            query = query.ilike('pump_prefix', `%${searchTerm}%`)
+            break
+          case 'volume':
+            const volumeNum = parseFloat(searchTerm)
+            if (!isNaN(volumeNum)) {
+              query = query.eq('realized_volume', volumeNum)
+            }
+            break
+          case 'value':
+            const valueNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'))
+            if (!isNaN(valueNum)) {
+              query = query.eq('total_value', valueNum)
+            }
+            break
+        }
+      }
+
+      // Aplicar filtros avançados
+      if (filters.report_number) {
+        query = query.ilike('report_number', `%${filters.report_number}%`)
+      }
+      
+      if (filters.client_name) {
+        query = query.ilike('client_rep_name', `%${filters.client_name}%`)
+      }
+      
+      if (filters.pump_name) {
+        query = query.ilike('pump_prefix', `%${filters.pump_name}%`)
+      }
+      
+      if (filters.volume_min !== undefined) {
+        query = query.gte('realized_volume', filters.volume_min)
+      }
+      
+      if (filters.volume_max !== undefined) {
+        query = query.lte('realized_volume', filters.volume_max)
+      }
+      
+      if (filters.value_min !== undefined) {
+        query = query.gte('total_value', filters.value_min)
+      }
+      
+      if (filters.value_max !== undefined) {
+        query = query.lte('total_value', filters.value_max)
       }
 
       // Por enquanto, vamos usar uma contagem simples
@@ -271,6 +335,32 @@ export default function ReportsList() {
     }
   }
 
+  // Funções de busca
+  const handleSearch = () => {
+    setCurrentPage(1) // Reset para primeira página
+    loadReports()
+  }
+
+  const clearSearch = () => {
+    setSearchTerm('')
+    setSearchType('id')
+    setFilters({})
+    setCurrentPage(1)
+    loadReports()
+  }
+
+  const handleAdvancedSearch = (advancedFilters: Partial<ReportFilters>) => {
+    setFilters(prev => ({ ...prev, ...advancedFilters }))
+    setCurrentPage(1)
+    loadReports()
+  }
+
+  const clearAdvancedSearch = () => {
+    setFilters({})
+    setCurrentPage(1)
+    loadReports()
+  }
+
   const handleStatusChange = async (reportId: string, newStatus: ReportStatus) => {
     try {
       const updateData: any = { status: newStatus }
@@ -377,6 +467,9 @@ const handleWhatsApp = (report: ReportWithRelations) => {
   const clearFilters = () => {
     setFilters({})
     setDateFilterType('all')
+    setSearchTerm('')
+    setSearchType('id')
+    setShowAdvancedSearch(false)
     setCurrentPage(1)
   }
 
@@ -385,7 +478,15 @@ const handleWhatsApp = (report: ReportWithRelations) => {
       (filters.status && filters.status.length > 0) ||
       dateFilterType !== 'all' ||
       filters.pump_prefix ||
-      filters.client_id
+      filters.client_id ||
+      searchTerm.trim() ||
+      filters.report_number ||
+      filters.client_name ||
+      filters.pump_name ||
+      filters.volume_min !== undefined ||
+      filters.volume_max !== undefined ||
+      filters.value_min !== undefined ||
+      filters.value_max !== undefined
     )
   }
 
@@ -526,6 +627,190 @@ const handleWhatsApp = (report: ReportWithRelations) => {
 
         {/* Card Principal */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+
+          {/* Barra de Busca */}
+          <div className="mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Campo de Busca */}
+              <div className="flex-1">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Digite o termo de busca..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <select
+                    value={searchType}
+                    onChange={(e) => setSearchType(e.target.value as any)}
+                    className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="id">ID do Relatório</option>
+                    <option value="date">Data</option>
+                    <option value="client">Cliente</option>
+                    <option value="pump">Bomba</option>
+                    <option value="volume">Volume (m³)</option>
+                    <option value="value">Valor (R$)</option>
+                  </select>
+                  <Button
+                    onClick={handleSearch}
+                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-sm font-medium"
+                  >
+                    🔍 Buscar
+                  </Button>
+                  <Button
+                    onClick={clearSearch}
+                    variant="outline"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-md text-sm font-medium"
+                  >
+                    Limpar
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Botão de Busca Avançada */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                  variant="outline"
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-md text-sm font-medium"
+                >
+                  {showAdvancedSearch ? '🔽 Busca Simples' : '🔍 Busca Avançada'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Busca Avançada */}
+            {showAdvancedSearch && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">Filtros Avançados</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* ID do Relatório */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ID do Relatório
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: RPT-20241201-0001"
+                      value={filters.report_number || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, report_number: e.target.value || undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Nome do Cliente */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome do Cliente
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: João Silva"
+                      value={filters.client_name || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, client_name: e.target.value || undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Prefixo da Bomba */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Prefixo da Bomba
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: WR-001"
+                      value={filters.pump_name || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, pump_name: e.target.value || undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Volume Mínimo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Volume Mínimo (m³)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="Ex: 10.0"
+                      value={filters.volume_min || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, volume_min: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Volume Máximo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Volume Máximo (m³)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="Ex: 100.0"
+                      value={filters.volume_max || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, volume_max: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Valor Mínimo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Valor Mínimo (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 100.00"
+                      value={filters.value_min || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, value_min: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  {/* Valor Máximo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Valor Máximo (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      placeholder="Ex: 1000.00"
+                      value={filters.value_max || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, value_max: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                {/* Botões da Busca Avançada */}
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    onClick={() => handleAdvancedSearch(filters)}
+                    className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-md text-sm font-medium"
+                  >
+                    🔍 Aplicar Filtros
+                  </Button>
+                  <Button
+                    onClick={clearAdvancedSearch}
+                    variant="outline"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 rounded-md text-sm font-medium"
+                  >
+                    Limpar Filtros
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Filtros */}
           <div className="mb-4">

@@ -65,6 +65,16 @@ export interface ReportFilters {
   dateTo?: string
   pump_prefix?: string
   client_id?: string
+  // Novos campos de busca
+  searchTerm?: string
+  searchType?: 'id' | 'date' | 'client' | 'pump' | 'volume' | 'value'
+  report_number?: string
+  client_name?: string
+  pump_name?: string
+  volume_min?: number
+  volume_max?: number
+  value_min?: number
+  value_max?: number
 }
 
 export interface NoteData {
