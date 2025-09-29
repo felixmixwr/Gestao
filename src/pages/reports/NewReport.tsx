@@ -71,10 +71,10 @@ const reportSchema = z.object({
   service_company_id: z.string().min(1, 'Empresa do serviço é obrigatória'),
   planned_volume: z.string().min(1, 'Volume planejado é obrigatório'),
   realized_volume: z.string().min(1, 'Volume realizado é obrigatório'),
-  driver_id: z.string().min(1, 'Motorista é obrigatório'),
+  driver_id: z.string().optional(),
   assistants: z.array(z.object({
-    id: z.string().min(1, 'Auxiliar é obrigatório')
-  })).min(1, 'Pelo menos um auxiliar é obrigatório'),
+    id: z.string().optional()
+  })).optional(),
   total_value: z.string().min(1, 'Valor total é obrigatório'),
   observations: z.string().optional()
 })
@@ -146,8 +146,8 @@ export default function NewReport() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([])
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [selectedPump, setSelectedPump] = useState<Pump | null>(null)
   // const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-  // const [selectedPump, setSelectedPump] = useState<Pump | null>(null)
 
   useEffect(() => {
     loadClients()
@@ -285,7 +285,7 @@ export default function NewReport() {
 
   const handlePumpChange = (pumpId: string) => {
     const pump = pumps.find(p => p.id === pumpId)
-    // setSelectedPump(pump || null)
+    setSelectedPump(pump || null)
     
     setFormData(prev => ({
       ...prev,
@@ -727,91 +727,117 @@ export default function NewReport() {
           </div>
         </div>
 
-        {/* Seção: Equipe */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Equipe</h3>
-          
-          <div className="space-y-6">
-            {/* Motorista */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Motorista Operador da Bomba *
-              </label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={formData.driver_id ?? ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, driver_id: e.target.value }))}
-              >
-                <option value="">Selecione um motorista</option>
-                {motoristaOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {errors.driver_id && (
-                <p className="mt-1 text-sm text-red-600">{errors.driver_id}</p>
-              )}
-            </div>
-
-            {/* Auxiliares Dinâmicos */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <label className="block text-sm font-medium text-gray-700">
-                  Auxiliares *
+        {/* Seção: Equipe - Ocultar para bombas terceiras */}
+        {!selectedPump?.is_terceira && (
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Equipe</h3>
+            
+            <div className="space-y-6">
+              {/* Motorista */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Motorista Operador da Bomba *
                 </label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addAssistant}
-                  className="text-blue-600 hover:text-blue-700"
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.driver_id ?? ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, driver_id: e.target.value }))}
                 >
-                  + Adicionar Auxiliar
-                </Button>
+                  <option value="">Selecione um motorista</option>
+                  {motoristaOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.driver_id && (
+                  <p className="mt-1 text-sm text-red-600">{errors.driver_id}</p>
+                )}
               </div>
-              
-              <div className="space-y-3">
-                {formData.assistants.map((assistant, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Auxiliar {index + 1}
-                      </label>
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        value={assistant.id}
-                        onChange={(e) => updateAssistant(index, e.target.value)}
-                      >
-                        <option value="">Selecione um auxiliar</option>
-                        {auxiliarOptions.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+
+              {/* Auxiliares Dinâmicos */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Auxiliares *
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addAssistant}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    + Adicionar Auxiliar
+                  </Button>
+                </div>
+                
+                <div className="space-y-3">
+                  {formData.assistants.map((assistant, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Auxiliar {index + 1}
+                        </label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          value={assistant.id}
+                          onChange={(e) => updateAssistant(index, e.target.value)}
+                        >
+                          <option value="">Selecione um auxiliar</option>
+                          {auxiliarOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {formData.assistants.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeAssistant(index)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 mt-6"
+                        >
+                          🗑️
+                        </Button>
+                      )}
                     </div>
-                    {formData.assistants.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeAssistant(index)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 mt-6"
-                      >
-                        🗑️
-                      </Button>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
+                
+                {errors.assistants && (
+                  <p className="mt-1 text-sm text-red-600">{errors.assistants}</p>
+                )}
               </div>
-              
-              {errors.assistants && (
-                <p className="mt-1 text-sm text-red-600">{errors.assistants}</p>
-              )}
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Aviso para bombas terceiras */}
+        {selectedPump?.is_terceira && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Bomba Terceira Selecionada
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>
+                    Esta é uma bomba de terceiros ({selectedPump.empresa_nome}). 
+                    A equipe será fornecida pela empresa proprietária da bomba.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Seção: Observações */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
