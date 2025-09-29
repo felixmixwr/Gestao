@@ -119,6 +119,13 @@ export function ProgramacaoGridBoardMobile() {
     ).sort((a, b) => a.horario.localeCompare(b.horario));
   };
 
+  // Função para obter a data selecionada
+  const getSelectedDate = () => {
+    const dayDate = new Date(weekStart);
+    dayDate.setDate(dayDate.getDate() + selectedDay);
+    return dayDate.toISOString().split('T')[0];
+  };
+
   const getProgramacoesForDay = (dayIndex: number) => {
     const dayDate = new Date(weekStart);
     dayDate.setDate(dayDate.getDate() + dayIndex);
@@ -268,8 +275,12 @@ export function ProgramacaoGridBoardMobile() {
                       </span>
                     </div>
                     <button
-                      onClick={() => handleDeleteClick(programacao)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(programacao);
+                      }}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      title="Excluir programação"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -314,23 +325,23 @@ export function ProgramacaoGridBoardMobile() {
                     </div>
                   </div>
 
-                  {/* Equipe */}
-                  {programacao.equipe && programacao.equipe.length > 0 && (
+                  {/* Motorista/Operador */}
+                  {programacao.motorista_operador && (
                     <div className="mb-3">
                       <div className="flex items-start space-x-2">
                         <Users className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
                         <div className="text-sm text-gray-600">
-                          {programacao.equipe.join(', ')}
+                          <span className="font-medium">Motorista:</span> {programacao.motorista_operador}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Observações */}
-                  {programacao.observacoes && (
+                  {/* Responsável */}
+                  {programacao.responsavel && (
                     <div className="mb-3">
                       <div className="text-sm text-gray-600">
-                        <span className="font-medium">Obs:</span> {programacao.observacoes}
+                        <span className="font-medium">Responsável:</span> {programacao.responsavel}
                       </div>
                     </div>
                   )}
@@ -375,7 +386,7 @@ export function ProgramacaoGridBoardMobile() {
         {/* Modal de Confirmação */}
         <ConfirmDialog
           isOpen={deleteConfirm.show}
-          onClose={() => setDeleteConfirm({ show: false, programacao: null })}
+          onCancel={() => setDeleteConfirm({ show: false, programacao: null })}
           onConfirm={handleDeleteConfirm}
           title="Excluir Programação"
           message="Tem certeza que deseja excluir esta programação?"
@@ -560,7 +571,7 @@ export function ProgramacaoGridBoardMobile() {
         {/* Modal de Confirmação */}
         <ConfirmDialog
           isOpen={deleteConfirm.show}
-          onClose={() => setDeleteConfirm({ show: false, programacao: null })}
+          onCancel={() => setDeleteConfirm({ show: false, programacao: null })}
           onConfirm={handleDeleteConfirm}
           title="Excluir Programação"
           message="Tem certeza que deseja excluir esta programação?"
@@ -569,12 +580,8 @@ export function ProgramacaoGridBoardMobile() {
         {/* Modal de Visualização Diária */}
         {showDailyView && (
           <DailyScheduleView
-            isOpen={showDailyView}
+            date={getSelectedDate()}
             onClose={() => setShowDailyView(false)}
-            programacoes={programacoes}
-            bombas={bombas}
-            colaboradores={colaboradores}
-            onDelete={handleDeleteClick}
           />
         )}
       </div>
