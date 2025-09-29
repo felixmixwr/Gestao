@@ -346,18 +346,6 @@ const handleWhatsApp = () => {
             >
               Excluir
             </Button>
-            <Button
-              onClick={() => setShowNotaFiscalForm(!showNotaFiscalForm)}
-              variant={showNotaFiscalForm ? "secondary" : "primary"}
-              disabled={hasNotaFiscal}
-            >
-              {showNotaFiscalForm ? 'Cancelar' : '+ Adicionar NF'}
-            </Button>
-            {hasNotaFiscal && (
-              <p className="text-sm text-gray-500 mt-2">
-                Este relatório já possui uma nota fiscal
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -451,26 +439,86 @@ const handleWhatsApp = () => {
           </div>
         </div>
 
-        {/* Formulário de Nota Fiscal */}
-        {showNotaFiscalForm && (
-          <NotaFiscalFormSimple
-            reportId={id!}
-            onSuccess={() => {
-              setShowNotaFiscalForm(false);
-              setRefreshNotas(prev => prev + 1); // Forçar refresh da lista
-            }}
-            onCancel={() => setShowNotaFiscalForm(false)}
-            onRefresh={() => setRefreshNotas(prev => prev + 1)}
-          />
-        )}
+        {/* Seção de Notas Fiscais */}
+        <div className="space-y-4">
+          {/* Cabeçalho da Seção */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Notas Fiscais</h2>
+              <p className="text-xs text-gray-600 mt-1">
+                Gerencie as notas fiscais relacionadas a este relatório
+              </p>
+            </div>
+            
+            {/* Botão de Ação Principal */}
+            <div className="flex items-center space-x-3">
+              {hasNotaFiscal && (
+                <div className="flex items-center space-x-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-md">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span>Nota fiscal vinculada</span>
+                </div>
+              )}
+              
+              <Button
+                onClick={() => setShowNotaFiscalForm(!showNotaFiscalForm)}
+                variant={showNotaFiscalForm ? "secondary" : "primary"}
+                disabled={hasNotaFiscal}
+                className="flex items-center space-x-1 px-3 py-2 text-sm"
+              >
+                {showNotaFiscalForm ? (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Cancelar</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Adicionar Nota Fiscal</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
 
-        {/* Lista de Notas Fiscais */}
-        <NotasFiscaisLista 
-          reportId={id!}
-          onRefresh={() => setRefreshNotas(prev => prev + 1)}
-          refreshTrigger={refreshNotas}
-          onHasNotaFiscalChange={setHasNotaFiscal}
-        />
+          {/* Formulário de Nota Fiscal */}
+          {showNotaFiscalForm && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 className="text-sm font-semibold text-blue-900">Nova Nota Fiscal</h3>
+              </div>
+              <p className="text-xs text-blue-700 mb-4">
+                Preencha os dados da nota fiscal para vincular ao relatório
+              </p>
+              
+              <NotaFiscalFormSimple
+                reportId={id!}
+                onSuccess={() => {
+                  setShowNotaFiscalForm(false);
+                  setRefreshNotas(prev => prev + 1);
+                }}
+                onCancel={() => setShowNotaFiscalForm(false)}
+                onRefresh={() => setRefreshNotas(prev => prev + 1)}
+              />
+            </div>
+          )}
+
+          {/* Lista de Notas Fiscais */}
+          <NotasFiscaisLista 
+            reportId={id!}
+            onRefresh={() => setRefreshNotas(prev => prev + 1)}
+            refreshTrigger={refreshNotas}
+            onHasNotaFiscalChange={setHasNotaFiscal}
+          />
+        </div>
 
       </div>
 
