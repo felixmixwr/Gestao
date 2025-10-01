@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 // VAPID Public Key gerada para WorldRental
-const VAPID_PUBLIC_KEY = 'BDt2hT6Ec-UakV-tAoO7ka2TrwcSXopaQzqXokawxm4xtPbj8YenBDYUcI2XOmtleMb8y732w25PLD3lzUekoHI'
+const VAPID_PUBLIC_KEY = 'BBNAVQi46g1rgjQ2nF9kkDt--WPXzFFVIhQm5D9UvAGlAfO1sCORVCnd6MFpEABZvy0PuyECaXL-WxAzuILcnpA'
 
 interface NotificationPermission {
   permission: NotificationPermission | null
