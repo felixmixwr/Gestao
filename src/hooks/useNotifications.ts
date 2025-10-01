@@ -166,11 +166,17 @@ export const useNotifications = () => {
         throw new Error('Usuário não autenticado')
       }
 
+      console.log('👤 Usuário autenticado:', user.id)
+
       // Primeiro, desativar tokens antigos do usuário
-      await supabase
+      const { error: updateError } = await supabase
         .from('user_push_tokens')
         .update({ is_active: false })
         .eq('user_id', user.id)
+
+      if (updateError) {
+        console.warn('⚠️ Erro ao desativar tokens antigos:', updateError.message)
+      }
 
       // Inserir novo token
       const { error } = await supabase
@@ -184,12 +190,13 @@ export const useNotifications = () => {
         })
 
       if (error) {
+        console.error('❌ Erro ao inserir token:', error)
         throw error
       }
 
-      console.log('Token salvo no banco de dados')
+      console.log('✅ Token salvo no banco de dados com sucesso')
     } catch (error) {
-      console.error('Erro ao salvar token:', error)
+      console.error('❌ Erro ao salvar token:', error)
       throw error
     }
   }, [])

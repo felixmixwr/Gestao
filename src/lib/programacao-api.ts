@@ -463,18 +463,19 @@ export class ProgramacaoAPI {
   // Enviar notificação push quando nova programação for criada
   static async sendNewProgramacaoNotification(programacao: Programacao): Promise<void> {
     try {
-      // Buscar todos os usuários da empresa que têm notificações ativas
-      const { data: users, error: usersError } = await supabase
-        .from('users')
-        .select('id')
-        .eq('company_id', programacao.company_id);
+      // Como você usa JWT, vamos buscar usuários ativos pelos tokens de push
+      const { data: pushTokens, error: tokensError } = await supabase
+        .from('user_push_tokens')
+        .select('user_id')
+        .eq('is_active', true);
 
-      if (usersError) {
-        throw new Error(`Erro ao buscar usuários: ${usersError.message}`);
+      if (tokensError) {
+        console.warn('⚠️ [ProgramacaoAPI] Erro ao buscar tokens de push:', tokensError.message);
+        return;
       }
 
-      if (!users || users.length === 0) {
-        console.log('📱 [ProgramacaoAPI] Nenhum usuário encontrado para notificação');
+      if (!pushTokens || pushTokens.length === 0) {
+        console.log('📱 [ProgramacaoAPI] Nenhum token de push ativo encontrado');
         return;
       }
 
@@ -492,8 +493,8 @@ export class ProgramacaoAPI {
         company_id: programacao.company_id
       };
 
-      // Enviar notificação para todos os usuários da empresa
-      const userIds = users.map(user => user.id);
+      // Enviar notificação para todos os usuários com tokens ativos
+      const userIds = pushTokens.map(token => token.user_id);
       const result = await notificationService.sendBulkNotification(
         userIds,
         title,
