@@ -24,12 +24,9 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2, Calculator, Fuel } from 'lucide-react';
 import { formatCurrency, calculateFuelTotal } from '../../types/financial';
 import type { 
-  Expense, 
   ExpenseWithRelations, 
   CreateExpenseData, 
-  UpdateExpenseData,
-  ExpenseCategory,
-  ExpenseType 
+  UpdateExpenseData
 } from '../../types/financial';
 import { EXPENSE_CATEGORY_OPTIONS, EXPENSE_TYPE_OPTIONS } from '../../types/financial';
 

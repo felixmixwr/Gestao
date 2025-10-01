@@ -13,11 +13,11 @@ import {
 import { Badge } from '../ui/badge';
 import { Calendar, Filter, X, Search, RefreshCw } from 'lucide-react';
 import { EXPENSE_CATEGORY_OPTIONS, EXPENSE_TYPE_OPTIONS, EXPENSE_STATUS_OPTIONS } from '../../types/financial';
-import type { ExpenseFilters } from '../../types/financial';
+import type { ExpenseFilters as ExpenseFiltersType } from '../../types/financial';
 
 interface ExpenseFiltersProps {
-  filters: ExpenseFilters;
-  onFiltersChange: (filters: ExpenseFilters) => void;
+  filters: ExpenseFiltersType;
+  onFiltersChange: (filters: ExpenseFiltersType) => void;
   onClearFilters: () => void;
   pumps: Array<{ id: string; prefix: string; model?: string; brand?: string }>;
   companies: Array<{ id: string; name: string }>;
@@ -43,42 +43,46 @@ export function ExpenseFilters({
 
   const handleCategoryChange = (category: string) => {
     if (category === 'all') {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { categoria, ...rest } = filters;
       onFiltersChange(rest);
     } else {
       onFiltersChange({
         ...filters,
-        categoria: [category as any]
+        categoria: [category]
       });
     }
   };
 
   const handleTypeChange = (type: string) => {
     if (type === 'all') {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { tipo_custo, ...rest } = filters;
       onFiltersChange(rest);
     } else {
       onFiltersChange({
         ...filters,
-        tipo_custo: [type as any]
+        tipo_custo: [type]
       });
     }
   };
 
   const handleStatusChange = (status: string) => {
     if (status === 'all') {
-      const { status: _, ...rest } = filters;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { status: statusFilter, ...rest } = filters;
       onFiltersChange(rest);
     } else {
       onFiltersChange({
         ...filters,
-        status: [status as any]
+        status: [status]
       });
     }
   };
 
   const handleBombaChange = (bombaId: string) => {
     if (bombaId === 'all') {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { bomba_id, ...rest } = filters;
       onFiltersChange(rest);
     } else {
@@ -91,6 +95,7 @@ export function ExpenseFilters({
 
   const handleCompanyChange = (companyId: string) => {
     if (companyId === 'all') {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { company_id, ...rest } = filters;
       onFiltersChange(rest);
     } else {
@@ -448,7 +453,7 @@ export function ExpenseFilters({
 
 // Componente para filtros rápidos (presets)
 interface QuickFiltersProps {
-  onApplyFilter: (filter: ExpenseFilters) => void;
+  onApplyFilter: (filter: ExpenseFiltersType) => void;
   onClearFilters: () => void;
 }
 

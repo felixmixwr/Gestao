@@ -1,5 +1,5 @@
-import { ReactNode, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import React, { ReactNode, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../lib/auth-hooks'
 import { APP_CONFIG } from '../utils/constants'
 import { Sidebar, SidebarBody, SidebarLink } from './ui/sidebar'
@@ -16,7 +16,6 @@ import {
   DollarSign, 
   FileText,
   LogOut,
-  Home,
   Calculator
 } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -84,7 +83,6 @@ const navigation = [
 ]
 
 export function Layout({ children }: LayoutProps) {
-  const location = useLocation()
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const [open, setOpen] = useState(false)
@@ -146,7 +144,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <NotificationManager>
-      {({ notifications, clearNotification }: NotificationContextProps): React.ReactNode => (
+      {({ notifications, clearNotification }: NotificationContextProps) => (
         <div className="min-h-screen bg-gray-50">
           {/* Sidebar */}
           <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">

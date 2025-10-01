@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNotifications } from '../hooks/useNotifications'
 import { supabase } from '../lib/supabase'
 

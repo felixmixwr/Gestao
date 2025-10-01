@@ -23,7 +23,6 @@ import {
   RangeCalendarProps as AriaRangeCalendarProps,
   RangeCalendarStateContext as AriaRangeCalendarStateContext,
   composeRenderProps,
-  Text,
   useLocale,
 } from "react-aria-components"
 

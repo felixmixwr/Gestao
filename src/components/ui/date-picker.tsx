@@ -3,12 +3,6 @@
 import React, { useState } from "react"
 import { parseDate, today, getLocalTimeZone } from "@internationalized/date"
 import {
-  CalendarCell,
-  CalendarGrid,
-  CalendarGridBody,
-  CalendarGridHeader,
-  CalendarHeaderCell,
-  CalendarHeading,
   JollyCalendar,
 } from "@/components/ui/range-calendar"
 import { Calendar, X } from "lucide-react"

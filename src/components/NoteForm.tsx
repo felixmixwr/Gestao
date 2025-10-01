@@ -60,7 +60,8 @@ export const NoteForm: React.FC<NoteFormProps> = ({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    watch
+    watch,
+    setValue
   } = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
     defaultValues: {

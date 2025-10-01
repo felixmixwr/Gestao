@@ -15,7 +15,7 @@ interface NotificationPayload {
   data?: any
 }
 
-interface PushSubscription {
+interface PushSubscriptionData {
   endpoint: string
   keys: {
     p256dh: string
@@ -32,8 +32,8 @@ serve(async (req) => {
   try {
     // Create Supabase client
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      (globalThis as any).Deno?.env?.get('SUPABASE_URL') ?? '',
+      (globalThis as any).Deno?.env?.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -54,7 +54,7 @@ serve(async (req) => {
       )
     }
 
-    let subscriptions: PushSubscription[] = []
+    let subscriptions: PushSubscriptionData[] = []
 
     if (userId) {
       // Busca subscription específica do usuário
@@ -142,7 +142,7 @@ serve(async (req) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `key=${Deno.env.get('FCM_SERVER_KEY')}`,
+              'Authorization': `key=${(globalThis as any).Deno?.env?.get('FCM_SERVER_KEY')}`,
             },
             body: JSON.stringify({
               notification: notificationPayload,

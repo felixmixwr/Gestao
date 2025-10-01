@@ -10,7 +10,7 @@ interface NotificationPayload {
   data?: any
 }
 
-interface PushSubscription {
+interface PushSubscriptionData {
   endpoint: string
   keys: {
     p256dh: string
@@ -21,7 +21,7 @@ interface PushSubscription {
 export function useNotifications() {
   const [isSupported, setIsSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission>('default')
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null)
+  const [subscription, setSubscription] = useState<PushSubscriptionData | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -62,10 +62,10 @@ export function useNotifications() {
       const registration = await navigator.serviceWorker.ready
       const pushSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.VITE_VAPID_PUBLIC_KEY
+        applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
       })
 
-      const subscriptionData: PushSubscription = {
+      const subscriptionData: PushSubscriptionData = {
         endpoint: pushSubscription.endpoint,
         keys: {
           p256dh: arrayBufferToBase64(pushSubscription.getKey('p256dh')!),

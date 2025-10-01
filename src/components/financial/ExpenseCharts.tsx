@@ -9,7 +9,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   LineChart,
   Line,
   AreaChart,
@@ -17,8 +16,8 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { formatCurrency, EXPENSE_CATEGORY_OPTIONS } from '../../types/financial';
-import type { ChartData, FinancialStats } from '../../types/financial';
+import { formatCurrency } from '../../types/financial';
+import type { FinancialStats } from '../../types/financial';
 
 // Cores para os gráficos
 const COLORS = {
