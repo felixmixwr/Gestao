@@ -12,7 +12,7 @@ interface NotificationPayload {
   icon?: string
   badge?: string
   url?: string
-  data?: any
+  data?: Record<string, unknown>
 }
 
 interface PushSubscriptionData {
@@ -31,9 +31,11 @@ serve(async (req) => {
 
   try {
     // Create Supabase client
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const denoEnv = (globalThis as any).Deno?.env
     const supabaseClient = createClient(
-      (globalThis as any).Deno?.env?.get('SUPABASE_URL') ?? '',
-      (globalThis as any).Deno?.env?.get('SUPABASE_ANON_KEY') ?? '',
+      denoEnv?.get('SUPABASE_URL') ?? '',
+      denoEnv?.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -142,7 +144,7 @@ serve(async (req) => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `key=${(globalThis as any).Deno?.env?.get('FCM_SERVER_KEY')}`,
+              'Authorization': `key=${denoEnv?.get('FCM_SERVER_KEY')}`,
             },
             body: JSON.stringify({
               notification: notificationPayload,

@@ -43,7 +43,6 @@ export function ExpenseFilters({
 
   const handleCategoryChange = (category: string) => {
     if (category === 'all') {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { categoria, ...rest } = filters;
       onFiltersChange(rest);
     } else {
@@ -56,7 +55,6 @@ export function ExpenseFilters({
 
   const handleTypeChange = (type: string) => {
     if (type === 'all') {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { tipo_custo, ...rest } = filters;
       onFiltersChange(rest);
     } else {
@@ -69,7 +67,6 @@ export function ExpenseFilters({
 
   const handleStatusChange = (status: string) => {
     if (status === 'all') {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { status: statusFilter, ...rest } = filters;
       onFiltersChange(rest);
     } else {
@@ -82,7 +79,6 @@ export function ExpenseFilters({
 
   const handleBombaChange = (bombaId: string) => {
     if (bombaId === 'all') {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { bomba_id, ...rest } = filters;
       onFiltersChange(rest);
     } else {
@@ -95,7 +91,6 @@ export function ExpenseFilters({
 
   const handleCompanyChange = (companyId: string) => {
     if (companyId === 'all') {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { company_id, ...rest } = filters;
       onFiltersChange(rest);
     } else {

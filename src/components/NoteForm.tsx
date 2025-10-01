@@ -56,13 +56,7 @@ export const NoteForm: React.FC<NoteFormProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    watch,
-    setValue
-  } = useForm<NoteFormData>({
+  const form = useForm<NoteFormData>({
     resolver: zodResolver(noteFormSchema),
     defaultValues: {
       company_logo: initialData?.company_logo || 'felixmix',
@@ -81,6 +75,7 @@ export const NoteForm: React.FC<NoteFormProps> = ({
     }
   });
 
+  const { register, handleSubmit, formState: { errors, isSubmitting }, watch, setValue } = form;
   const watchedValue = watch('nf_value');
 
   const onSubmit = async (data: NoteFormData) => {
