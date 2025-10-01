@@ -111,17 +111,25 @@ export const useNotifications = () => {
           })
           console.log('✅ Subscription criada com applicationServerKey')
         } catch (error) {
-          console.warn('⚠️ Erro com applicationServerKey, tentando sem:', error.message)
+          console.warn('⚠️ Erro com applicationServerKey:', error.message)
+          console.log('🔍 Detalhes do erro:', error)
           
-          try {
-            // Tentar sem applicationServerKey (usar GCM do manifest)
-            subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true
-            })
-            console.log('✅ Subscription criada sem applicationServerKey (usando GCM)')
-          } catch (gcmError) {
-            console.error('❌ Erro também sem applicationServerKey:', gcmError.message)
-            throw gcmError
+          // Se o erro é sobre gcm_sender_id, vamos tentar uma abordagem diferente
+          if (error.message.includes('gcm_sender_id')) {
+            console.log('🔄 Problema com GCM detectado, tentando abordagem alternativa...')
+            
+            // Verificar se há subscription existente
+            const existingSubscription = await registration.pushManager.getSubscription()
+            if (existingSubscription) {
+              console.log('✅ Usando subscription existente')
+              subscription = existingSubscription
+            } else {
+              console.log('❌ Nenhuma subscription disponível')
+              throw new Error('Não foi possível criar subscription push. Verifique as configurações do navegador.')
+            }
+          } else {
+            // Outros erros
+            throw error
           }
         }
       }
