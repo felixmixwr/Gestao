@@ -840,7 +840,7 @@ function NovaProgramacaoContent() {
                   <option value="">Selecione a bomba</option>
                   {bombas.map(bomba => (
                     <option key={bomba.id} value={bomba.id}>
-                      {bomba.prefix} - {bomba.model} ({bomba.brand})
+                      {bomba.is_terceira ? '🔗 ' : ''}{bomba.prefix} - {bomba.model} ({bomba.brand})
                     </option>
                   ))}
                 </select>

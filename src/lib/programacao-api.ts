@@ -40,32 +40,73 @@ export class ProgramacaoAPI {
 
   // Buscar programação por ID
   static async getById(id: string): Promise<Programacao | null> {
-    const { data, error } = await supabase
-      .from('programacao')
-      .select(`
-        *,
-        pumps (
-          id,
-          prefix,
-          model,
-          brand
-        ),
-        companies (
-          id,
-          name
-        )
-      `)
-      .eq('id', id)
-      .single();
+    try {
+      // 1. Buscar programação básica
+      const { data: programacaoData, error: programacaoError } = await supabase
+        .from('programacao')
+        .select(`
+          *,
+          companies (
+            id,
+            name
+          )
+        `)
+        .eq('id', id)
+        .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null; // Não encontrado
+      if (programacaoError) {
+        if (programacaoError.code === 'PGRST116') {
+          return null; // Não encontrado
+        }
+        throw new Error(`Erro ao buscar programação: ${programacaoError.message}`);
       }
-      throw new Error(`Erro ao buscar programação: ${error.message}`);
-    }
 
-    return data;
+      if (!programacaoData) {
+        return null;
+      }
+
+      // 2. Buscar dados da bomba (interna ou terceira)
+      let pumpData = null;
+      if (programacaoData.bomba_id) {
+        // Tentar buscar bomba interna primeiro
+        const { data: pumpsData } = await supabase
+          .from('pumps')
+          .select('id, prefix, model, brand')
+          .eq('id', programacaoData.bomba_id)
+          .single();
+
+        if (pumpsData) {
+          pumpData = pumpsData;
+        } else {
+          // Se não encontrou bomba interna, buscar bomba terceira
+          const { data: bombaTerceira } = await supabase
+            .from('view_bombas_terceiras_com_empresa')
+            .select('id, prefixo, modelo, empresa_nome_fantasia, valor_diaria')
+            .eq('id', programacaoData.bomba_id)
+            .single();
+
+          if (bombaTerceira) {
+            pumpData = {
+              id: bombaTerceira.id,
+              prefix: bombaTerceira.prefixo,
+              model: bombaTerceira.modelo || '',
+              brand: `${bombaTerceira.empresa_nome_fantasia} - R$ ${bombaTerceira.valor_diaria || 0}/dia`,
+              is_terceira: true,
+              empresa_nome: bombaTerceira.empresa_nome_fantasia,
+              valor_diaria: bombaTerceira.valor_diaria
+            };
+          }
+        }
+      }
+
+      return {
+        ...programacaoData,
+        pumps: pumpData
+      };
+    } catch (error) {
+      console.error('Erro ao buscar programação por ID:', error);
+      throw error;
+    }
   }
 
   // Listar programações com filtros
@@ -150,45 +191,101 @@ export class ProgramacaoAPI {
   static async getByPeriod(startDate: string, endDate: string): Promise<Programacao[]> {
     console.log('🔍 [ProgramacaoAPI] Buscando programações por período:', { startDate, endDate });
     
-    const { data, error } = await supabase
-      .from('programacao')
-      .select(`
-        *,
-        pumps (
-          id,
-          prefix,
-          model,
-          brand
-        ),
-        companies (
-          id,
-          name
-        )
-      `)
-      .gte('data', startDate)
-      .lte('data', endDate)
-      .order('data', { ascending: true })
-      .order('horario', { ascending: true });
+    try {
+      // 1. Buscar programações básicas
+      const { data: programacoesData, error: programacoesError } = await supabase
+        .from('programacao')
+        .select(`
+          *,
+          companies (
+            id,
+            name
+          )
+        `)
+        .gte('data', startDate)
+        .lte('data', endDate)
+        .order('data', { ascending: true })
+        .order('horario', { ascending: true });
 
-    if (error) {
-      console.error('❌ [ProgramacaoAPI] Erro ao buscar programações:', error);
-      throw new Error(`Erro ao buscar programações por período: ${error.message}`);
-    }
+      if (programacoesError) {
+        console.error('❌ [ProgramacaoAPI] Erro ao buscar programações:', programacoesError);
+        throw new Error(`Erro ao buscar programações por período: ${programacoesError.message}`);
+      }
 
-    console.log('✅ [ProgramacaoAPI] Programações encontradas:', data?.length || 0);
-    if (data && data.length > 0) {
-      console.log('🔍 [ProgramacaoAPI] Primeira programação:', data[0]);
-      console.log('🔍 [ProgramacaoAPI] Status da primeira:', data[0].status);
+      if (!programacoesData || programacoesData.length === 0) {
+        console.log('⚠️ [ProgramacaoAPI] Nenhuma programação encontrada');
+        return [];
+      }
+
+      // 2. Buscar bombas internas
+      const pumpIds = [...new Set(programacoesData.map(p => p.bomba_id).filter(Boolean))];
+      console.log('🔍 [ProgramacaoAPI] Pump IDs únicos:', pumpIds);
       
-      // Garantir que todas as programações tenham status definido
-      data.forEach(programacao => {
+      const { data: pumpsData } = await supabase
+        .from('pumps')
+        .select('id, prefix, model, brand')
+        .in('id', pumpIds);
+      
+      console.log('📊 [ProgramacaoAPI] Bombas internas carregadas:', pumpsData?.length || 0);
+      
+      // 3. Buscar bombas terceiras para IDs que não foram encontrados nas bombas internas
+      const foundPumpIds = pumpsData?.map(p => p.id) || [];
+      const missingPumpIds = pumpIds.filter(id => !foundPumpIds.includes(id));
+      
+      let bombasTerceirasData = [];
+      if (missingPumpIds.length > 0) {
+        console.log('🔍 [ProgramacaoAPI] Buscando bombas terceiras para IDs:', missingPumpIds);
+        const { data: bombasTerceiras } = await supabase
+          .from('view_bombas_terceiras_com_empresa')
+          .select('id, prefixo, modelo, empresa_nome_fantasia, valor_diaria')
+          .in('id', missingPumpIds);
+        
+        bombasTerceirasData = bombasTerceiras || [];
+        console.log('📊 [ProgramacaoAPI] Bombas terceiras carregadas:', bombasTerceirasData.length);
+      }
+      
+      // 4. Enriquecer programações com dados das bombas
+      const enrichedProgramacoes = programacoesData.map(programacao => {
+        // Buscar bomba interna primeiro
+        let pumpData = pumpsData?.find(p => p.id === programacao.bomba_id);
+        
+        // Se não encontrou bomba interna, buscar bomba terceira
+        if (!pumpData) {
+          const bombaTerceira = bombasTerceirasData?.find(bt => bt.id === programacao.bomba_id);
+          if (bombaTerceira) {
+            pumpData = {
+              id: bombaTerceira.id,
+              prefix: bombaTerceira.prefixo,
+              model: bombaTerceira.modelo || '',
+              brand: `${bombaTerceira.empresa_nome_fantasia} - R$ ${bombaTerceira.valor_diaria || 0}/dia`,
+              is_terceira: true,
+              empresa_nome: bombaTerceira.empresa_nome_fantasia,
+              valor_diaria: bombaTerceira.valor_diaria
+            };
+          }
+        }
+        
+        return {
+          ...programacao,
+          pumps: pumpData
+        };
+      });
+      
+      console.log('✅ [ProgramacaoAPI] Programações enriquecidas:', enrichedProgramacoes.length);
+      
+      // 5. Garantir que todas as programações tenham status definido
+      enrichedProgramacoes.forEach(programacao => {
         if (!programacao.status) {
           programacao.status = 'programado';
           console.log('⚠️ [ProgramacaoAPI] Programação sem status, definindo como programado:', programacao.id);
         }
       });
+      
+      return enrichedProgramacoes;
+    } catch (error) {
+      console.error('❌ [ProgramacaoAPI] Erro ao buscar programações por período:', error);
+      throw error;
     }
-    return data || [];
   }
 
   // Buscar programações agrupadas por data (para o board)
@@ -235,18 +332,67 @@ export class ProgramacaoAPI {
     }
   }
 
-  // Buscar bombas disponíveis
-  static async getBombas(): Promise<Array<{ id: string; prefix: string; model: string; brand: string }>> {
-    const { data, error } = await supabase
-      .from('pumps')
-      .select('id, prefix, model, brand')
-      .order('prefix');
+  // Buscar bombas disponíveis (internas + terceiras)
+  static async getBombas(): Promise<Array<{ id: string; prefix: string; model: string; brand: string; is_terceira?: boolean; empresa_nome?: string; valor_diaria?: number }>> {
+    try {
+      // Buscar bombas internas
+      const { data: pumpsData, error: pumpsError } = await supabase
+        .from('pumps')
+        .select('id, prefix, model, brand')
+        .order('prefix');
 
-    if (error) {
-      throw new Error(`Erro ao buscar bombas: ${error.message}`);
+      if (pumpsError) {
+        throw new Error(`Erro ao buscar bombas internas: ${pumpsError.message}`);
+      }
+
+      // Buscar bombas de terceiros
+      const { data: bombasTerceirasData, error: bombasTerceirasError } = await supabase
+        .from('view_bombas_terceiras_com_empresa')
+        .select('id, prefixo, modelo, empresa_nome_fantasia, valor_diaria')
+        .order('empresa_nome_fantasia, prefixo');
+
+      if (bombasTerceirasError) {
+        throw new Error(`Erro ao buscar bombas terceiras: ${bombasTerceirasError.message}`);
+      }
+
+      // Combinar as bombas internas e terceiras
+      const bombasInternas = (pumpsData || []).map(pump => ({
+        id: pump.id,
+        prefix: pump.prefix,
+        model: pump.model,
+        brand: pump.brand,
+        is_terceira: false
+      }));
+
+      const bombasTerceiras = (bombasTerceirasData || []).map(bomba => ({
+        id: bomba.id,
+        prefix: bomba.prefixo,
+        model: bomba.modelo || '',
+        brand: `${bomba.empresa_nome_fantasia} - R$ ${bomba.valor_diaria || 0}/dia`,
+        is_terceira: true,
+        empresa_nome: bomba.empresa_nome_fantasia,
+        valor_diaria: bomba.valor_diaria
+      }));
+
+      // Combinar e ordenar por prefixo
+      const todasBombas = [...bombasInternas, ...bombasTerceiras].sort((a, b) => {
+        // Ordenar primeiro por prefixo
+        const prefixComparison = a.prefix.localeCompare(b.prefix);
+        if (prefixComparison !== 0) return prefixComparison;
+        
+        // Se o prefixo for igual, ordenar bombas internas primeiro
+        if (a.is_terceira !== b.is_terceira) {
+          return a.is_terceira ? 1 : -1;
+        }
+        
+        return 0;
+      });
+
+      return todasBombas;
+    } catch (error) {
+      console.error('Erro ao buscar bombas:', error);
+      throw error;
     }
-
-    return data || [];
   }
 
   // Buscar empresas do usuário

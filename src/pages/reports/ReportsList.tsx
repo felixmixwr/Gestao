@@ -24,10 +24,15 @@ export default function ReportsList() {
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [pumps, setPumps] = useState<Array<{ id: string; prefix: string }>>([])
+  const [totalReports, setTotalReports] = useState(0)
   const [filters, setFilters] = useState<ReportFilters>({})
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
   const [dateFilterType, setDateFilterType] = useState<string>('all')
+  
+  // Estados para ordenação
+  const [sortField, setSortField] = useState<string>('created_at')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   
   // Estados para busca
   const [searchTerm, setSearchTerm] = useState('')
@@ -47,7 +52,7 @@ export default function ReportsList() {
 
   useEffect(() => {
     loadReports()
-  }, [filters, currentPage, searchTerm, searchType])
+  }, [filters, currentPage, searchTerm, searchType, sortField, sortDirection])
 
   const loadClients = async () => {
     try {
@@ -127,7 +132,14 @@ export default function ReportsList() {
       let query = supabase
         .from('reports')
         .select('*')
-        .order('created_at', { ascending: false })
+
+      // Aplicar ordenação apenas se não for por status (status será ordenado customizado)
+      if (sortField !== 'status') {
+        query = query.order(sortField, { ascending: sortDirection === 'asc' })
+      } else {
+        // Para status, usar ordenação padrão por data de criação
+        query = query.order('created_at', { ascending: false })
+      }
 
       // Aplicar filtros
       if (filters.status && filters.status.length > 0) {
@@ -216,13 +228,86 @@ export default function ReportsList() {
         query = query.lte('total_value', filters.value_max)
       }
 
-      // Por enquanto, vamos usar uma contagem simples
-      console.log('🔍 [DEBUG] Executando query principal...')
-      setTotalPages(1) // Simplificado por enquanto
+      // 1. Primeiro, contar o total de registros para calcular paginação
+      console.log('🔍 [DEBUG] Contando total de registros...')
+      
+      // Criar uma query separada apenas para contagem
+      let countQuery = supabase
+        .from('reports')
+        .select('*', { count: 'exact', head: true })
+        .order(sortField, { ascending: sortDirection === 'asc' })
 
-      // Depois, aplicar paginação
+      // Aplicar os mesmos filtros na query de contagem
+      if (filters.status && filters.status.length > 0) {
+        countQuery = countQuery.in('status', filters.status)
+      }
+      if (filters.dateFrom) {
+        countQuery = countQuery.gte('date', filters.dateFrom)
+      }
+      if (filters.dateTo) {
+        countQuery = countQuery.lte('date', filters.dateTo)
+      }
+      if (filters.pump_prefix) {
+        countQuery = countQuery.eq('pump_prefix', filters.pump_prefix)
+      }
+      if (filters.client_id) {
+        countQuery = countQuery.eq('client_id', filters.client_id)
+      }
+      if (searchTerm.trim()) {
+        switch (searchType) {
+          case 'id':
+            countQuery = countQuery.ilike('report_number', `%${searchTerm}%`)
+            break
+          case 'date':
+            countQuery = countQuery.ilike('date', `%${searchTerm}%`)
+            break
+          case 'client':
+            countQuery = countQuery.ilike('client_rep_name', `%${searchTerm}%`)
+            break
+          case 'pump':
+            countQuery = countQuery.ilike('pump_prefix', `%${searchTerm}%`)
+            break
+          case 'volume':
+            const volumeNum = parseFloat(searchTerm)
+            if (!isNaN(volumeNum)) {
+              countQuery = countQuery.eq('realized_volume', volumeNum)
+            }
+            break
+          case 'value':
+            const valueNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'))
+            if (!isNaN(valueNum)) {
+              countQuery = countQuery.eq('total_value', valueNum)
+            }
+            break
+        }
+      }
+
+      console.log('🔍 [DEBUG] Executando query de contagem...')
+      const { count: totalCount, error: countError } = await countQuery
+
+      if (countError) {
+        console.error('❌ [ERROR] Erro ao contar registros:', countError)
+        console.error('❌ [ERROR] Detalhes do erro:', countError.message, countError.details, countError.hint)
+        throw countError
+      }
+
+      console.log('✅ [SUCCESS] Contagem executada com sucesso!')
+      console.log('📊 [DATA] Resultado da contagem:', totalCount)
+
+      const totalRecords = totalCount || 0
+      const calculatedTotalPages = Math.max(1, Math.ceil(totalRecords / ITEMS_PER_PAGE))
+      
+      console.log('📊 [DATA] Total de registros:', totalRecords)
+      console.log('📊 [DATA] Total de páginas calculadas:', calculatedTotalPages)
+      console.log('📊 [DATA] ITEMS_PER_PAGE:', ITEMS_PER_PAGE)
+      console.log('📊 [DATA] currentPage:', currentPage)
+      
+      setTotalPages(calculatedTotalPages)
+      setTotalReports(totalRecords)
+
+      // 2. Aplicar paginação na query principal
       console.log('🔍 [DEBUG] Aplicando paginação...')
-      const { data: reportsData, error } = await query
+      let { data: reportsData, error } = await query
         .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1)
 
       if (error) {
@@ -322,7 +407,24 @@ export default function ReportsList() {
         console.log('📊 [DATA] Pump data do primeiro:', enrichedReports[0]?.pumps)
         console.log('📊 [DATA] Company data do primeiro:', enrichedReports[0]?.companies)
         
-        setReports(enrichedReports)
+        // 6. Aplicar ordenação customizada por status se necessário
+        let finalReports = enrichedReports
+        if (sortField === 'status') {
+          console.log('🔍 [DEBUG] Aplicando ordenação customizada por status...')
+          finalReports = enrichedReports.sort((a, b) => {
+            const orderA = getStatusOrder(a.status)
+            const orderB = getStatusOrder(b.status)
+            
+            if (sortDirection === 'asc') {
+              return orderA - orderB
+            } else {
+              return orderB - orderA
+            }
+          })
+          console.log('📊 [DATA] Ordenação customizada aplicada')
+        }
+        
+        setReports(finalReports)
       } else {
         console.log('⚠️ [WARNING] Nenhum relatório retornado!')
         setReports([])
@@ -361,6 +463,32 @@ export default function ReportsList() {
     setFilters({})
     setCurrentPage(1)
     loadReports()
+  }
+
+  // Função para lidar com ordenação
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Se já está ordenando por este campo, alternar direção
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      // Se é um novo campo, começar com descendente
+      setSortField(field)
+      setSortDirection('desc')
+    }
+    setCurrentPage(1) // Voltar para primeira página
+  }
+
+  // Função para ordenar status customizado
+  const getStatusOrder = (status: string) => {
+    const statusOrder = {
+      'ENVIADO_FINANCEIRO': 1,
+      'RECEBIDO_FINANCEIRO': 2,
+      'AGUARDANDO_APROVACAO': 3,
+      'NOTA_EMITIDA': 4,
+      'AGUARDANDO_PAGAMENTO': 5,
+      'PAGO': 6
+    }
+    return statusOrder[status as keyof typeof statusOrder] || 999
   }
 
   const handleStatusChange = async (reportId: string, newStatus: ReportStatus) => {
@@ -551,7 +679,8 @@ const handleWhatsApp = (report: ReportWithRelations) => {
     {
       key: 'status' as keyof ReportWithRelations,
       label: 'STATUS',
-      className: 'w-32',
+      className: 'w-32 cursor-pointer hover:bg-gray-100 select-none',
+      sortable: true,
       render: (value: ReportStatus, report: ReportWithRelations) => (
         <select
           value={value}
@@ -954,11 +1083,11 @@ const handleWhatsApp = (report: ReportWithRelations) => {
               <div>
                 {hasActiveFilters() ? (
                   <span>
-                    Mostrando <strong>{reports.length}</strong> relatório(s) com os filtros aplicados
+                    Mostrando <strong>{reports.length}</strong> de <strong>{totalReports}</strong> relatório(s) com os filtros aplicados
                   </span>
                 ) : (
                   <span>
-                    Total de <strong>{reports.length}</strong> relatório(s)
+                    Total de <strong>{totalReports}</strong> relatório(s)
                   </span>
                 )}
               </div>
@@ -978,9 +1107,17 @@ const handleWhatsApp = (report: ReportWithRelations) => {
                 {columns.map((column, index) => (
                   <th
                     key={index}
-                    className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase ${column.className || ''}`}
+                    className={`px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase ${column.className || ''} ${(column as any).sortable ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+                    onClick={() => (column as any).sortable && handleSort(column.key)}
                   >
-                    {column.label}
+                    <div className="flex items-center space-x-1">
+                      <span>{column.label}</span>
+                      {(column as any).sortable && sortField === column.key && (
+                        <span className="text-blue-600">
+                          {sortDirection === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -1016,24 +1153,67 @@ const handleWhatsApp = (report: ReportWithRelations) => {
         </div>
 
         {/* Paginação */}
-        {totalPages > 1 && (
+        {totalPages > 0 && (
           <div className="flex justify-center items-center space-x-2 mt-6">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1 || totalPages <= 1}
             >
-              Anterior
+              Primeira
             </Button>
             
             <Button
               variant="outline"
               size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 || totalPages <= 1}
+            >
+              Anterior
+            </Button>
+            
+            {/* Mostrar números das páginas */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNumber;
+              if (totalPages <= 5) {
+                pageNumber = i + 1;
+              } else if (currentPage <= 3) {
+                pageNumber = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNumber = totalPages - 4 + i;
+              } else {
+                pageNumber = currentPage - 2 + i;
+              }
+              
+              return (
+                <Button
+                  key={pageNumber}
+                  variant={currentPage === pageNumber ? "primary" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(pageNumber)}
+                >
+                  {pageNumber}
+                </Button>
+              );
+            })}
+            
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || totalPages <= 1}
             >
               Próxima
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || totalPages <= 1}
+            >
+              Última
             </Button>
           </div>
         )}

@@ -222,7 +222,7 @@ export default function ProgramacaoBoardFixed() {
                     { value: '', label: 'Todas as bombas' },
                     ...bombas.map(bomba => ({
                       value: bomba.id,
-                      label: `${bomba.name} - ${bomba.model}`
+                      label: `${bomba.is_terceira ? '🔗 ' : ''}${bomba.name} - ${bomba.model}`
                     }))
                   ]}
                   placeholder="Filtrar por bomba"

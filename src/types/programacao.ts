@@ -101,6 +101,9 @@ export interface BombaOption {
   prefix: string;
   model: string;
   brand: string;
+  is_terceira?: boolean;
+  empresa_nome?: string;
+  valor_diaria?: number;
 }
 
 export interface ClienteOption {
