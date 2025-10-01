@@ -4,7 +4,6 @@ import { GenericError } from '../pages/errors/GenericError'
 
 // Import components directly to avoid lazy loading issues
 import { Login } from '../pages/auth/LoginSimple'
-import { Signup } from '../pages/auth/SignupSimple'
 import Dashboard from '../pages/Dashboard'
 import ClientsList from '../pages/clients/ClientsList'
 import NewClient from '../pages/clients/NewClient'
@@ -50,11 +49,6 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <Login />,
-    errorElement: <GenericError />
-  },
-  {
-    path: '/signup',
-    element: <Signup />,
     errorElement: <GenericError />
   },
   {

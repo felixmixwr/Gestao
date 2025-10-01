@@ -522,3 +522,5 @@ export function QuickFilters({ onApplyFilter, onClearFilters }: QuickFiltersProp
   );
 }
 
+
+

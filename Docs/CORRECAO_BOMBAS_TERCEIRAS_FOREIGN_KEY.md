@@ -91,3 +91,5 @@ Execute o script `scripts/test_bombas_terceiras_fix.sql` para verificar se as co
 - A interface se adapta automaticamente ao tipo de bomba selecionada
 - Não há impacto na performance do sistema
 
+
+

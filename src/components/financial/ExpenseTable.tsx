@@ -382,3 +382,5 @@ export function TableSummary({ totalExpenses, totalValue, averageValue }: TableS
   );
 }
 
+
+

@@ -158,3 +158,5 @@ Após executar a migração corrigida:
 2. Verifique se as políticas RLS estão funcionando
 3. Implemente a interface de usuário para gerenciar despesas
 4. Configure relatórios e dashboards para análise financeira
+
+

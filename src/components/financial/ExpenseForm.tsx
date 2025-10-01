@@ -522,3 +522,5 @@ export function ExpenseView({ expense, onEdit, onDelete, onClose }: ExpenseViewP
   );
 }
 
+
+

@@ -8,6 +8,19 @@ export class ProgramacaoAPI {
     console.log('🔍 [ProgramacaoAPI] company_id:', data.company_id);
     console.log('🔍 [ProgramacaoAPI] status:', data.status);
     
+    // Validação de UUIDs vazios
+    if (!data.company_id || data.company_id.trim() === '') {
+      throw new Error('Company ID é obrigatório e não pode estar vazio');
+    }
+    
+    if (data.cliente_id && data.cliente_id.trim() === '') {
+      throw new Error('Cliente ID não pode estar vazio se fornecido');
+    }
+    
+    if (data.bomba_id && data.bomba_id.trim() === '') {
+      throw new Error('Bomba ID não pode estar vazio se fornecido');
+    }
+    
     const { data: programacao, error } = await supabase
       .from('programacao')
       .insert([data])

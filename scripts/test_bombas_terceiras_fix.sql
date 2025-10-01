@@ -109,3 +109,5 @@ WHERE table_name = 'reports'
 AND column_name IN ('pump_id', 'client_id', 'company_id', 'service_company_id')
 ORDER BY ordinal_position;
 
+
+

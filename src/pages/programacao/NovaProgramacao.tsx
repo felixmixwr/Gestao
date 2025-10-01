@@ -12,6 +12,8 @@ import { DatePicker } from '../../components/ui/date-picker';
 // Removidos imports não utilizados após mudança para layout do reports
 import { ColaboradorOption, BombaOption, EmpresaOption, ClienteOption } from '../../types/programacao';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useAuth } from '../../lib/auth-hooks';
+import { supabase } from '../../lib/supabase';
 
 const BritaOptions = [
   { value: '0', label: '0' },
@@ -45,6 +47,7 @@ function NovaProgramacaoContent() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { buscarCEP, validarCEP, formatarCEP } = useViaCep();
+  const { user } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -94,6 +97,24 @@ function NovaProgramacaoContent() {
     try {
       console.log('🔄 Iniciando carregamento de dados iniciais...');
       
+      // Obter company_id do usuário logado
+      let userCompanyId = '';
+      if (user?.id) {
+        console.log('🔍 Buscando company_id do usuário...');
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('company_id')
+          .eq('id', user.id)
+          .single();
+
+        if (userError) {
+          console.error('❌ Erro ao buscar company_id do usuário:', userError);
+        } else {
+          userCompanyId = userData?.company_id || '';
+          console.log('✅ Company ID encontrado:', userCompanyId);
+        }
+      }
+      
       console.log('👥 Buscando clientes...');
       const clientesData = await ProgramacaoAPI.getClientes();
       console.log('✅ Clientes carregados:', clientesData);
@@ -114,6 +135,15 @@ function NovaProgramacaoContent() {
       setEmpresas(empresasData);
       setColaboradores(colaboradoresData);
       setBombas(bombasData);
+
+      // Definir company_id automaticamente se encontrado
+      if (userCompanyId) {
+        console.log('🔧 Definindo company_id automaticamente:', userCompanyId);
+        setFormData(prev => ({
+          ...prev,
+          company_id: userCompanyId
+        }));
+      }
 
       // Se não está editando e há apenas uma empresa, selecionar automaticamente
       if (!isEditing && empresasData.length === 1) {
@@ -306,10 +336,18 @@ function NovaProgramacaoContent() {
       return;
     }
 
+    // Validação adicional para company_id
+    if (!formData.company_id || formData.company_id.trim() === '') {
+      toast.error('Erro: Company ID não encontrado. Por favor, recarregue a página.');
+      console.error('❌ [NovaProgramacao] Company ID vazio:', formData.company_id);
+      return;
+    }
+
     setSaving(true);
     try {
       // Debug: mostrar dados antes de enviar
       console.log('🔍 [NovaProgramacao] Dados do formulário:', formData);
+      console.log('🔍 [NovaProgramacao] Company ID:', formData.company_id);
       console.log('🔍 [NovaProgramacao] Data selecionada:', formData.data);
       console.log('🔍 [NovaProgramacao] Data atual do sistema:', new Date().toISOString().split('T')[0]);
       

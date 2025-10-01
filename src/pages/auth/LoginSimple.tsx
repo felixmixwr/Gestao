@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Navigate, Link } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { useAuth } from '../../lib/auth-hooks'
 import { Button } from '../../components/Button'
 import { APP_CONFIG } from '../../utils/constants'
@@ -102,14 +102,6 @@ export function Login() {
             </Button>
           </div>
 
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Não tem uma conta?{' '}
-              <Link to="/signup" className="font-medium text-primary-600 hover:text-primary-500">
-                Cadastre-se aqui
-              </Link>
-            </p>
-          </div>
         </form>
       </div>
     </div>

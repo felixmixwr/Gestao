@@ -176,3 +176,5 @@ BEGIN
     RAISE NOTICE '✅ Migração da tabela expenses concluída com sucesso!';
     RAISE NOTICE 'Tabela expenses criada com todas as colunas, índices, triggers e políticas RLS.';
 END $$;
+
+

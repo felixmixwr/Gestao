@@ -68,3 +68,5 @@ END $$;
 -- SELECT 'Testando função de verificação...' as status;
 -- SELECT check_pump_reference() FROM reports LIMIT 1;
 
+
+

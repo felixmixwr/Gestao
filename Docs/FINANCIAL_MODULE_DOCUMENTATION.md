@@ -315,3 +315,5 @@ npm run test:coverage
 - ✅ Validação robusta com Zod
 - ✅ Tipagem TypeScript completa
 
+
+
