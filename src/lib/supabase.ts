@@ -573,6 +573,10 @@ export type Database = {
           quilometragem_atual: number | null
           quantidade_litros: number | null
           custo_por_litro: number | null
+          payment_method: 'cartao' | 'pix' | null
+          discount_type: 'fixed' | 'percentage' | null
+          discount_value: number | null
+          fuel_station: string | null
           nota_fiscal_id: string | null
           observacoes: string | null
           created_at: string
@@ -591,6 +595,10 @@ export type Database = {
           quilometragem_atual?: number | null
           quantidade_litros?: number | null
           custo_por_litro?: number | null
+          payment_method?: 'cartao' | 'pix' | null
+          discount_type?: 'fixed' | 'percentage' | null
+          discount_value?: number | null
+          fuel_station?: string | null
           nota_fiscal_id?: string | null
           observacoes?: string | null
           created_at?: string
@@ -609,6 +617,10 @@ export type Database = {
           quilometragem_atual?: number | null
           quantidade_litros?: number | null
           custo_por_litro?: number | null
+          payment_method?: 'cartao' | 'pix' | null
+          discount_type?: 'fixed' | 'percentage' | null
+          discount_value?: number | null
+          fuel_station?: string | null
           nota_fiscal_id?: string | null
           observacoes?: string | null
           created_at?: string

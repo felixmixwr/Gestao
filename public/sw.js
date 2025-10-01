@@ -1,145 +1,166 @@
 // Service Worker para notificações push
-const CACHE_NAME = 'felix-mix-v1'
+// WorldRental FelixMix PWA
+
+const CACHE_NAME = 'worldrental-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
   '/static/css/main.css',
   '/manifest.json'
-]
+];
 
-// Instalação do Service Worker
-self.addEventListener('install', (event) => {
+// Instalar Service Worker
+self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache aberto')
-        return cache.addAll(urlsToCache)
+      .then(function(cache) {
+        console.log('Service Worker: Cache aberto');
+        return cache.addAll(urlsToCache);
       })
-  )
-})
+  );
+});
 
-// Ativação do Service Worker
-self.addEventListener('activate', (event) => {
+// Ativar Service Worker
+self.addEventListener('activate', function(event) {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then(function(cacheNames) {
       return Promise.all(
-        cacheNames.map((cacheName) => {
+        cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
-            console.log('Removendo cache antigo:', cacheName)
-            return caches.delete(cacheName)
+            console.log('Service Worker: Removendo cache antigo', cacheName);
+            return caches.delete(cacheName);
           }
         })
-      )
+      );
     })
-  )
-})
+  );
+});
 
-// Interceptação de requisições
-self.addEventListener('fetch', (event) => {
+// Interceptar requisições
+self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
-      .then((response) => {
-        // Retorna do cache se encontrado, senão faz a requisição
-        return response || fetch(event.request)
-      })
-  )
-})
-
-// Configuração de notificações push
-self.addEventListener('push', (event) => {
-  console.log('Push event recebido:', event)
-
-  let data = {}
-  if (event.data) {
-    try {
-      data = event.data.json()
-    } catch (e) {
-      data = {
-        title: 'Felix Mix',
-        body: event.data.text() || 'Nova notificação',
-        icon: '/icons/notification.png',
-        badge: '/icons/badge.png',
-        url: '/'
+      .then(function(response) {
+        // Retornar do cache ou buscar da rede
+        return response || fetch(event.request);
       }
-    }
-  }
+    )
+  );
+});
 
-  const options = {
-    body: data.body || 'Nova notificação',
-    icon: data.icon || '/icons/notification.png',
-    badge: data.badge || '/icons/badge.png',
-    vibrate: [200, 100, 200],
-    data: {
-      url: data.url || '/',
-      timestamp: Date.now()
-    },
+// Gerenciar notificações push
+self.addEventListener('push', function(event) {
+  console.log('Service Worker: Push recebido', event);
+  
+  let data = {
+    title: 'WorldRental',
+    body: 'Você tem uma nova notificação',
+    icon: '/icon-192x192.png',
+    badge: '/badge-72x72.png',
+    tag: 'worldrental-notification',
+    requireInteraction: true,
     actions: [
       {
         action: 'open',
-        title: 'Abrir',
-        icon: '/icons/open.png'
+        title: 'Abrir App',
+        icon: '/icon-72x72.png'
       },
       {
         action: 'close',
         title: 'Fechar',
-        icon: '/icons/close.png'
+        icon: '/icon-72x72.png'
       }
-    ],
-    requireInteraction: true,
-    silent: false
+    ]
+  };
+
+  // Se há dados no push, usar eles
+  if (event.data) {
+    try {
+      const pushData = event.data.json();
+      data = { ...data, ...pushData };
+    } catch (e) {
+      data.body = event.data.text();
+    }
   }
+
+  console.log('Service Worker: Exibindo notificação', data);
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Felix Mix', options)
-  )
-})
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon,
+      badge: data.badge,
+      tag: data.tag,
+      requireInteraction: data.requireInteraction,
+      actions: data.actions,
+      data: data.data || {}
+    })
+  );
+});
 
-// Clique na notificação
-self.addEventListener('notificationclick', (event) => {
-  console.log('Notificação clicada:', event)
+// Gerenciar cliques em notificações
+self.addEventListener('notificationclick', function(event) {
+  console.log('Service Worker: Notificação clicada', event);
+  
+  event.notification.close();
 
-  event.notification.close()
-
-  if (event.action === 'open' || !event.action) {
-    const url = event.notification.data?.url || '/'
-    
-    event.waitUntil(
-      clients.matchAll({ type: 'window' }).then((clientList) => {
-        // Verifica se já existe uma janela aberta
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.navigate(url)
-            return client.focus()
-          }
-        }
-        
-        // Se não há janela aberta, abre uma nova
-        if (clients.openWindow) {
-          return clients.openWindow(url)
-        }
-      })
-    )
+  if (event.action === 'close') {
+    return;
   }
-})
+
+  // Abrir o app ou focar na janela existente
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(function(clientList) {
+      // Se há uma janela aberta, focar nela
+      for (let i = 0; i < clientList.length; i++) {
+        const client = clientList[i];
+        if (client.url === '/' && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // Se não há janela aberta, abrir uma nova
+      if (clients.openWindow) {
+        return clients.openWindow('/');
+      }
+    })
+  );
+});
+
+// Gerenciar notificações fechadas
+self.addEventListener('notificationclose', function(event) {
+  console.log('Service Worker: Notificação fechada', event);
+});
 
 // Background sync para notificações offline
-self.addEventListener('sync', (event) => {
-  console.log('Background sync:', event.tag)
+self.addEventListener('sync', function(event) {
+  console.log('Service Worker: Background sync', event);
   
-  if (event.tag === 'notification-sync') {
+  if (event.tag === 'background-sync') {
     event.waitUntil(
-      // Aqui você pode implementar lógica para sincronizar notificações
-      // quando o dispositivo voltar a ter conexão
-      Promise.resolve()
-    )
+      // Sincronizar dados offline quando voltar online
+      syncOfflineData()
+    );
   }
-})
+});
 
-// Mensagens do cliente principal
-self.addEventListener('message', (event) => {
-  console.log('Mensagem recebida no service worker:', event.data)
+// Função para sincronizar dados offline
+async function syncOfflineData() {
+  try {
+    // Aqui você pode implementar sincronização de dados offline
+    console.log('Service Worker: Sincronizando dados offline');
+  } catch (error) {
+    console.error('Service Worker: Erro na sincronização', error);
+  }
+}
+
+// Gerenciar mensagens do app
+self.addEventListener('message', function(event) {
+  console.log('Service Worker: Mensagem recebida', event);
   
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting()
+    self.skipWaiting();
   }
-})
+});
+
+console.log('Service Worker: Carregado com sucesso!');

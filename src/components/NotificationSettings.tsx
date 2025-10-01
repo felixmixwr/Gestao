@@ -4,11 +4,11 @@ import { Button } from './ui/button'
 import { Bell, BellOff, Settings, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface NotificationManagerProps {
+interface NotificationSettingsProps {
   className?: string
 }
 
-export const NotificationManager: React.FC<NotificationManagerProps> = ({ className = '' }) => {
+export const NotificationSettings: React.FC<NotificationSettingsProps> = ({ className = '' }) => {
   const {
     isSupported,
     permission,
@@ -202,3 +202,6 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({ classN
     </div>
   )
 }
+
+
+

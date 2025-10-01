@@ -1,190 +1,267 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
-interface NotificationPayload {
+// VAPID Public Key gerada para WorldRental
+const VAPID_PUBLIC_KEY = 'BDt2hT6Ec-UakV-tAoO7ka2TrwcSXopaQzqXokawxm4xtPbj8YenBDYUcI2XOmtleMb8y732w25PLD3lzUekoHI'
+
+interface NotificationPermission {
+  permission: NotificationPermission | null
+  isSupported: boolean
+  isEnabled: boolean
+  token: string | null
+  error: string | null
+}
+
+interface NotificationOptions {
   title: string
   body: string
   icon?: string
   badge?: string
-  url?: string
+  tag?: string
+  requireInteraction?: boolean
+  actions?: Array<{
+    action: string
+    title: string
+    icon?: string
+  }>
   data?: any
 }
 
-interface PushSubscriptionData {
-  endpoint: string
-  keys: {
-    p256dh: string
-    auth: string
-  }
-}
+export const useNotifications = () => {
+  const [state, setState] = useState<NotificationPermission>({
+    permission: null,
+    isSupported: false,
+    isEnabled: false,
+    token: null,
+    error: null
+  })
 
-export function useNotifications() {
-  const [isSupported, setIsSupported] = useState(false)
-  const [permission, setPermission] = useState<NotificationPermission>('default')
-  const [subscription, setSubscription] = useState<PushSubscriptionData | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
+  // Verificar se notificações são suportadas
   useEffect(() => {
-    // Verifica se o navegador suporta notificações
-    if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
-      setIsSupported(true)
-      setPermission(Notification.permission)
+    const isSupported = 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window
+    const permission = isSupported ? Notification.permission : null
+    
+    setState(prev => ({
+      ...prev,
+      isSupported,
+      permission
+    }))
+  }, [])
+
+  // Solicitar permissão para notificações
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (!state.isSupported) {
+      setState(prev => ({ ...prev, error: 'Notificações não são suportadas neste navegador' }))
+      return false
+    }
+
+    try {
+      const permission = await Notification.requestPermission()
+      
+      setState(prev => ({
+        ...prev,
+        permission,
+        error: null
+      }))
+
+      if (permission === 'granted') {
+        await registerPushNotifications()
+        return true
+      } else {
+        setState(prev => ({ 
+          ...prev, 
+          error: 'Permissão para notificações foi negada' 
+        }))
+        return false
+      }
+    } catch (error) {
+      console.error('Erro ao solicitar permissão:', error)
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Erro ao solicitar permissão para notificações' 
+      }))
+      return false
+    }
+  }, [state.isSupported])
+
+  // Registrar notificações push
+  const registerPushNotifications = useCallback(async (): Promise<boolean> => {
+    try {
+      // Registrar service worker
+      const registration = await navigator.serviceWorker.register('/sw.js')
+      console.log('Service Worker registrado:', registration)
+
+      // Aguardar o service worker estar ativo
+      await navigator.serviceWorker.ready
+      console.log('Service Worker está pronto')
+
+      // Verificar se já existe uma subscription
+      let subscription = await registration.pushManager.getSubscription()
+      
+      if (!subscription) {
+        // Criar nova subscription
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        })
+      }
+
+      console.log('Push subscription:', subscription)
+
+      // Salvar token no banco de dados
+      await saveTokenToDatabase(subscription)
+
+      setState(prev => ({
+        ...prev,
+        token: JSON.stringify(subscription),
+        isEnabled: true,
+        error: null
+      }))
+
+      return true
+    } catch (error) {
+      console.error('Erro ao registrar push notifications:', error)
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Erro ao registrar notificações push' 
+      }))
+      return false
     }
   }, [])
 
-  // Solicita permissão para notificações
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    if (!isSupported) {
-      console.warn('Notificações push não são suportadas neste navegador')
-      return false
-    }
-
+  // Salvar token no banco de dados
+  const saveTokenToDatabase = useCallback(async (subscription: PushSubscription): Promise<void> => {
     try {
-      const result = await Notification.requestPermission()
-      setPermission(result)
-      return result === 'granted'
-    } catch (error) {
-      console.error('Erro ao solicitar permissão:', error)
-      return false
-    }
-  }, [isSupported])
-
-  // Registra subscription para push notifications
-  const subscribeToPush = useCallback(async (): Promise<boolean> => {
-    if (!isSupported || permission !== 'granted') {
-      console.warn('Permissão não concedida ou navegador não suporta push notifications')
-      return false
-    }
-
-    setIsLoading(true)
-
-    try {
-      const registration = await navigator.serviceWorker.ready
-      const pushSubscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
-      })
-
-      const subscriptionData: PushSubscriptionData = {
-        endpoint: pushSubscription.endpoint,
-        keys: {
-          p256dh: arrayBufferToBase64(pushSubscription.getKey('p256dh')!),
-          auth: arrayBufferToBase64(pushSubscription.getKey('auth')!)
-        }
-      }
-
-      setSubscription(subscriptionData)
-
-      // Salva subscription no Supabase
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { error } = await supabase
-          .from('push_subscriptions')
-          .upsert({
-            user_id: user.id,
-            subscription: subscriptionData,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-
-        if (error) {
-          console.error('Erro ao salvar subscription:', error)
-          return false
-        }
-      }
-
-      return true
-    } catch (error) {
-      console.error('Erro ao registrar push subscription:', error)
-      return false
-    } finally {
-      setIsLoading(false)
-    }
-  }, [isSupported, permission])
-
-  // Remove subscription
-  const unsubscribeFromPush = useCallback(async (): Promise<boolean> => {
-    if (!subscription) return false
-
-    setIsLoading(true)
-
-    try {
-      const registration = await navigator.serviceWorker.ready
-      const pushSubscription = await registration.pushManager.getSubscription()
       
-      if (pushSubscription) {
-        await pushSubscription.unsubscribe()
+      if (!user) {
+        throw new Error('Usuário não autenticado')
       }
 
-      // Remove do Supabase
+      // Primeiro, desativar tokens antigos do usuário
+      await supabase
+        .from('user_push_tokens')
+        .update({ is_active: false })
+        .eq('user_id', user.id)
+
+      // Inserir novo token
+      const { error } = await supabase
+        .from('user_push_tokens')
+        .insert({
+          user_id: user.id,
+          endpoint: subscription.endpoint,
+          p256dh: subscription.keys.p256dh,
+          auth: subscription.keys.auth,
+          is_active: true
+        })
+
+      if (error) {
+        throw error
+      }
+
+      console.log('Token salvo no banco de dados')
+    } catch (error) {
+      console.error('Erro ao salvar token:', error)
+      throw error
+    }
+  }, [])
+
+  // Remover notificações
+  const unsubscribe = useCallback(async (): Promise<boolean> => {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+      
+      if (registration) {
+        const subscription = await registration.pushManager.getSubscription()
+        
+        if (subscription) {
+          await subscription.unsubscribe()
+        }
+      }
+
+      // Desativar token no banco de dados
       const { data: { user } } = await supabase.auth.getUser()
+      
       if (user) {
         await supabase
-          .from('push_subscriptions')
-          .delete()
+          .from('user_push_tokens')
+          .update({ is_active: false })
           .eq('user_id', user.id)
       }
 
-      setSubscription(null)
+      setState(prev => ({
+        ...prev,
+        token: null,
+        isEnabled: false,
+        error: null
+      }))
+
       return true
     } catch (error) {
-      console.error('Erro ao remover subscription:', error)
+      console.error('Erro ao cancelar inscrição:', error)
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Erro ao cancelar notificações' 
+      }))
       return false
-    } finally {
-      setIsLoading(false)
     }
-  }, [subscription])
+  }, [])
 
-  // Envia notificação local (para testes)
-  const sendLocalNotification = useCallback((payload: NotificationPayload) => {
-    if (permission !== 'granted') return
+  // Enviar notificação local (para testes)
+  const sendLocalNotification = useCallback((options: NotificationOptions): void => {
+    if (state.permission === 'granted') {
+      new Notification(options.title, {
+        body: options.body,
+        icon: options.icon || '/icon-192x192.png',
+        badge: options.badge || '/badge-72x72.png',
+        tag: options.tag,
+        requireInteraction: options.requireInteraction,
+        actions: options.actions,
+        data: options.data
+      })
+    }
+  }, [state.permission])
 
-    const notification = new Notification(payload.title, {
-      body: payload.body,
-      icon: payload.icon || '/icons/notification.png',
-      badge: payload.badge || '/icons/badge.png',
-      data: payload.data,
-      requireInteraction: true
-    })
+  // Converter VAPID key para Uint8Array
+  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4)
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
 
-    notification.onclick = () => {
-      window.focus()
-      if (payload.url) {
-        window.location.href = payload.url
+    const rawData = window.atob(base64)
+    const outputArray = new Uint8Array(rawData.length)
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i)
+    }
+    return outputArray
+  }
+
+  // Verificar status atual
+  const checkStatus = useCallback(async (): Promise<void> => {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration()
+      
+      if (registration) {
+        const subscription = await registration.pushManager.getSubscription()
+        
+        setState(prev => ({
+          ...prev,
+          token: subscription ? JSON.stringify(subscription) : null,
+          isEnabled: !!subscription
+        }))
       }
-      notification.close()
+    } catch (error) {
+      console.error('Erro ao verificar status:', error)
     }
-  }, [permission])
-
-  // Inicializa o sistema de notificações
-  const initializeNotifications = useCallback(async () => {
-    if (!isSupported) return false
-
-    const hasPermission = await requestPermission()
-    if (!hasPermission) return false
-
-    return await subscribeToPush()
-  }, [isSupported, requestPermission, subscribeToPush])
+  }, [])
 
   return {
-    isSupported,
-    permission,
-    subscription,
-    isLoading,
+    ...state,
     requestPermission,
-    subscribeToPush,
-    unsubscribeFromPush,
+    unsubscribe,
     sendLocalNotification,
-    initializeNotifications
+    checkStatus
   }
-}
-
-// Função auxiliar para converter ArrayBuffer para Base64
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer)
-  let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
 }
