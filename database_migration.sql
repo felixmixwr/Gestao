@@ -29,4 +29,3 @@ COMMENT ON COLUMN expenses.discount_value IS 'Valor do desconto (em reais ou per
 COMMENT ON COLUMN expenses.fuel_station IS 'Nome do posto de combustível';
 
 
-

@@ -164,7 +164,15 @@ export function formatCurrency(value: number): string {
 }
 
 export function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('pt-BR');
+  // Se a data está no formato YYYY-MM-DD, criar diretamente para evitar problemas de fuso horário
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-').map(Number)
+    const dateObj = new Date(year, month - 1, day) // Mês é 0-indexado
+    return dateObj.toLocaleDateString('pt-BR')
+  }
+  
+  // Para outros formatos, usar a conversão normal
+  return new Date(date).toLocaleDateString('pt-BR')
 }
 
 export function getCategoryColor(categoria: ExpenseCategory): string {

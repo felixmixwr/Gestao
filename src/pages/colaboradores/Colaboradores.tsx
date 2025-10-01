@@ -295,13 +295,13 @@ export default function Colaboradores() {
               { 
                 key: 'id', 
                 label: 'Ações', 
-                className: 'w-[160px]',
+                className: 'w-[140px] max-w-[140px] sticky right-0 bg-white',
                 render: (_v, item) => (
                   <div className="flex gap-1 justify-center">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs px-2 py-1"
+                      className="text-xs px-2 py-1 min-w-[50px]"
                       onClick={(e) => { e.stopPropagation(); navigate(`/colaboradores/${item.id}`) }}
                     >
                       Ver
@@ -309,7 +309,7 @@ export default function Colaboradores() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs px-2 py-1"
+                      className="text-xs px-2 py-1 min-w-[50px]"
                       onClick={(e) => { e.stopPropagation(); navigate(`/colaboradores/${item.id}/edit`) }}
                     >
                       Editar

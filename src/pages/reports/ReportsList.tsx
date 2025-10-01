@@ -308,7 +308,20 @@ export default function ReportsList() {
       // 2. Aplicar paginação na query principal
       console.log('🔍 [DEBUG] Aplicando paginação...')
       let { data: reportsData, error } = await query
-        .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1)
+
+      // Se a ordenação for por status, carregar todos os dados para ordenação customizada
+      if (sortField === 'status') {
+        console.log('🔍 [DEBUG] Carregando todos os dados para ordenação customizada por status...')
+        // Não aplicar range ainda, vamos ordenar primeiro
+      } else {
+        // Para outras ordenações, aplicar paginação diretamente no banco
+        const { data: paginatedData, error: paginationError } = await query.range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1)
+        if (paginationError) {
+          console.error('❌ [ERROR] Erro na paginação:', paginationError)
+          throw paginationError
+        }
+        reportsData = paginatedData
+      }
 
       if (error) {
         console.error('❌ [ERROR] Erro na query principal:', error)
@@ -317,6 +330,7 @@ export default function ReportsList() {
 
       console.log('✅ [SUCCESS] Relatórios básicos carregados!')
       console.log('📊 [DATA] Total de relatórios retornados:', reportsData?.length || 0)
+      console.log('📊 [DATA] Ordenação atual:', { sortField, sortDirection })
       
       if (reportsData && reportsData.length > 0) {
         console.log('🔍 [DEBUG] Enriquecendo dados com relacionamentos...')
@@ -422,6 +436,13 @@ export default function ReportsList() {
             }
           })
           console.log('📊 [DATA] Ordenação customizada aplicada')
+          
+          // 7. Aplicar paginação no frontend para ordenação por status
+          console.log('🔍 [DEBUG] Aplicando paginação no frontend...')
+          const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+          const endIndex = startIndex + ITEMS_PER_PAGE
+          finalReports = finalReports.slice(startIndex, endIndex)
+          console.log('📊 [DATA] Paginação aplicada:', { startIndex, endIndex, total: enrichedReports.length })
         }
         
         setReports(finalReports)

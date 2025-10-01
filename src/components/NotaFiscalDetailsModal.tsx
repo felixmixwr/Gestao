@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './Button';
 import { formatCurrency, formatDate } from '../utils/format';
+import { formatDateSafe } from '../utils/date-utils';
 import type { Database } from '../lib/supabase';
 
 type NotaFiscal = Database['public']['Tables']['notas_fiscais']['Row'];
@@ -122,11 +123,11 @@ export const NotaFiscalDetailsModal: React.FC<NotaFiscalDetailsModalProps> = ({
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-sm font-medium text-gray-500">Data de Emissão</span>
-                  <span className="text-sm text-gray-900">{formatDate(nota.data_emissao)}</span>
+                  <span className="text-sm text-gray-900">{formatDateSafe(nota.data_emissao)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-sm font-medium text-gray-500">Data de Vencimento</span>
-                  <span className="text-sm text-gray-900">{formatDate(nota.data_vencimento)}</span>
+                  <span className="text-sm text-gray-900">{formatDateSafe(nota.data_vencimento)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-sm font-medium text-gray-500">Data de Criação</span>

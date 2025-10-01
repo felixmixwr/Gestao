@@ -88,3 +88,28 @@ export function toBrasiliaISOString(date: Date): string {
   // O problema estava na conversão desnecessária
   return date.toISOString();
 }
+
+/**
+ * Formata uma data de forma segura evitando problemas de fuso horário
+ * Esta função é especialmente útil para datas no formato YYYY-MM-DD
+ */
+export function formatDateSafe(dateString: string | null | undefined): string {
+  if (!dateString) return 'N/A'
+  
+  try {
+    // Se a data está no formato YYYY-MM-DD, criar diretamente para evitar problemas de fuso horário
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split('-').map(Number)
+      const date = new Date(year, month - 1, day) // Mês é 0-indexado
+      return date.toLocaleDateString('pt-BR')
+    }
+    
+    // Para outros formatos, usar a conversão normal
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return 'N/A'
+    return date.toLocaleDateString('pt-BR')
+  } catch (error) {
+    console.warn('⚠️ Erro ao formatar data:', dateString, error)
+    return 'N/A'
+  }
+}

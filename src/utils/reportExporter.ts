@@ -4,6 +4,7 @@ import { ReportWithRelations } from '../types/reports'
 import { formatCurrency } from './formatters'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { formatDateSafe } from './date-utils'
 
 /**
  * Formata um valor monetário de forma segura
@@ -21,12 +22,20 @@ const safeFormatCurrency = (value: number | null | undefined): string => {
 }
 
 /**
- * Formata uma data de forma segura
+ * Formata uma data de forma segura considerando fuso horário
  */
 const safeFormatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return 'N/A'
   
   try {
+    // Se a data está no formato YYYY-MM-DD, criar diretamente para evitar problemas de fuso horário
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split('-').map(Number)
+      const date = new Date(year, month - 1, day) // Mês é 0-indexado
+      return format(date, 'dd/MM/yyyy', { locale: ptBR })
+    }
+    
+    // Para outros formatos, usar a conversão normal
     const date = new Date(dateString)
     if (isNaN(date.getTime())) return 'N/A'
     return format(date, 'dd/MM/yyyy', { locale: ptBR })
@@ -160,7 +169,7 @@ export const exportToXLSX = (data: ExportData, options: ExportOptions = { format
       ...data.reports.map((report, index) => [
         index + 1,
         report.report_number || 'N/A',
-        report.date ? new Date(report.date).toLocaleDateString('pt-BR') : 'N/A',
+        safeFormatDate(report.date),
         report.clients?.name || report.client_rep_name || 'N/A',
         report.work_address || 'N/A',
         report.pumps?.prefix || report.pump_prefix || 'N/A',

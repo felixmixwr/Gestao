@@ -5,6 +5,7 @@ import { APP_CONFIG } from '../utils/constants'
 import { Sidebar, SidebarBody, SidebarLink } from './ui/sidebar'
 import { BottomTabs } from './layout/BottomTabs'
 import { NotificationManager } from './NotificationManager'
+import { NotificationProvider } from './NotificationProvider'
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -143,8 +144,9 @@ export function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <NotificationManager>
-      {({ notifications, clearNotification }: NotificationContextProps) => (
+    <NotificationProvider>
+      <NotificationManager>
+        {({ notifications, clearNotification }: NotificationContextProps) => (
         <div className="min-h-screen bg-gray-50">
           {/* Sidebar */}
           <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">
@@ -212,7 +214,8 @@ export function Layout({ children }: LayoutProps) {
             onTabClick={(tabName) => clearNotification(tabName)}
           />
         </div>
-      )}
-    </NotificationManager>
+        )}
+      </NotificationManager>
+    </NotificationProvider>
   )
 }

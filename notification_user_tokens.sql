@@ -69,3 +69,4 @@ INSERT INTO user_push_tokens (
 -- 9. Verificar se funcionou
 SELECT COUNT(*) as total_tokens FROM user_push_tokens;
 SELECT 'Tabela user_push_tokens criada com sucesso!' as status;
+

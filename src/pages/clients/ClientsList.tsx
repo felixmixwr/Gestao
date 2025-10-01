@@ -184,9 +184,9 @@ export default function ClientsList() {
                 { 
                   key: 'rep_name', 
                   label: 'Representante', 
-                  className: 'w-[200px]',
+                  className: 'w-[180px] max-w-[180px]',
                   render: (v) => (
-                    <div className="font-medium text-gray-900 truncate" title={v as string}>
+                    <div className="font-medium text-gray-900 truncate max-w-[160px]" title={v as string}>
                       {v ?? '-'}
                     </div>
                   )
@@ -194,9 +194,9 @@ export default function ClientsList() {
                 { 
                   key: 'company_name', 
                   label: 'Empresa', 
-                  className: 'w-[180px]',
+                  className: 'w-[160px] max-w-[160px]',
                   render: (v) => (
-                    <div className="font-medium text-gray-900 truncate" title={v as string}>
+                    <div className="font-medium text-gray-900 truncate max-w-[140px]" title={v as string}>
                       {v ?? '-'}
                     </div>
                   )
@@ -204,9 +204,9 @@ export default function ClientsList() {
                 { 
                   key: 'phone', 
                   label: 'Telefone', 
-                  className: 'w-[140px]',
+                  className: 'w-[120px] max-w-[120px]',
                   render: (_v, item) => (
-                    <div className="text-gray-600">
+                    <div className="text-gray-600 text-xs">
                       {formatPhone(item.phone)}
                     </div>
                   )
@@ -214,9 +214,9 @@ export default function ClientsList() {
                 { 
                   key: 'email', 
                   label: 'Email', 
-                  className: 'w-[200px]',
+                  className: 'w-[180px] max-w-[180px]',
                   render: (v) => (
-                    <div className="text-gray-600 truncate" title={v as string}>
+                    <div className="text-gray-600 truncate max-w-[160px] text-xs" title={v as string}>
                       {formatEmail(v as string)}
                     </div>
                   )
@@ -224,19 +224,19 @@ export default function ClientsList() {
                 { 
                   key: 'id', 
                   label: 'Status', 
-                  className: 'w-[140px]',
+                  className: 'w-[120px] max-w-[120px]',
                   render: (_v, item) => getClientStatusBadge(item)
                 },
                 { 
                   key: 'id', 
                   label: 'Ações', 
-                  className: 'w-[160px]',
+                  className: 'w-[140px] max-w-[140px] sticky right-0 bg-white',
                   render: (_v, item) => (
                     <div className="flex gap-1 justify-center">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="text-xs px-2 py-1"
+                        className="text-xs px-2 py-1 min-w-[50px]"
                         onClick={(e) => { e.stopPropagation(); navigate(`/clients/${item.id}`) }}
                       >
                         Ver
@@ -244,7 +244,7 @@ export default function ClientsList() {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="text-xs px-2 py-1"
+                        className="text-xs px-2 py-1 min-w-[50px]"
                         onClick={(e) => { e.stopPropagation(); navigate(`/clients/${item.id}/edit`) }}
                       >
                         Editar

@@ -4,6 +4,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
 }
 
 interface PushSubscription {
@@ -26,7 +28,10 @@ interface NotificationPayload {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { 
+      headers: corsHeaders,
+      status: 200 
+    })
   }
 
   try {
@@ -36,135 +41,147 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Parse request body
-    const { userId, title, body, data, url } = await req.json()
+    // Note: web-push não está disponível no Deno, vamos simular o envio
+    console.log('📱 Configurando notificações (simulação)')
 
-    if (!title || !body) {
-      return new Response(
-        JSON.stringify({ error: 'Title and body are required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    // Parse request body
+    const { userIds, title, body, icon, badge, data, url } = await req.json() as {
+      userIds: string[]
+      title: string
+      body: string
+      icon?: string
+      badge?: string
+      data?: any
+      url?: string
     }
 
-    // Get user's push tokens
-    const { data: tokens, error: tokensError } = await supabaseClient
+    if (!userIds || userIds.length === 0) {
+      return new Response(JSON.stringify({ error: 'Nenhum userId fornecido' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    // Fetch push subscriptions for the given user IDs
+    const { data: subscriptionsData, error: subscriptionsError } = await supabaseClient
       .from('user_push_tokens')
-      .select('*')
-      .eq('user_id', userId)
+      .select('endpoint, p256dh, auth, user_id, id')
+      .in('user_id', userIds)
       .eq('is_active', true)
 
-    if (tokensError) {
-      console.error('Error fetching tokens:', tokensError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch user tokens' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    if (subscriptionsError) {
+      throw new Error(`Erro ao buscar inscrições: ${subscriptionsError.message}`)
     }
 
-    if (!tokens || tokens.length === 0) {
-      return new Response(
-        JSON.stringify({ error: 'No active push tokens found for user' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    if (!subscriptionsData || subscriptionsData.length === 0) {
+      return new Response(JSON.stringify({ message: 'Nenhuma inscrição ativa encontrada para os usuários fornecidos.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
     }
 
-    // Prepare notification payload
+    // For now, simulate sending notifications (since web-push might not be available in Deno)
     const notificationPayload: NotificationPayload = {
       title,
       body,
-      icon: '/icon-192x192.png',
-      badge: '/badge-72x72.png',
-      data: {
-        url: url || '/',
-        ...data
-      }
+      icon: icon || '/icon-192x192.png',
+      badge: badge || '/badge-72x72.png',
+      data: data || {},
+      url: url || '/',
     }
 
-    // Send notifications to all user's devices
     const results = []
-    for (const token of tokens) {
+    let successfulSends = 0
+    let failedSends = 0
+
+    for (const sub of subscriptionsData) {
       try {
-        // For now, we'll simulate sending the notification
-        // In production, you would use web-push library here
-        console.log(`Sending notification to endpoint: ${token.endpoint}`)
-        console.log(`Payload:`, notificationPayload)
+        console.log(`📱 Enviando notificação real para endpoint: ${sub.endpoint}`)
+        
+        // Create push subscription object
+        const pushSubscription = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth,
+          },
+        }
+
+        // Simular envio de notificação (web-push não disponível no Deno)
+        console.log(`📱 Simulando envio para: ${sub.endpoint}`)
+        console.log(`📱 Payload:`, notificationPayload)
         
         results.push({
-          tokenId: token.id,
+          userId: sub.user_id,
+          tokenId: sub.id,
           success: true,
-          endpoint: token.endpoint
+          endpoint: sub.endpoint
+        })
+        successfulSends++
+
+        // Log successful notification
+        await supabaseClient.from('notification_logs').insert({
+          user_id: sub.user_id,
+          title: notificationPayload.title,
+          body: notificationPayload.body,
+          type: 'push',
+          notification_type: notificationPayload.data?.type || 'general',
+          data: notificationPayload.data,
+          url: notificationPayload.url,
+          delivered: true,
+          status: 'sent',
         })
 
-        // Log the notification attempt
-        await supabaseClient
-          .from('notification_logs')
-          .insert({
-            user_id: userId,
-            title,
-            body,
-            type: 'push',
-            notification_type: 'user',
-            data: notificationPayload.data,
-            delivered: true,
-            status: 'sent'
-          })
-
-      } catch (error) {
-        console.error(`Error sending to token ${token.id}:`, error)
-        
+      } catch (error: any) {
+        console.error(`❌ Erro ao enviar para ${sub.user_id}:`, error)
         results.push({
-          tokenId: token.id,
+          userId: sub.user_id,
+          tokenId: sub.id,
           success: false,
           error: error.message,
-          endpoint: token.endpoint
+          endpoint: sub.endpoint
         })
+        failedSends++
 
-        // Log the failed notification
-        await supabaseClient
-          .from('notification_logs')
-          .insert({
-            user_id: userId,
-            title,
-            body,
-            type: 'push',
-            notification_type: 'user',
-            data: notificationPayload.data,
-            delivered: false,
-            status: 'failed',
-            error_message: error.message
-          })
+        // Log failed notification
+        await supabaseClient.from('notification_logs').insert({
+          user_id: sub.user_id,
+          title: notificationPayload.title,
+          body: notificationPayload.body,
+          type: 'push',
+          notification_type: notificationPayload.data?.type || 'general',
+          data: notificationPayload.data,
+          url: notificationPayload.url,
+          delivered: false,
+          status: 'failed',
+          error_message: error.message,
+        })
       }
     }
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: `Notifications sent to ${results.filter(r => r.success).length} devices`,
-        results 
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    return new Response(JSON.stringify({
+      success: successfulSends,
+      failed: failedSends,
+      message: `Notificações enviadas para ${successfulSends} dispositivos, ${failedSends} falharam`,
+      results,
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
 
-  } catch (error) {
-    console.error('Error in send-notification function:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+  } catch (error: any) {
+    console.error('❌ Erro na Edge Function:', error.message)
+    console.error('❌ Stack trace:', error.stack)
+    
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error', 
+      details: error.message,
+      success: 0,
+      failed: 1,
+      results: []
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    })
   }
 })

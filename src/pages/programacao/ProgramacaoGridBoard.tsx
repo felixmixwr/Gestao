@@ -279,7 +279,7 @@ export function ProgramacaoGridBoard() {
                 {bombas.map((bomba, bombaIndex) => (
                   <tr key={bomba.id} className={`${bombaIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} print-row`}>
                     {/* Coluna da bomba */}
-                    <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit print-cell">
+                    <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit print-cell z-10">
                       <div className="text-sm font-semibold">{bomba.prefix}</div>
                       <div className="text-xs text-gray-500">{bomba.model}</div>
                     </td>
@@ -318,6 +318,20 @@ export function ProgramacaoGridBoard() {
                                 <div className="text-xs text-gray-600 mb-1">
                                   {programacao.volume_previsto}m³
                                 </div>
+                                
+                                {/* Motorista */}
+                                {programacao.motorista_nome && (
+                                  <div className="text-xs text-gray-600 mb-1">
+                                    🚗 {programacao.motorista_nome}
+                                  </div>
+                                )}
+                                
+                                {/* Auxiliares */}
+                                {programacao.auxiliares_nomes && programacao.auxiliares_nomes.length > 0 && (
+                                  <div className="text-xs text-gray-600 mb-1">
+                                    👥 {programacao.auxiliares_nomes.join(', ')}
+                                  </div>
+                                )}
                                 
                                 {/* Local */}
                                 <div className="text-xs text-gray-500 truncate">

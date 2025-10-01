@@ -34,7 +34,7 @@
 .table {
   @apply min-w-full divide-y divide-gray-200;
   table-layout: fixed;
-  min-width: 1130px;
+  min-width: 1000px;
 }
 
 .table th {
@@ -65,6 +65,32 @@
 /* Alinhamento para valores monetários */
 .table td .text-right {
   text-align: right;
+}
+
+/* Suporte para colunas sticky */
+.table th.sticky,
+.table td.sticky {
+  position: sticky;
+  z-index: 10;
+}
+
+.table th.sticky.right-0,
+.table td.sticky.right-0 {
+  right: 0;
+  border-left: 1px solid #e5e7eb;
+}
+
+.table th.sticky.left-0,
+.table td.sticky.left-0 {
+  left: 0;
+  border-right: 1px solid #e5e7eb;
+}
+
+/* Garantir que textos longos sejam truncados */
+.table td .truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Primary color variables */

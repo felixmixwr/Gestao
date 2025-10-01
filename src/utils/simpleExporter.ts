@@ -1,6 +1,8 @@
 // Versão ultra-simples da exportação XLSX
 // Esta versão remove toda formatação complexa para garantir funcionamento
 
+import { formatDateBR } from './date-utils'
+
 export const exportToXLSXSimple = (data: ExportData, options: ExportOptions = { format: 'xlsx' }): void => {
   try {
     console.log('🔍 Iniciando exportação XLSX SIMPLES...')
@@ -26,7 +28,7 @@ export const exportToXLSXSimple = (data: ExportData, options: ExportOptions = { 
       ...data.reports.map((report, index) => [
         index + 1,
         report.report_number || 'N/A',
-        report.date ? new Date(report.date).toLocaleDateString('pt-BR') : 'N/A',
+        report.date ? formatDateBR(report.date) : 'N/A',
         report.clients?.name || report.client_rep_name || 'N/A',
         report.pumps?.prefix || report.pump_prefix || 'N/A',
         report.realized_volume || 0,
@@ -54,6 +56,9 @@ export const exportToXLSXSimple = (data: ExportData, options: ExportOptions = { 
     throw new Error(`Erro ao exportar XLSX: ${error.message}`)
   }
 }
+
+
+
 
 
 

@@ -6,6 +6,7 @@ import { Button } from '../../components/Button';
 import { Table } from '../../components/Table';
 // import { FileDownloadButton } from '../../components/FileDownloadButton';
 import { formatCurrency, formatDate } from '../../utils/format';
+import { formatDateSafe } from '../../utils/date-utils';
 import type { Database } from '../../lib/supabase';
 
 type NotaFiscal = Database['public']['Tables']['notas_fiscais']['Row'];
@@ -190,7 +191,7 @@ export const NotesList: React.FC = () => {
       render: (nota: NotaFiscal) => (
         <div>
           <span className="font-medium text-gray-900">
-            {formatDate(nota.data_emissao)}
+            {formatDateSafe(nota.data_emissao)}
           </span>
         </div>
       )
@@ -200,14 +201,17 @@ export const NotesList: React.FC = () => {
       label: 'Data de Vencimento',
       render: (nota: NotaFiscal) => {
         try {
-          const vencimento = new Date(nota.data_vencimento);
+          // Usar a função segura para criar a data
+          const vencimento = nota.data_vencimento && /^\d{4}-\d{2}-\d{2}$/.test(nota.data_vencimento) 
+            ? new Date(nota.data_vencimento.split('-').map(Number).join(','))
+            : new Date(nota.data_vencimento);
           const hoje = new Date();
           const isVencida = vencimento < hoje && nota.status !== 'Paga';
           
           return (
             <div>
               <span className={`font-medium ${isVencida ? 'text-red-600' : 'text-gray-900'}`}>
-                {formatDate(nota.data_vencimento)}
+                {formatDateSafe(nota.data_vencimento)}
               </span>
               {isVencida && (
                 <div className="text-xs text-red-500 font-medium">Vencida</div>
@@ -218,7 +222,7 @@ export const NotesList: React.FC = () => {
           return (
             <div>
               <span className="font-medium text-gray-900">
-                {formatDate(nota.data_vencimento)}
+                {formatDateSafe(nota.data_vencimento)}
               </span>
             </div>
           );

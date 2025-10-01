@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from './Button';
 import { formatCurrency, formatDate } from '../utils/format';
+import { formatDateSafe } from '../utils/date-utils';
 import { NotaFiscalDetailsModal } from './NotaFiscalDetailsModal';
 import type { Database } from '../lib/supabase';
 
@@ -192,11 +193,11 @@ export const NotasFiscaisLista: React.FC<NotasFiscaisListaProps> = ({
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                       <div className="space-y-1">
                         <div className="text-xs font-medium text-gray-500">Data de Emissão</div>
-                        <div className="text-xs text-gray-900">{formatDate(nota.data_emissao)}</div>
+                        <div className="text-xs text-gray-900">{formatDateSafe(nota.data_emissao)}</div>
                       </div>
                       <div className="space-y-1">
                         <div className="text-xs font-medium text-gray-500">Data de Vencimento</div>
-                        <div className="text-xs text-gray-900">{formatDate(nota.data_vencimento)}</div>
+                        <div className="text-xs text-gray-900">{formatDateSafe(nota.data_vencimento)}</div>
                       </div>
                       <div className="space-y-1">
                         <div className="text-xs font-medium text-gray-500">Valor</div>

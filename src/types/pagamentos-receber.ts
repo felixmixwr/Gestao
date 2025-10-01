@@ -171,6 +171,14 @@ export function formatarValor(valor: number): string {
 
 // Função para formatar data
 export function formatarData(data: string): string {
+  // Se a data está no formato YYYY-MM-DD, criar diretamente para evitar problemas de fuso horário
+  if (/^\d{4}-\d{2}-\d{2}$/.test(data)) {
+    const [year, month, day] = data.split('-').map(Number)
+    const dateObj = new Date(year, month - 1, day) // Mês é 0-indexado
+    return dateObj.toLocaleDateString('pt-BR')
+  }
+  
+  // Para outros formatos, usar a conversão normal
   return new Date(data).toLocaleDateString('pt-BR')
 }
 

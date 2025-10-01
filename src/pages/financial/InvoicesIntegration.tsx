@@ -12,6 +12,7 @@ import {
   getCompaniesForSelect 
 } from '../../lib/financialApi';
 import { formatCurrency } from '../../types/financial';
+import { formatDateSafe } from '../../utils/date-utils';
 import type { InvoiceIntegration, CreateExpenseData } from '../../types/financial';
 
 export function InvoicesIntegration() {
@@ -244,10 +245,10 @@ export function InvoicesIntegration() {
                         {formatCurrency(invoice.valor)}
                       </TableCell>
                       <TableCell>
-                        {new Date(invoice.data_emissao).toLocaleDateString('pt-BR')}
+                        {formatDateSafe(invoice.data_emissao)}
                       </TableCell>
                       <TableCell>
-                        {new Date(invoice.data_vencimento).toLocaleDateString('pt-BR')}
+                        {formatDateSafe(invoice.data_vencimento)}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(invoice.status)}>

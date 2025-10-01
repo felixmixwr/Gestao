@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Layout } from '../../components/Layout';
 import { Button } from '../../components/Button';
 import { formatCurrency, formatDate } from '../../utils/format';
+import { formatDateSafe } from '../../utils/date-utils';
 import type { Database } from '../../lib/supabase';
 
 type NotaFiscal = Database['public']['Tables']['notas_fiscais']['Row'];
@@ -190,10 +191,10 @@ export const NotesListSimple: React.FC = () => {
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
                         <div className="text-sm text-gray-900">
-                          Emissão: {formatDate(nota.data_emissao)}
+                          Emissão: {formatDateSafe(nota.data_emissao)}
                         </div>
                         <div className="text-sm text-gray-900">
-                          Vencimento: {formatDate(nota.data_vencimento)}
+                          Vencimento: {formatDateSafe(nota.data_vencimento)}
                         </div>
                       </div>
                       

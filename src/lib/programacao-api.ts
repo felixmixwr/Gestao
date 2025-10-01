@@ -242,7 +242,7 @@ export class ProgramacaoAPI {
       const foundPumpIds = pumpsData?.map(p => p.id) || [];
       const missingPumpIds = pumpIds.filter(id => !foundPumpIds.includes(id));
       
-      let bombasTerceirasData = [];
+      let bombasTerceirasData: any[] = [];
       if (missingPumpIds.length > 0) {
         console.log('🔍 [ProgramacaoAPI] Buscando bombas terceiras para IDs:', missingPumpIds);
         const { data: bombasTerceiras } = await supabase
@@ -253,15 +253,33 @@ export class ProgramacaoAPI {
         bombasTerceirasData = bombasTerceiras || [];
         console.log('📊 [ProgramacaoAPI] Bombas terceiras carregadas:', bombasTerceirasData.length);
       }
+
+      // 4. Buscar dados dos colaboradores (motoristas e auxiliares)
+      const colaboradorIds = [
+        ...new Set(programacoesData.map(p => p.motorista_operador).filter(Boolean)),
+        ...new Set(programacoesData.flatMap(p => p.auxiliares_bomba || []))
+      ];
       
-      // 4. Enriquecer programações com dados das bombas
+      let colaboradoresData: any[] = [];
+      if (colaboradorIds.length > 0) {
+        console.log('🔍 [ProgramacaoAPI] Buscando colaboradores para IDs:', colaboradorIds);
+        const { data: colaboradores } = await supabase
+          .from('colaboradores')
+          .select('id, nome, funcao')
+          .in('id', colaboradorIds);
+        
+        colaboradoresData = colaboradores || [];
+        console.log('📊 [ProgramacaoAPI] Colaboradores carregados:', colaboradoresData.length);
+      }
+      
+      // 5. Enriquecer programações com dados das bombas e colaboradores
       const enrichedProgramacoes = programacoesData.map(programacao => {
         // Buscar bomba interna primeiro
         let pumpData = pumpsData?.find(p => p.id === programacao.bomba_id);
         
         // Se não encontrou bomba interna, buscar bomba terceira
         if (!pumpData) {
-          const bombaTerceira = bombasTerceirasData?.find(bt => bt.id === programacao.bomba_id);
+          const bombaTerceira = bombasTerceirasData?.find((bt: any) => bt.id === programacao.bomba_id);
           if (bombaTerceira) {
             pumpData = {
               id: bombaTerceira.id,
@@ -271,19 +289,33 @@ export class ProgramacaoAPI {
               is_terceira: true,
               empresa_nome: bombaTerceira.empresa_nome_fantasia,
               valor_diaria: bombaTerceira.valor_diaria
-            };
+            } as any;
           }
         }
+
+        // Buscar nome do motorista
+        const motorista = programacao.motorista_operador ? 
+          colaboradoresData?.find((c: any) => c.id === programacao.motorista_operador)?.nome || programacao.motorista_operador : 
+          null;
+
+        // Buscar nomes dos auxiliares
+        const auxiliares = programacao.auxiliares_bomba && programacao.auxiliares_bomba.length > 0 ?
+          programacao.auxiliares_bomba
+            .map((id: string) => colaboradoresData?.find((c: any) => c.id === id)?.nome || id)
+            .filter(Boolean) :
+          [];
         
         return {
           ...programacao,
-          pumps: pumpData
+          pumps: pumpData,
+          motorista_nome: motorista,
+          auxiliares_nomes: auxiliares
         };
       });
       
       console.log('✅ [ProgramacaoAPI] Programações enriquecidas:', enrichedProgramacoes.length);
       
-      // 5. Garantir que todas as programações tenham status definido
+      // 6. Garantir que todas as programações tenham status definido
       enrichedProgramacoes.forEach(programacao => {
         if (!programacao.status) {
           programacao.status = 'programado';
@@ -495,6 +527,8 @@ export class ProgramacaoAPI {
 
       // Enviar notificação para todos os usuários com tokens ativos
       const userIds = pushTokens.map(token => token.user_id);
+      console.log('🔍 [ProgramacaoAPI] Enviando notificação para usuários:', userIds);
+      
       const result = await notificationService.sendBulkNotification(
         userIds,
         title,
