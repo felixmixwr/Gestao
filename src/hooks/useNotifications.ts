@@ -100,10 +100,30 @@ export const useNotifications = () => {
       
       if (!subscription) {
         // Criar nova subscription
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-        })
+        console.log('🔑 VAPID Public Key:', VAPID_PUBLIC_KEY)
+        console.log('🔑 VAPID Key convertida:', urlBase64ToUint8Array(VAPID_PUBLIC_KEY))
+        
+        try {
+          // Tentar com applicationServerKey primeiro
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+          })
+          console.log('✅ Subscription criada com applicationServerKey')
+        } catch (error) {
+          console.warn('⚠️ Erro com applicationServerKey, tentando sem:', error.message)
+          
+          try {
+            // Tentar sem applicationServerKey (usar GCM do manifest)
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true
+            })
+            console.log('✅ Subscription criada sem applicationServerKey (usando GCM)')
+          } catch (gcmError) {
+            console.error('❌ Erro também sem applicationServerKey:', gcmError.message)
+            throw gcmError
+          }
+        }
       }
 
       console.log('Push subscription:', subscription)
@@ -224,18 +244,29 @@ export const useNotifications = () => {
 
   // Converter VAPID key para Uint8Array
   const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4)
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/')
+    try {
+      // Remover espaços e quebras de linha
+      const cleanBase64 = base64String.trim().replace(/\s/g, '')
+      
+      // Adicionar padding se necessário
+      const padding = '='.repeat((4 - cleanBase64.length % 4) % 4)
+      const base64 = (cleanBase64 + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/')
 
-    const rawData = window.atob(base64)
-    const outputArray = new Uint8Array(rawData.length)
+      const rawData = window.atob(base64)
+      const outputArray = new Uint8Array(rawData.length)
 
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i)
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i)
+      }
+      
+      console.log('✅ VAPID key convertida com sucesso, tamanho:', outputArray.length)
+      return outputArray
+    } catch (error) {
+      console.error('❌ Erro ao converter VAPID key:', error)
+      throw new Error('VAPID key inválida')
     }
-    return outputArray
   }
 
   // Verificar status atual

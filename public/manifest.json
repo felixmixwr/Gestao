@@ -125,5 +125,6 @@
   },
   "launch_handler": {
     "client_mode": "navigate-existing"
-  }
+  },
+  "gcm_sender_id": "103953800507"
 }
