@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { Programacao, ProgramacaoFormData, ProgramacaoFilters } from '../types/programacao';
+import { notificationService } from '../services/notificationService';
 
 export class ProgramacaoAPI {
   // Criar nova programação
@@ -35,6 +36,15 @@ export class ProgramacaoAPI {
     }
 
     console.log('✅ [ProgramacaoAPI] Programação criada com sucesso:', programacao);
+
+    // Enviar notificação push para todos os usuários da empresa
+    try {
+      await ProgramacaoAPI.sendNewProgramacaoNotification(programacao);
+    } catch (notificationError) {
+      console.warn('⚠️ [ProgramacaoAPI] Erro ao enviar notificação (não crítico):', notificationError);
+      // Não falha a criação da programação se a notificação falhar
+    }
+
     return programacao;
   }
 
@@ -448,6 +458,56 @@ export class ProgramacaoAPI {
     }
 
     return (conflict && conflict.length > 0);
+  }
+
+  // Enviar notificação push quando nova programação for criada
+  static async sendNewProgramacaoNotification(programacao: Programacao): Promise<void> {
+    try {
+      // Buscar todos os usuários da empresa que têm notificações ativas
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('company_id', programacao.company_id);
+
+      if (usersError) {
+        throw new Error(`Erro ao buscar usuários: ${usersError.message}`);
+      }
+
+      if (!users || users.length === 0) {
+        console.log('📱 [ProgramacaoAPI] Nenhum usuário encontrado para notificação');
+        return;
+      }
+
+      // Preparar dados da notificação
+      const title = '📅 Nova Programação Adicionada!';
+      const body = `Obra: ${programacao.prefixo_obra} - ${programacao.cliente}\nData: ${new Date(programacao.data).toLocaleDateString('pt-BR')} às ${programacao.horario}`;
+      
+      const notificationData = {
+        type: 'new_programacao',
+        programacao_id: programacao.id,
+        prefixo_obra: programacao.prefixo_obra,
+        cliente: programacao.cliente,
+        data: programacao.data,
+        horario: programacao.horario,
+        company_id: programacao.company_id
+      };
+
+      // Enviar notificação para todos os usuários da empresa
+      const userIds = users.map(user => user.id);
+      const result = await notificationService.sendBulkNotification(
+        userIds,
+        title,
+        body,
+        notificationData,
+        `/programacao/${programacao.id}`
+      );
+
+      console.log(`📱 [ProgramacaoAPI] Notificação enviada para ${result.success} usuários (${result.failed} falharam)`);
+
+    } catch (error) {
+      console.error('❌ [ProgramacaoAPI] Erro ao enviar notificação:', error);
+      throw error;
+    }
   }
 }
 

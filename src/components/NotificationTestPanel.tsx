@@ -3,7 +3,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
-import { Bell, Send, Users, User } from 'lucide-react'
+import { Bell, Send, Users, User, Calendar } from 'lucide-react'
 import { notificationService } from '../services/notificationService'
 import { toast } from 'sonner'
 import { useNotifications } from '../hooks/useNotifications'
@@ -53,6 +53,46 @@ export const NotificationTestPanel: React.FC = () => {
     } catch (error) {
       console.error('Erro ao enviar notificação:', error)
       toast.error('Erro ao enviar notificação')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleTestProgramacaoNotification = async () => {
+    setLoading(true)
+    try {
+      // Simular dados de uma programação para teste
+      const mockProgramacao = {
+        id: 'test-id',
+        prefixo_obra: 'TEST-2025-001',
+        cliente: 'Cliente Teste',
+        data: new Date().toISOString().split('T')[0],
+        horario: '08:00:00',
+        company_id: 'test-company-id'
+      }
+
+      // Simular a notificação de programação
+      const title = '📅 Nova Programação Adicionada!'
+      const body = `Obra: ${mockProgramacao.prefixo_obra} - ${mockProgramacao.cliente}\nData: ${new Date(mockProgramacao.data).toLocaleDateString('pt-BR')} às ${mockProgramacao.horario}`
+      
+      const result = await notificationService.sendNotificationToAllUsers(
+        title,
+        body,
+        {
+          type: 'new_programacao',
+          programacao_id: mockProgramacao.id,
+          prefixo_obra: mockProgramacao.prefixo_obra,
+          cliente: mockProgramacao.cliente,
+          data: mockProgramacao.data,
+          horario: mockProgramacao.horario
+        },
+        `/programacao/${mockProgramacao.id}`
+      )
+      
+      toast.success(`Notificação de programação enviada para ${result.success} usuários!`)
+    } catch (error) {
+      console.error('Erro ao enviar notificação de programação:', error)
+      toast.error('Erro ao enviar notificação de programação')
     } finally {
       setLoading(false)
     }
@@ -125,7 +165,7 @@ export const NotificationTestPanel: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {userId.trim() ? (
             <Button
               onClick={handleSendToUser}
@@ -145,6 +185,16 @@ export const NotificationTestPanel: React.FC = () => {
               {loading ? 'Enviando...' : 'Enviar para Todos'}
             </Button>
           )}
+          
+          <Button
+            onClick={handleTestProgramacaoNotification}
+            disabled={loading}
+            variant="outline"
+            className="flex items-center gap-2 border-blue-200 text-blue-700 hover:bg-blue-50"
+          >
+            <Calendar className="w-4 h-4" />
+            {loading ? 'Enviando...' : 'Testar Programação'}
+          </Button>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -156,6 +206,7 @@ export const NotificationTestPanel: React.FC = () => {
                 <li>As notificações são enviadas via Supabase Edge Functions</li>
                 <li>Funciona apenas para usuários com tokens ativos</li>
                 <li>As notificações aparecem mesmo com o app fechado</li>
+                <li>Notificações automáticas são enviadas quando novas programações são criadas</li>
               </ul>
             </div>
           </div>
