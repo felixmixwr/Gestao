@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { Badge } from './Badge'
 import { formatCurrency } from '../utils/formatters'
 import { Database } from '../lib/supabase'
-import { PumpKPIs, formatVolume, formatLiters, getMaintenanceStatus, getPumpStatusColor, getPumpIcon, isMaintenanceDue } from '../types/pump-advanced'
+import { PumpKPIs, formatVolume, formatLiters, getMaintenanceStatus, getPumpIcon, isMaintenanceDue } from '../types/pump-advanced'
 import { PumpAdvancedAPI } from '../lib/pump-advanced-api'
 import { PumpCardSkeleton } from './PumpLoadingSkeleton'
 
@@ -33,7 +33,7 @@ export function PumpCard({ pump }: PumpCardProps) {
 
   useEffect(() => {
     loadKPIs()
-  }, [pump.id])
+  }, [pump.id, loadKPIs])
 
   const getStatusVariant = (status: string) => {
     switch (status) {

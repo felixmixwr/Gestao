@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { X, Plus, TrendingUp, TrendingDown, Calendar, DollarSign, Fuel, Wrench, Package, Eye } from 'lucide-react'
+import { X, Plus, TrendingUp, TrendingDown, DollarSign, Fuel, Wrench, Package, Eye } from 'lucide-react'
 import { Badge } from './Badge'
 import { Button } from './Button'
 import { formatCurrency, formatVolume, formatLiters, formatDate, getMaintenanceTypeColor, getMaintenanceStatusColor, getInvestmentCategoryColor, getMaintenanceIcon, getDieselIcon, getInvestmentIcon } from '../types/pump-advanced'
-import { PumpDetails, Maintenance, DieselEntry, Investment } from '../types/pump-advanced'
+import { PumpDetails } from '../types/pump-advanced'
 import { PumpAdvancedAPI } from '../lib/pump-advanced-api'
 import { FinancialIntegrationAlert } from './FinancialIntegrationAlert'
 import { PumpKPICharts } from './PumpKPICharts'
@@ -36,7 +36,7 @@ export function PumpDetailModal({
     if (isOpen && pumpId) {
       loadPumpDetails()
     }
-  }, [isOpen, pumpId])
+  }, [isOpen, pumpId, loadPumpDetails])
 
   async function loadPumpDetails() {
     try {
@@ -474,7 +474,7 @@ function DieselTab({
                     </div>
                     <div>
                       <span className="text-gray-600">Quilometragem:</span>
-                      <p className="font-medium">{entry.current_mileage ? entry.current_mileage.toLocaleString('pt-BR') : 'N/A'} km</p>
+                      <p className="font-medium">{entry.current_mileage.toLocaleString('pt-BR')} km</p>
                     </div>
                   </div>
 

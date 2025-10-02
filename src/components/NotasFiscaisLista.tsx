@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from './Button';
-import { formatCurrency, formatDate } from '../utils/format';
+import { formatCurrency } from '../utils/format';
 import { formatDateSafe } from '../utils/date-utils';
 import { NotaFiscalDetailsModal } from './NotaFiscalDetailsModal';
 import type { Database } from '../lib/supabase';
@@ -28,7 +28,7 @@ export const NotasFiscaisLista: React.FC<NotasFiscaisListaProps> = ({
 
   useEffect(() => {
     loadNotas();
-  }, [reportId, refreshTrigger]); // Adicionado refreshTrigger como dependência
+  }, [reportId, refreshTrigger, loadNotas]); // Adicionado refreshTrigger como dependência
 
   const loadNotas = async () => {
     try {

@@ -17,7 +17,7 @@ export function PumpMaintenanceCalendarEvent({
   pumpPrefix,
   onEdit,
   onDelete,
-  onViewDetails
+  onViewDetails: _onViewDetails // eslint-disable-line no-unused-vars
 }: PumpMaintenanceCalendarEventProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)

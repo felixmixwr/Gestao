@@ -184,18 +184,20 @@ export default function ReportsList() {
           case 'pump':
             query = query.ilike('pump_prefix', `%${searchTerm}%`)
             break
-          case 'volume':
+          case 'volume': {
             const volumeNum = parseFloat(searchTerm)
             if (!isNaN(volumeNum)) {
               query = query.eq('realized_volume', volumeNum)
             }
             break
-          case 'value':
+          }
+          case 'value': {
             const valueNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'))
             if (!isNaN(valueNum)) {
               query = query.eq('total_value', valueNum)
             }
             break
+          }
         }
       }
 
@@ -267,18 +269,20 @@ export default function ReportsList() {
           case 'pump':
             countQuery = countQuery.ilike('pump_prefix', `%${searchTerm}%`)
             break
-          case 'volume':
+          case 'volume': {
             const volumeNum = parseFloat(searchTerm)
             if (!isNaN(volumeNum)) {
               countQuery = countQuery.eq('realized_volume', volumeNum)
             }
             break
-          case 'value':
+          }
+          case 'value': {
             const valueNum = parseFloat(searchTerm.replace(/[^\d.,]/g, '').replace(',', '.'))
             if (!isNaN(valueNum)) {
               countQuery = countQuery.eq('total_value', valueNum)
             }
             break
+          }
         }
       }
 
@@ -738,12 +742,12 @@ const handleWhatsApp = (report: ReportWithRelations) => {
       key: 'actions' as keyof ReportWithRelations,
       label: 'AÇÕES',
       className: 'w-24',
-      render: (_: any, report: ReportWithRelations) => (
+      render: (_: any, _report: ReportWithRelations) => (
         <div className="flex flex-col gap-1">
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleViewReport(report)}
+            onClick={() => handleViewReport(_report)}
             className="px-2 py-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium"
           >
             Ver
@@ -751,8 +755,8 @@ const handleWhatsApp = (report: ReportWithRelations) => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleWhatsApp(report)}
-            disabled={!report.clients?.phone}
+            onClick={() => handleWhatsApp(_report)}
+            disabled={!_report.clients?.phone}
             className="px-2 py-1 bg-green-50 border-green-300 text-green-700 hover:bg-green-100 rounded text-xs font-medium"
           >
             WhatsApp

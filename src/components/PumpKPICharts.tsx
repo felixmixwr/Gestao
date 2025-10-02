@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, Activity, BarChart3, PieChart } from 'lucide-react'
+import { TrendingUp, Activity, BarChart3, PieChart } from 'lucide-react'
 import { formatCurrency, formatVolume, formatLiters } from '../types/pump-advanced'
 import { PumpKPIs } from '../types/pump-advanced'
 import { PumpAdvancedAPI } from '../lib/pump-advanced-api'
@@ -150,7 +150,6 @@ export function PumpKPICharts({ pumpId, period = 'month' }: PumpKPIChartsProps) 
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-32 h-32 relative">
               {data.datasets[0].data.map((value, index) => {
-                const percentage = (value / total) * 100
                 const angle = (value / total) * 360
                 const cumulativeAngle = data.datasets[0].data.slice(0, index).reduce((sum, val) => sum + (val / total) * 360, 0)
                 

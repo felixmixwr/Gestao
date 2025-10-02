@@ -5,7 +5,7 @@ import { Layout } from '../../components/Layout';
 import { Button } from '../../components/Button';
 import { Table } from '../../components/Table';
 // import { FileDownloadButton } from '../../components/FileDownloadButton';
-import { formatCurrency, formatDate } from '../../utils/format';
+import { formatCurrency } from '../../utils/format';
 import { formatDateSafe } from '../../utils/date-utils';
 import type { Database } from '../../lib/supabase';
 

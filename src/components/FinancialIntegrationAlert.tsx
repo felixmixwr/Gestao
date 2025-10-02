@@ -25,7 +25,7 @@ export function FinancialIntegrationAlert({
   onClose, 
   autoHide = true 
 }: FinancialIntegrationAlertProps) {
-  const [alerts, setAlerts] = useState<FinancialAlert[]>([])
+  const [, setAlerts] = useState<FinancialAlert[]>([])
   const [showAlert, setShowAlert] = useState(false)
   const [currentAlert, setCurrentAlert] = useState<FinancialAlert | null>(null)
 
@@ -72,7 +72,7 @@ export function FinancialIntegrationAlert({
     
     // Mostrar o primeiro alerta não lido
     const unreadAlert = mockAlerts.find(alert => !alert.read)
-    if (unreadAlert && (!pumpId || unreadAlert.pumpId === pumpId)) {
+    if (unreadAlert && (!pumpId || alert.pumpId === pumpId)) {
       setCurrentAlert(unreadAlert)
       setShowAlert(true)
     }
@@ -86,7 +86,7 @@ export function FinancialIntegrationAlert({
 
       return () => clearTimeout(timer)
     }
-  }, [showAlert, autoHide])
+  }, [showAlert, autoHide, handleClose])
 
   const handleClose = () => {
     if (currentAlert) {

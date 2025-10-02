@@ -13,11 +13,12 @@ import {
   CreateInvestmentData,
   UpdateMaintenanceData,
   UpdateDieselEntryData,
-  UpdateInvestmentData,
+  // UpdateInvestmentData,
   PumpFilters,
   PumpDashboardStats,
   FinancialIntegration,
   CalendarEvent,
+  PumpNotification,
   PumpAlert
 } from '../types/pump-advanced'
 import { ExpenseCategory } from '../types/financial'
@@ -731,6 +732,25 @@ export class PumpAdvancedAPI {
       // 3. Notificar usuários sobre o evento
     } catch (error) {
       console.error('Erro ao criar evento do calendário:', error)
+      throw error
+    }
+  }
+
+  // ===== NOTIFICAÇÕES =====
+
+  // Buscar notificações de uma bomba
+  static async getPumpNotifications(): Promise<PumpNotification[]> {
+    // Por enquanto, retornar array vazio. Em uma implementação real, buscar da tabela de notificações
+    return []
+  }
+
+  // Criar notificação
+  static async createNotification(notification: Omit<PumpNotification, 'id' | 'created_at'>): Promise<void> {
+    try {
+      // Por enquanto, apenas log. Em uma implementação real, salvar na tabela de notificações
+      console.log('Notificação criada:', notification)
+    } catch (error) {
+      console.error('Erro ao criar notificação:', error)
       throw error
     }
   }

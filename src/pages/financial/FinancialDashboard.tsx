@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, Filter, Download } from 'lucide-react';
+import { Plus, DollarSign, Calendar, Filter, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -12,10 +12,8 @@ import {
   getExpenses, 
   getFinancialStats, 
   getPumpsForSelect, 
-  getCompaniesForSelect,
-  getPaidInvoices 
+  getCompaniesForSelect
 } from '../../lib/financialApi';
-import { formatCurrency } from '../../types/financial';
 import type { 
   ExpenseWithRelations, 
   FinancialStats, 

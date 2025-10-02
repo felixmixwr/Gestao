@@ -15,9 +15,9 @@ export function FinancialReports() {
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState<ExpenseWithRelations[]>([]);
   const [stats, setStats] = useState<FinancialStats | null>(null);
-  const [pumps, setPumps] = useState<Array<{ id: string; prefix: string; model?: string; brand?: string }>>([]);
-  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
-  const [filters, setFilters] = useState<ExpenseFilters>({});
+  // const [pumps] = useState<Array<{ id: string; prefix: string; model?: string; brand?: string }>>([]);
+  // const [companies] = useState<Array<{ id: string; name: string }>>([]);
+  const [filters] = useState<ExpenseFilters>({});
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState({
     inicio: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -108,9 +108,12 @@ export function FinancialReports() {
       case 'month':
         inicio = new Date(today.getFullYear(), today.getMonth(), 1);
         break;
-      case 'quarter':
+      case 'quarter': {
         const quarter = Math.floor(today.getMonth() / 3);
         inicio = new Date(today.getFullYear(), quarter * 3, 1);
+        break;
+      }
+      default:
         break;
       case 'year':
         inicio = new Date(today.getFullYear(), 0, 1);

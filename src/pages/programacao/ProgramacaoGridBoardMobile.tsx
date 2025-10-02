@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProgramacaoAPI } from '../../lib/programacao-api';
 import { Programacao, BombaOption } from '../../types/programacao';
@@ -8,9 +8,9 @@ import { Button } from '../../components/Button';
 import { toast } from '../../lib/toast-hooks';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
-import { getWeekBoundsBrasilia, getDayOfWeekBR } from '../../utils/date-utils';
+import { getWeekBoundsBrasilia } from '../../utils/date-utils';
 import { DailyScheduleView } from '../../components/DailyScheduleView';
-import { ChevronLeft, ChevronRight, Calendar, Plus, Trash2, Clock, MapPin, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Plus, Clock, MapPin, Users } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
   'Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'

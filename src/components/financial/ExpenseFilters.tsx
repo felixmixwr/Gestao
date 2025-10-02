@@ -43,8 +43,9 @@ export function ExpenseFilters({
 
   const handleCategoryChange = (category: string) => {
     if (category === 'all') {
-      const { categoria, ...rest } = filters;
-      onFiltersChange(rest);
+      const newFilters = { ...filters };
+      delete newFilters.categoria;
+      onFiltersChange(newFilters);
     } else {
       onFiltersChange({
         ...filters,
@@ -55,8 +56,9 @@ export function ExpenseFilters({
 
   const handleTypeChange = (type: string) => {
     if (type === 'all') {
-      const { tipo_custo, ...rest } = filters;
-      onFiltersChange(rest);
+      const newFilters = { ...filters };
+      delete newFilters.tipo_custo;
+      onFiltersChange(newFilters);
     } else {
       onFiltersChange({
         ...filters,
@@ -67,8 +69,9 @@ export function ExpenseFilters({
 
   const handleStatusChange = (status: string) => {
     if (status === 'all') {
-      const { status: statusFilter, ...rest } = filters;
-      onFiltersChange(rest);
+      const newFilters = { ...filters };
+      delete newFilters.status;
+      onFiltersChange(newFilters);
     } else {
       onFiltersChange({
         ...filters,
@@ -79,8 +82,9 @@ export function ExpenseFilters({
 
   const handleBombaChange = (bombaId: string) => {
     if (bombaId === 'all') {
-      const { bomba_id, ...rest } = filters;
-      onFiltersChange(rest);
+      const newFilters = { ...filters };
+      delete newFilters.bomba_id;
+      onFiltersChange(newFilters);
     } else {
       onFiltersChange({
         ...filters,
@@ -91,8 +95,9 @@ export function ExpenseFilters({
 
   const handleCompanyChange = (companyId: string) => {
     if (companyId === 'all') {
-      const { company_id, ...rest } = filters;
-      onFiltersChange(rest);
+      const newFilters = { ...filters };
+      delete newFilters.company_id;
+      onFiltersChange(newFilters);
     } else {
       onFiltersChange({
         ...filters,

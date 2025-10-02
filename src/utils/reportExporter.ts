@@ -4,7 +4,7 @@ import { ReportWithRelations } from '../types/reports'
 import { formatCurrency } from './formatters'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { formatDateSafe } from './date-utils'
+// import { formatDateSafe } from './date-utils'
 
 /**
  * Formata um valor monetário de forma segura
