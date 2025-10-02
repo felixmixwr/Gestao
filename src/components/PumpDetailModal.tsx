@@ -474,7 +474,7 @@ function DieselTab({
                     </div>
                     <div>
                       <span className="text-gray-600">Quilometragem:</span>
-                      <p className="font-medium">{entry.current_mileage.toLocaleString('pt-BR')} km</p>
+                      <p className="font-medium">{entry.current_mileage ? entry.current_mileage.toLocaleString('pt-BR') : 'N/A'} km</p>
                     </div>
                   </div>
 

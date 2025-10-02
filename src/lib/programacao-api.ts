@@ -232,7 +232,13 @@ export class ProgramacaoAPI {
       const foundPumpIds = pumpsData?.map(p => p.id) || [];
       const missingPumpIds = pumpIds.filter(id => !foundPumpIds.includes(id));
       
-      let bombasTerceirasData = [];
+      let bombasTerceirasData: Array<{
+        id: string;
+        prefixo: string;
+        modelo: string;
+        empresa_nome_fantasia: string;
+        valor_diaria: number;
+      }> = [];
       if (missingPumpIds.length > 0) {
         console.log('🔍 [ProgramacaoAPI] Buscando bombas terceiras para IDs:', missingPumpIds);
         const { data: bombasTerceiras } = await supabase
@@ -261,7 +267,7 @@ export class ProgramacaoAPI {
               is_terceira: true,
               empresa_nome: bombaTerceira.empresa_nome_fantasia,
               valor_diaria: bombaTerceira.valor_diaria
-            };
+            } as any;
           }
         }
         

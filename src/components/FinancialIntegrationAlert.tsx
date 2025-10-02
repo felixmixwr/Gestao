@@ -72,7 +72,7 @@ export function FinancialIntegrationAlert({
     
     // Mostrar o primeiro alerta não lido
     const unreadAlert = mockAlerts.find(alert => !alert.read)
-    if (unreadAlert && (!pumpId || alert.pumpId === pumpId)) {
+    if (unreadAlert && (!pumpId || unreadAlert.pumpId === pumpId)) {
       setCurrentAlert(unreadAlert)
       setShowAlert(true)
     }
