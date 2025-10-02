@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { Layout } from '../../components/Layout'
 import { Button } from '../../components/Button'
 import { Select } from '../../components/Select'
+import { MultiSelect } from '../../components/MultiSelect'
 import { DateRangePicker } from '../../components/ui/date-range-picker';
 import { ExportModal } from '../../components/ExportModal'
 import { ReportWithRelations, ReportFilters, ReportStatus } from '../../types/reports'
@@ -46,8 +47,9 @@ export default function ReportsList() {
   
   // Estados para exportação
   const [showExportModal, setShowExportModal] = useState(false)
-
-  const ITEMS_PER_PAGE = 20
+  
+  // Estado para itens por página
+  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   useEffect(() => {
     loadClients()
@@ -57,7 +59,7 @@ export default function ReportsList() {
 
   useEffect(() => {
     loadReports()
-  }, [filters, currentPage, searchTerm, searchType, sortField, sortDirection])
+  }, [filters, currentPage, searchTerm, searchType, sortField, sortDirection, itemsPerPage])
 
   const loadClients = async () => {
     try {
@@ -319,11 +321,11 @@ export default function ReportsList() {
       console.log('📊 [DATA] Resultado da contagem:', totalCount)
 
       const totalRecords = totalCount || 0
-      const calculatedTotalPages = Math.max(1, Math.ceil(totalRecords / ITEMS_PER_PAGE))
+      const calculatedTotalPages = Math.max(1, Math.ceil(totalRecords / itemsPerPage))
       
       console.log('📊 [DATA] Total de registros:', totalRecords)
       console.log('📊 [DATA] Total de páginas calculadas:', calculatedTotalPages)
-      console.log('📊 [DATA] ITEMS_PER_PAGE:', ITEMS_PER_PAGE)
+      console.log('📊 [DATA] itemsPerPage:', itemsPerPage)
       console.log('📊 [DATA] currentPage:', currentPage)
       
       setTotalPages(calculatedTotalPages)
@@ -339,7 +341,7 @@ export default function ReportsList() {
         // Não aplicar range ainda, vamos ordenar primeiro
       } else {
         // Para outras ordenações, aplicar paginação diretamente no banco
-        const { data: paginatedData, error: paginationError } = await query.range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1)
+        const { data: paginatedData, error: paginationError } = await query.range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1)
         if (paginationError) {
           console.error('❌ [ERROR] Erro na paginação:', paginationError)
           throw paginationError
@@ -463,8 +465,8 @@ export default function ReportsList() {
           
           // 7. Aplicar paginação no frontend para ordenação por status
           console.log('🔍 [DEBUG] Aplicando paginação no frontend...')
-          const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
-          const endIndex = startIndex + ITEMS_PER_PAGE
+          const startIndex = (currentPage - 1) * itemsPerPage
+          const endIndex = startIndex + itemsPerPage
           finalReports = finalReports.slice(startIndex, endIndex)
           console.log('📊 [DATA] Paginação aplicada:', { startIndex, endIndex, total: enrichedReports.length })
         }
@@ -524,6 +526,12 @@ export default function ReportsList() {
       setSortField(field)
       setSortDirection('desc')
     }
+    setCurrentPage(1) // Voltar para primeira página
+  }
+
+  // Função para lidar com mudança de itens por página
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage)
     setCurrentPage(1) // Voltar para primeira página
   }
 
@@ -652,6 +660,7 @@ const handleWhatsApp = (report: ReportWithRelations) => {
     setFilteredCompanies(companies)
     setShowAdvancedSearch(false)
     setCurrentPage(1)
+    // Não resetar itemsPerPage - manter a preferência do usuário
   }
 
   const hasActiveFilters = () => {
@@ -1061,19 +1070,20 @@ const handleWhatsApp = (report: ReportWithRelations) => {
           {/* Filtros */}
           <div className="mb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Status Filter */}
-              <Select
+              {/* Status Filter - MultiSelect */}
+              <MultiSelect
                 label="Status"
-                value={filters.status?.[0] || ''}
-                onChange={(value) => {
+                value={filters.status || []}
+                onChange={(values) => {
                   setFilters(prev => ({ 
                     ...prev, 
-                    status: value ? [value as ReportStatus] : undefined 
+                    status: values.length > 0 ? values as ReportStatus[] : undefined 
                   }))
                   setCurrentPage(1)
                 }}
                 options={getAllStatusOptions()}
-                placeholder="Selecione um status"
+                placeholder="Selecione os status"
+                maxDisplayItems={2}
               />
 
               {/* Date Filter */}
@@ -1149,9 +1159,13 @@ const handleWhatsApp = (report: ReportWithRelations) => {
                     <span className="text-sm font-medium text-blue-800">Filtros ativos:</span>
                     <div className="flex flex-wrap gap-2">
                       {filters.status && filters.status.length > 0 && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Status: {getStatusLabel(filters.status[0])}
-                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {filters.status.map((status) => (
+                            <span key={status} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Status: {getStatusLabel(status)}
+                            </span>
+                          ))}
+                        </div>
                       )}
                       {dateFilterType !== 'all' && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -1187,20 +1201,42 @@ const handleWhatsApp = (report: ReportWithRelations) => {
             )}
           </div>
 
-          {/* Results Summary */}
+          {/* Results Summary e Controles de Paginação */}
           {!loading && (
             <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-              <div>
-                {hasActiveFilters() ? (
-                  <span>
-                    Mostrando <strong>{reports.length}</strong> de <strong>{totalReports}</strong> relatório(s) com os filtros aplicados
-                  </span>
-                ) : (
-                  <span>
-                    Total de <strong>{totalReports}</strong> relatório(s)
-                  </span>
-                )}
+              <div className="flex items-center gap-4">
+                <div>
+                  {hasActiveFilters() ? (
+                    <span>
+                      Mostrando <strong>{reports.length}</strong> de <strong>{totalReports}</strong> relatório(s) com os filtros aplicados
+                    </span>
+                  ) : (
+                    <span>
+                      Total de <strong>{totalReports}</strong> relatório(s)
+                    </span>
+                  )}
+                </div>
+                
+                {/* Dropdown de Itens por Página */}
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Mostrar:
+                  </label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={75}>75</option>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                  </select>
+                  <span className="text-sm text-gray-500">por página</span>
+                </div>
               </div>
+              
               <div>
                 Página {currentPage} de {totalPages}
               </div>
