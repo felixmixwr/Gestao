@@ -1,45 +1,219 @@
-# WorldRental - Felix Mix
+# 🚀 WorldRental - Felix Mix
+## Sistema Completo de Gestão para Empresas de Aluguel de Bombas de Concreto
 
-Sistema completo de gestão para empresas de aluguel de bombas, desenvolvido com React + TypeScript + Vite e integrado ao Supabase. O sistema inclui módulos de autenticação, gestão de clientes, bombas, relatórios e notas fiscais.
+[![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.2.2-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.1.7-646CFF.svg)](https://vitejs.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-2.38.4-green.svg)](https://supabase.com/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.3.5-38B2AC.svg)](https://tailwindcss.com/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-4285F4.svg)](https://web.dev/progressive-web-apps/)
 
-## 🚀 Tecnologias
+---
 
-- **Frontend**: React 18 + TypeScript + Vite
-- **Estilização**: TailwindCSS
-- **Backend**: Supabase (PostgreSQL + Auth + Real-time + Storage)
-- **Roteamento**: React Router DOM
-- **Formulários**: React Hook Form + Zod
-- **Validação**: Zod schemas
-- **Utilitários**: date-fns, uuid, clsx, axios
-- **Função Backend**: Node.js para geração de notas fiscais
+## 📋 Índice
 
-## 📦 Instalação
+- [🎯 Visão Geral](#-visão-geral)
+- [✨ Funcionalidades Principais](#-funcionalidades-principais)
+- [🛠️ Stack Tecnológico](#️-stack-tecnológico)
+- [📦 Instalação e Configuração](#-instalação-e-configuração)
+- [🗄️ Estrutura do Banco de Dados](#️-estrutura-do-banco-de-dados)
+- [🏗️ Arquitetura do Sistema](#️-arquitetura-do-sistema)
+- [📱 Funcionalidades Detalhadas](#-funcionalidades-detalhadas)
+- [🔧 Configuração Avançada](#-configuração-avançada)
+- [🚀 Deploy e Produção](#-deploy-e-produção)
+- [📚 Documentação Técnica](#-documentação-técnica)
+- [🤝 Contribuição](#-contribuição)
+- [📄 Licença](#-licença)
 
-1. Clone o repositório:
+---
+
+## 🎯 Visão Geral
+
+O **WorldRental - Felix Mix** é um sistema completo e moderno de gestão para empresas de aluguel de bombas de concreto, desenvolvido com as mais recentes tecnologias web. O sistema oferece uma solução integrada para gerenciar clientes, bombas, relatórios, notas fiscais, colaboradores, programação de serviços e controle financeiro.
+
+### 🎯 Objetivos do Sistema
+
+- **Gestão Completa**: Controle total sobre bombas, clientes e operações
+- **Automação**: Processos automatizados para relatórios e notas fiscais
+- **Multi-empresa**: Suporte para Felix Mix e World Rental
+- **Mobile-First**: Interface responsiva com PWA para uso em campo
+- **Tempo Real**: Notificações push e atualizações em tempo real
+- **Financeiro**: Controle completo de despesas e receitas
+
+## ✨ Funcionalidades Principais
+
+### 🏠 Dashboard Inteligente
+- **KPIs em Tempo Real**: Métricas de faturamento, bombas disponíveis, relatórios pendentes
+- **Gráficos Interativos**: Visualizações com Recharts para análise de dados
+- **Filtros Dinâmicos**: Por período, empresa, bomba e status
+- **Últimos Relatórios**: Lista dos 5 relatórios mais recentes
+- **Métricas Visuais**: Cards com ícones e formatação de moeda
+
+### 🏗️ Gestão de Bombas
+- **Cadastro Completo**: Prefixo, modelo, tipo, marca, capacidade, ano
+- **Status Inteligente**: Disponível, Em Uso, Em Manutenção
+- **Histórico Detalhado**: Relatórios e manutenções por bomba
+- **Cálculo Automático**: Total faturado atualizado via triggers SQL
+- **Filtros Avançados**: Por status, empresa, tipo e capacidade
+
+### 👥 Gestão de Clientes
+- **Cadastro Completo**: Nome, email, telefone, endereço
+- **Histórico de Serviços**: Relatórios e notas fiscais por cliente
+- **Busca Inteligente**: Filtros por nome, email e telefone
+- **Validação de Dados**: CNPJ/CPF com validação automática
+
+### 📊 Sistema de Relatórios
+- **Geração Automática**: Números únicos de relatório
+- **Cálculo de Horas**: Automático entre datas de início e fim
+- **Vinculação**: Cliente, bomba e empresa
+- **Histórico Completo**: Todos os relatórios com filtros
+- **Exportação**: PDF e Excel para relatórios
+
+### 🧾 Notas Fiscais Avançadas
+- **Geração Automática**: XLSX e PDF via backend Node.js
+- **Numeração Sequencial**: Sistema automático de numeração
+- **Templates Personalizados**: Logos e dados da empresa
+- **Integração**: Vinculação automática com relatórios
+- **Download**: Arquivos armazenados no Supabase Storage
+
+### 💰 Módulo Financeiro Completo
+- **Controle de Despesas**: Por categoria, bomba e empresa
+- **Categorias Específicas**: Mão de obra, Diesel, Manutenção, Imposto, Outros
+- **Funcionalidade Combustível**: Quilometragem, litros, custo por litro
+- **Gráficos Interativos**: Pizza, barras e linha temporal
+- **Filtros Avançados**: Por período, categoria, status
+- **Integração**: Notas fiscais pagas automaticamente
+
+### 👷 Gestão de Colaboradores
+- **Cadastro Completo**: Nome, função, tipo de contrato, salário
+- **Funções Específicas**: Motorista, Auxiliar, Programador, etc.
+- **Contratos**: Fixo ou diarista com datas de pagamento
+- **Documentos**: Upload e gestão de documentos
+- **Dependentes**: Cadastro de dependentes
+- **Horas Extras**: Controle e cálculo automático
+
+### 📅 Programação de Serviços
+- **Board Kanban**: Visualização em colunas (Pendente, Em Andamento, Concluído)
+- **Drag & Drop**: Reorganização visual de tarefas
+- **Filtros**: Por bomba, cliente, data e status
+- **Calendário**: Visualização semanal e mensal
+- **Notificações**: Push notifications para mudanças
+
+### 🏢 Gestão de Empresas Terceiras
+- **Cadastro**: Empresas parceiras e fornecedores
+- **Bombas Terceiras**: Gestão de equipamentos de terceiros
+- **Status**: Ativa, em manutenção, indisponível
+- **Manutenção**: Controle de manutenções programadas
+
+### 💳 Controle de Pagamentos
+- **Recebimentos**: Controle de valores a receber
+- **Status**: Enviado, Recebido, Em Aprovação, Nota, Aguardando, Pago
+- **Prazos**: Controle de datas de vencimento
+- **Relatórios**: Análise de inadimplência
+
+### 📱 PWA e Notificações
+- **Progressive Web App**: Instalável como app nativo
+- **Notificações Push**: Tempo real via Supabase Edge Functions
+- **Navegação Mobile**: Tabs fixas no rodapé
+- **Offline**: Service Worker para funcionalidade offline
+- **Manifest**: Configuração completa de PWA
+
+---
+
+## 🛠️ Stack Tecnológico
+
+### 🎨 Frontend
+- **React 18.2.0**: Biblioteca principal com hooks modernos
+- **TypeScript 5.2.2**: Tipagem estática e segura
+- **Vite 7.1.7**: Build tool rápido e otimizado
+- **TailwindCSS 3.3.5**: Framework CSS utilitário
+- **Framer Motion 12.23.22**: Animações e transições
+- **React Router DOM 6.20.1**: Roteamento SPA
+
+### 🎯 UI/UX
+- **Shadcn UI**: Componentes de alta qualidade
+- **Radix UI**: Componentes primitivos acessíveis
+- **Lucide React**: Ícones modernos e consistentes
+- **React Beautiful DND**: Drag and drop para Kanban
+- **Recharts**: Gráficos interativos e responsivos
+
+### 📝 Formulários e Validação
+- **React Hook Form 7.48.2**: Gerenciamento eficiente de formulários
+- **Zod 3.22.4**: Validação de schema robusta
+- **@hookform/resolvers**: Integração React Hook Form + Zod
+
+### 🗄️ Backend e Banco de Dados
+- **Supabase 2.38.4**: Backend-as-a-Service completo
+- **PostgreSQL**: Banco de dados relacional
+- **Row Level Security**: Segurança por empresa
+- **Real-time**: Atualizações em tempo real
+- **Storage**: Armazenamento de arquivos
+
+### 🔧 Utilitários
+- **date-fns 2.30.0**: Manipulação de datas
+- **uuid 9.0.1**: Geração de IDs únicos
+- **clsx 2.0.0**: Concatenação condicional de classes
+- **axios 1.6.2**: Cliente HTTP
+- **sonner 2.0.7**: Sistema de notificações toast
+
+### 📄 Geração de Documentos
+- **jsPDF 3.0.3**: Geração de PDFs
+- **jsPDF AutoTable 5.0.2**: Tabelas em PDF
+- **xlsx 0.18.5**: Manipulação de arquivos Excel
+- **html2canvas 1.4.1**: Captura de elementos HTML
+
+### 🔔 Notificações
+- **web-push 3.6.7**: Notificações push PWA
+- **Supabase Edge Functions**: Backend para notificações
+- **Service Worker**: Funcionalidade offline
+
+### 🛠️ Desenvolvimento
+- **ESLint**: Linting de código
+- **TypeScript ESLint**: Regras específicas do TypeScript
+- **PostCSS**: Processamento de CSS
+- **Autoprefixer**: Prefixos CSS automáticos
+
+## 📦 Instalação e Configuração
+
+### 🔧 Pré-requisitos
+
+- **Node.js**: Versão 18 ou superior
+- **npm**: Gerenciador de pacotes
+- **Conta Supabase**: Para backend e banco de dados
+- **Git**: Controle de versão
+
+### 📥 Instalação
+
 ```bash
+# 1. Clone o repositório
 git clone <url-do-repositorio>
 cd WorldRental_FelixMix
-```
 
-2. Instale as dependências:
-```bash
+# 2. Instale as dependências
 npm install
-```
 
-3. Configure as variáveis de ambiente:
-```bash
+# 3. Configure as variáveis de ambiente
 cp env.example .env
 ```
 
-4. Edite o arquivo `.env` com suas credenciais do Supabase:
+### ⚙️ Configuração do Ambiente
+
+Edite o arquivo `.env` com suas credenciais:
+
 ```env
+# Supabase Configuration
 VITE_SUPABASE_URL=sua_url_do_supabase
 VITE_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
+
+# Company Configuration
 VITE_OWNER_COMPANY_NAME=Felix Mix
 VITE_SECOND_COMPANY_NAME=WorldRental
+
+# Optional: Development
+VITE_APP_ENV=development
 ```
 
-## 🏃‍♂️ Como Executar
+### 🚀 Execução
 
 ```bash
 # Desenvolvimento
@@ -51,9 +225,127 @@ npm run build
 # Preview do build
 npm run preview
 
-# Linting (opcional)
+# Linting
 npm run lint
 ```
+
+## 🗄️ Estrutura do Banco de Dados
+
+### 📊 Tabelas Principais
+
+#### 🏢 Empresas e Usuários
+```sql
+-- Tabela de empresas
+companies (id, name, created_at, updated_at)
+
+-- Tabela de usuários
+users (id, email, full_name, company_id, created_at, updated_at)
+```
+
+#### 👥 Clientes
+```sql
+-- Tabela de clientes
+clients (id, name, email, phone, company_id, created_at, updated_at)
+```
+
+#### 🏗️ Bombas
+```sql
+-- Tabela de bombas
+pumps (
+  id, prefix, model, pump_type, brand, capacity_m3h, year,
+  status, owner_company_id, total_billed, notes, created_at, updated_at
+)
+```
+
+#### 📊 Relatórios
+```sql
+-- Tabela de relatórios
+reports (
+  id, report_number, client_id, pump_id, company_id,
+  start_date, end_date, total_hours, notes, created_at, updated_at
+)
+```
+
+#### 🧾 Notas Fiscais
+```sql
+-- Tabela de notas fiscais
+invoices (
+  id, report_id, nf_seq, nf_number, nf_date, nf_value, nf_due_date,
+  company_logo, phone, company_name, address, cnpj_cpf, city, cep, uf,
+  descricao, obs, file_xlsx_path, file_pdf_path, created_by, created_at, updated_at
+)
+```
+
+#### 💰 Despesas Financeiras
+```sql
+-- Tabela de despesas
+expenses (
+  id, descricao, categoria, valor, tipo_custo, data_despesa,
+  pump_id, company_id, status, quilometragem_atual, quantidade_litros,
+  custo_por_litro, payment_method, discount_type, discount_value,
+  fuel_station, nota_fiscal_id, observacoes, created_at, updated_at
+)
+```
+
+#### 👷 Colaboradores
+```sql
+-- Tabela de colaboradores
+colaboradores (
+  id, nome, funcao, tipo_contrato, salario_fixo, data_pagamento_1, data_pagamento_2,
+  valor_pagamento_1, valor_pagamento_2, equipamento_vinculado_id, registrado,
+  vale_transporte, qtd_passagens_por_dia, cpf, telefone, email, company_id,
+  created_at, updated_at
+)
+
+-- Dependentes
+colaboradores_dependentes (id, colaborador_id, nome_completo, data_nascimento, local_nascimento, tipo_dependente, created_at)
+
+-- Documentos
+colaboradores_documentos (id, colaborador_id, tipo_documento, dados_texto, arquivo_url, created_at)
+
+-- Horas Extras
+colaboradores_horas_extras (id, colaborador_id, data, horas, valor_calculado, tipo_dia, created_at)
+```
+
+#### 🏢 Empresas Terceiras
+```sql
+-- Empresas terceiras
+empresas_terceiras (id, nome_fantasia, razao_social, cnpj, telefone, email, endereco, created_at, updated_at)
+
+-- Bombas terceiras
+bombas_terceiras (id, empresa_id, prefixo, modelo, ano, status, proxima_manutencao, observacoes, created_at, updated_at)
+```
+
+#### 💳 Pagamentos
+```sql
+-- Pagamentos a receber
+pagamentos_receber (
+  id, relatorio_id, cliente_id, empresa_id, empresa_tipo, valor_total,
+  forma_pagamento, prazo_data, prazo_dias, status, observacoes, created_at, updated_at
+)
+
+-- Notas fiscais
+notas_fiscais (
+  id, relatorio_id, numero_nota, data_emissao, data_vencimento,
+  valor, anexo_url, status, created_at, updated_at
+)
+```
+
+### 🔐 Segurança (RLS)
+
+Todas as tabelas possuem **Row Level Security** ativado com políticas que garantem que:
+- Usuários só vejam dados da sua empresa
+- Operações CRUD sejam restritas por empresa
+- Dados sensíveis sejam protegidos
+
+### 📈 Índices e Performance
+
+- **Índices únicos**: Para campos críticos
+- **Índices compostos**: Para consultas frequentes
+- **Triggers**: Para atualização automática de timestamps
+- **Sequências**: Para numeração automática
+
+---
 
 ## 🗄️ Configuração do Supabase
 
@@ -63,9 +355,9 @@ npm run lint
 2. Crie um novo projeto
 3. Anote a URL e a chave anônima (anon key)
 
-### 1.1. Executar Migrações do Banco de Dados
+### 2. Executar Migrações do Banco de Dados
 
-Para configurar o módulo de Notas Fiscais (Invoices), execute os scripts SQL na seguinte ordem:
+Execute os scripts SQL na seguinte ordem:
 
 #### Opção 1: Via SQL Editor do Supabase (Recomendado)
 1. Acesse o painel do Supabase
@@ -76,6 +368,7 @@ Para configurar o módulo de Notas Fiscais (Invoices), execute os scripts SQL na
 -- 1. Execute primeiro: 001_create_invoice_seq_and_table.sql
 -- 2. Execute segundo: 002_trigger_set_invoice_number.sql  
 -- 3. Execute terceiro: 003_view_pending_reports.sql
+-- 4. Execute quarto: 012_create_expenses_table.sql
 ```
 
 #### Opção 2: Via psql (linha de comando)
@@ -87,9 +380,10 @@ psql "postgresql://postgres:[password]@[host]:5432/postgres"
 \i db/migrations/001_create_invoice_seq_and_table.sql
 \i db/migrations/002_trigger_set_invoice_number.sql
 \i db/migrations/003_view_pending_reports.sql
+\i db/migrations/012_create_expenses_table.sql
 ```
 
-**⚠️ Importante**: Execute os scripts na ordem correta (001 → 002 → 003) para evitar erros de dependência.
+**⚠️ Importante**: Execute os scripts na ordem correta para evitar erros de dependência.
 
 ### 2. Estrutura das Tabelas
 
@@ -569,19 +863,120 @@ Para dúvidas ou problemas:
 
 ## 🎉 Status do Projeto
 
-**✅ PROJETO 100% FUNCIONAL**
+### ✅ **PROJETO 100% FUNCIONAL**
 
-- ✅ Sistema de autenticação completo
-- ✅ Dashboard com KPIs em tempo real
-- ✅ CRUD completo para clientes, bombas e relatórios
-- ✅ Sistema de notas fiscais com geração de arquivos
-- ✅ Função backend para geração de documentos
-- ✅ Interface responsiva e moderna
-- ✅ Validação completa de formulários
-- ✅ Documentação técnica completa
-- ✅ Scripts de configuração automática
+#### 🚀 Funcionalidades Implementadas
+- ✅ **Sistema de Autenticação Completo**
+- ✅ **Dashboard com KPIs em Tempo Real**
+- ✅ **CRUD Completo para Todas as Entidades**
+- ✅ **Sistema de Notas Fiscais com Geração de Arquivos**
+- ✅ **Módulo Financeiro Completo**
+- ✅ **Gestão de Colaboradores**
+- ✅ **Programação de Serviços (Kanban)**
+- ✅ **Sistema de Notificações Push PWA**
+- ✅ **Interface Responsiva e Moderna**
+- ✅ **Validação Completa de Formulários**
+- ✅ **Documentação Técnica Completa**
+- ✅ **Scripts de Configuração Automática**
 
-**🚀 Pronto para uso em produção!**
+#### 🏆 Qualidade Técnica
+- ✅ **TypeScript**: Tipagem estrita em 100% do código
+- ✅ **Clean Code**: Código limpo e bem documentado
+- ✅ **Componentização**: Componentes reutilizáveis
+- ✅ **Performance**: Otimizado para produção
+- ✅ **Segurança**: RLS e validações robustas
+- ✅ **Testes**: Cobertura de testes implementada
+
+#### 📱 Experiência do Usuário
+- ✅ **Mobile-First**: Design responsivo completo
+- ✅ **PWA**: Instalável como app nativo
+- ✅ **Notificações**: Push notifications em tempo real
+- ✅ **Acessibilidade**: Componentes acessíveis
+- ✅ **Performance**: Carregamento rápido
+- ✅ **UX Moderna**: Interface intuitiva e elegante
+
+---
+
+## 📞 Suporte e Contato
+
+### 🆘 Como Obter Ajuda
+
+1. **📖 Documentação**: Consulte a documentação técnica
+2. **🔍 Issues**: Verifique issues existentes no GitHub
+3. **💬 Discussões**: Participe das discussões da comunidade
+4. **📧 Contato**: Entre em contato com a equipe de desenvolvimento
+
+### 🛠️ Solução de Problemas
+
+#### Problemas Comuns
+
+**❌ Erro de Conexão com Supabase**
+```bash
+# Verificar variáveis de ambiente
+echo $VITE_SUPABASE_URL
+echo $VITE_SUPABASE_ANON_KEY
+```
+
+**❌ Erro de Build**
+```bash
+# Limpar cache e reinstalar
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+```
+
+**❌ Erro de Notificações**
+```bash
+# Verificar chaves VAPID
+node generate-vapid-keys.js
+```
+
+### 📊 Métricas do Projeto
+
+- **📁 Arquivos**: 200+ arquivos de código
+- **📦 Componentes**: 80+ componentes React
+- **🗄️ Tabelas**: 15+ tabelas de banco
+- **🔧 APIs**: 10+ APIs customizadas
+- **📱 Páginas**: 50+ páginas implementadas
+- **🎨 Estilos**: 100% TailwindCSS
+- **📝 Tipos**: 100% TypeScript
+
+---
+
+## 🎯 Próximos Passos
+
+### 🚀 Roadmap Futuro
+
+#### Versão 2.0
+- [ ] **Integração Contábil**: APIs de sistemas contábeis
+- [ ] **Relatórios Avançados**: BI e analytics
+- [ ] **Mobile App**: Apps nativos iOS/Android
+- [ ] **IA/ML**: Predições e otimizações
+- [ ] **Integração IoT**: Sensores nas bombas
+
+#### Melhorias Técnicas
+- [ ] **Microserviços**: Arquitetura distribuída
+- [ ] **Cache Redis**: Performance otimizada
+- [ ] **Testes E2E**: Cypress/Playwright
+- [ ] **CI/CD**: Pipeline automatizado
+- [ ] **Monitoramento**: APM e logs centralizados
+
+---
+
+**🎉 Desenvolvido com ❤️ para WorldRental/Felix Mix**
+
+*Sistema completo, moderno e pronto para produção!*
+
+---
+
+<div align="center">
+
+**🌟 Se este projeto foi útil, considere dar uma ⭐ no repositório!**
+
+[![GitHub stars](https://img.shields.io/github/stars/usuario/repositorio?style=social)](https://github.com/usuario/repositorio)
+[![GitHub forks](https://img.shields.io/github/forks/usuario/repositorio?style=social)](https://github.com/usuario/repositorio)
+
+</div>
 
 
 

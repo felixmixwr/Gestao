@@ -8,30 +8,12 @@ import { Button } from '../../components/Button';
 import { toast } from '../../lib/toast-hooks';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
-// import { ProgramacaoExportData } from '../../utils/programacao-exporter';
 import { getWeekBoundsBrasilia, getDayOfWeekBR } from '../../utils/date-utils';
 import { DailyScheduleView } from '../../components/DailyScheduleView';
-
-// interface ProgramacaoCard {
-//   id: string;
-//   hora: string;
-//   cliente: string;
-//   volume: number;
-//   local: string;
-//   endereco: string;
-//   numero: string;
-//   bairro: string;
-//   cidade: string;
-//   estado: string;
-// }
 
 const DAYS_OF_WEEK = [
   'Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'
 ];
-
-// const DAY_NAMES = [
-//   'Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'
-// ];
 
 export function ProgramacaoGridBoard() {
   const navigate = useNavigate();
@@ -108,11 +90,6 @@ export function ProgramacaoGridBoard() {
     setCurrentWeek(new Date());
   };
 
-  // const goToToday = () => {
-  //   const today = new Date();
-  //   setCurrentWeek(today);
-  // };
-
   // Obter programações para uma bomba e dia específicos
   const getProgramacoesForBombaAndDay = (bombaId: string, dayOfWeek: number) => {
     return programacoes.filter(p => {
@@ -134,6 +111,30 @@ export function ProgramacaoGridBoard() {
     if (bairro) parts.push(bairro);
     if (cidade) parts.push(cidade);
     return parts.join(', ');
+  };
+
+  // Obter classes CSS baseadas no status da programação
+  const getProgramacaoClasses = (status: string) => {
+    // Verificação mais robusta para status reservado
+    const isReservado = status && status.toLowerCase().trim() === 'reservado';
+    
+    if (isReservado) {
+      return {
+        card: 'bg-yellow-50 border border-yellow-200 rounded-lg p-3 cursor-pointer hover:bg-yellow-100 transition-colors',
+        hora: 'text-sm font-semibold text-yellow-800 mb-1',
+        cliente: 'text-sm font-medium text-gray-900 mb-1 truncate',
+        volume: 'text-xs text-gray-600 mb-1',
+        local: 'text-xs text-gray-500 truncate'
+      };
+    } else {
+      return {
+        card: 'bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors',
+        hora: 'text-sm font-semibold text-blue-800 mb-1',
+        cliente: 'text-sm font-medium text-gray-900 mb-1 truncate',
+        volume: 'text-xs text-gray-600 mb-1',
+        local: 'text-xs text-gray-500 truncate'
+      };
+    }
   };
 
   // Deletar programação
@@ -279,7 +280,7 @@ export function ProgramacaoGridBoard() {
                 {bombas.map((bomba, bombaIndex) => (
                   <tr key={bomba.id} className={`${bombaIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} print-row`}>
                     {/* Coluna da bomba */}
-                    <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit print-cell z-10">
+                    <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit print-cell">
                       <div className="text-sm font-semibold">{bomba.prefix}</div>
                       <div className="text-xs text-gray-500">{bomba.model}</div>
                     </td>
@@ -292,69 +293,51 @@ export function ProgramacaoGridBoard() {
                         <td key={dayIndex} className="w-48 p-2 border-r border-gray-200 last:border-r-0 align-top print-cell">
                           <div className="space-y-2 min-h-[100px]">
                             {dayProgramacoes.map((programacao) => {
-                              // Determinar cor do card baseado no status
-                              const isReservado = programacao.status === 'reservado';
-                              const cardClasses = isReservado 
-                                ? "bg-yellow-100 border border-yellow-300 hover:bg-yellow-200"
-                                : "bg-blue-50 border border-blue-200 hover:bg-blue-100";
-                              
+                              const classes = getProgramacaoClasses(programacao.status);
                               return (
-                              <div
-                                key={programacao.id}
-                                className={`${cardClasses} rounded-lg p-3 cursor-pointer transition-colors print-programacao`}
-                                onClick={() => navigate(`/programacao/${programacao.id}`)}
-                              >
-                                {/* Hora */}
-                                <div className={`text-sm font-semibold mb-1 ${isReservado ? 'text-yellow-900' : 'text-blue-800'}`}>
-                                  {formatTime(programacao.horario)}
-                                </div>
-                                
-                                {/* Cliente */}
-                                <div className="text-sm font-medium text-gray-900 mb-1 truncate">
-                                  {programacao.cliente || 'Cliente não informado'}
-                                </div>
-                                
-                                {/* Volume */}
-                                <div className="text-xs text-gray-600 mb-1">
-                                  {programacao.volume_previsto}m³
-                                </div>
-                                
-                                {/* Motorista */}
-                                {programacao.motorista_nome && (
-                                  <div className="text-xs text-gray-600 mb-1">
-                                    🚗 {programacao.motorista_nome}
-                                  </div>
-                                )}
-                                
-                                {/* Auxiliares */}
-                                {programacao.auxiliares_nomes && programacao.auxiliares_nomes.length > 0 && (
-                                  <div className="text-xs text-gray-600 mb-1">
-                                    👥 {programacao.auxiliares_nomes.join(', ')}
-                                  </div>
-                                )}
-                                
-                                {/* Local */}
-                                <div className="text-xs text-gray-500 truncate">
-                                  {formatLocation(
-                                    programacao.endereco,
-                                    programacao.numero,
-                                    programacao.bairro || '',
-                                    programacao.cidade || ''
-                                  )}
-                                </div>
-
-                                {/* Badge de Exclusão */}
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(programacao);
-                                  }}
-                                  className="mt-2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium hover:bg-red-200 transition-colors print-hidden"
-                                  title="Excluir programação"
+                                <div
+                                  key={programacao.id}
+                                  className={`${classes.card} print-programacao`}
+                                  onClick={() => navigate(`/programacao/${programacao.id}`)}
                                 >
-                                  Excluir
-                                </button>
-                              </div>
+                                  {/* Hora */}
+                                  <div className={classes.hora}>
+                                    {formatTime(programacao.horario)}
+                                  </div>
+                                  
+                                  {/* Cliente */}
+                                  <div className={classes.cliente}>
+                                    {programacao.cliente || 'Cliente não informado'}
+                                  </div>
+                                  
+                                  {/* Volume */}
+                                  <div className={classes.volume}>
+                                    {programacao.volume_previsto}m³
+                                  </div>
+                                  
+                                  {/* Local */}
+                                  <div className={classes.local}>
+                                    {formatLocation(
+                                      programacao.endereco,
+                                      programacao.numero,
+                                      programacao.bairro || '',
+                                      programacao.cidade || ''
+                                    )}
+                                  </div>
+
+                                  {/* Botão de deletar */}
+                                  <div className="mt-2 flex justify-end">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteClick(programacao);
+                                      }}
+                                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors shadow-sm"
+                                    >
+                                      Excluir
+                                    </button>
+                                  </div>
+                                </div>
                               );
                             })}
                             

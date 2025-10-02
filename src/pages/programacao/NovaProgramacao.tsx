@@ -196,7 +196,7 @@ function NovaProgramacaoContent() {
         });
       } else {
         toast.error('Programação não encontrada');
-        navigate('/programacao/board');
+        navigate('/programacao');
       }
     } catch (error) {
       toast.error('Erro ao carregar programação');
@@ -214,7 +214,7 @@ function NovaProgramacaoContent() {
       if (field === 'cliente_id' && typeof value === 'string') {
         const cliente = clientes.find(c => c.id === value);
         if (cliente) {
-          newData.cliente = cliente.name;
+          newData.cliente = cliente.company_name || cliente.name;
         }
       }
       
@@ -359,7 +359,7 @@ function NovaProgramacaoContent() {
         await ProgramacaoAPI.create(formData);
         toast.success('Programação criada com sucesso!');
       }
-      navigate('/programacao/board');
+      navigate('/programacao');
     } catch (error) {
       toast.error(`Erro ao ${isEditing ? 'atualizar' : 'criar'} programação`);
       console.error(error);
@@ -385,7 +385,7 @@ function NovaProgramacaoContent() {
           </h1>
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/programacao/board'}
+            onClick={() => window.location.href = '/programacao'}
           >
             Voltar
           </Button>

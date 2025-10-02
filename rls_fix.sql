@@ -37,5 +37,3 @@ SELECT current_user, auth.uid();
 -- Se ainda houver problemas, execute também:
 -- GRANT ALL ON expenses TO authenticated;
 -- GRANT ALL ON expenses TO anon;
-
-

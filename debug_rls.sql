@@ -76,5 +76,3 @@ INSERT INTO expenses (
     'cartao'
 );
 */
-
-

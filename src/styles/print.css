@@ -22,27 +22,32 @@
   page-break-inside: avoid;
 }
 
-.print-programacao {
-  background-color: #e3f2fd !important;
-  border: 1px solid #2196f3 !important;
-  margin-bottom: 4px !important;
-  padding: 6px !important;
-  font-size: 11px !important;
-  line-height: 1.3 !important;
+/* Aplicar estilos de impressão apenas durante a impressão */
+@media print {
+  .print-programacao {
+    background-color: #e3f2fd !important;
+    border: 1px solid #2196f3 !important;
+    margin-bottom: 4px !important;
+    padding: 6px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  
+  .print-programacao:hover {
+    background-color: #e3f2fd !important;
+  }
 }
 
-.print-programacao:hover {
-  background-color: #e3f2fd !important;
-}
+/* Card amarelo para status reservado - apenas para impressão */
+@media print {
+  .print-programacao.bg-yellow-100 {
+    background-color: #fef3c7 !important;
+    border: 1px solid #d97706 !important;
+  }
 
-/* Card amarelo para status reservado */
-.print-programacao.bg-yellow-100 {
-  background-color: #fef3c7 !important;
-  border: 1px solid #d97706 !important;
-}
-
-.print-programacao.bg-yellow-100:hover {
-  background-color: #fde68a !important;
+  .print-programacao.bg-yellow-100:hover {
+    background-color: #fde68a !important;
+  }
 }
 
 .print-hidden {
@@ -70,28 +75,30 @@
   overflow-wrap: break-word;
 }
 
-/* Estilos específicos para elementos importantes */
-.print-programacao .text-blue-800 {
-  color: #1565c0 !important;
-  font-weight: bold !important;
-}
+/* Estilos específicos para elementos importantes - apenas para impressão */
+@media print {
+  .print-programacao .text-blue-800 {
+    color: #1565c0 !important;
+    font-weight: bold !important;
+  }
 
-.print-programacao .text-yellow-800 {
-  color: #b45309 !important;
-  font-weight: bold !important;
-}
+  .print-programacao .text-yellow-800 {
+    color: #b45309 !important;
+    font-weight: bold !important;
+  }
 
-.print-programacao .text-gray-900 {
-  color: #212529 !important;
-  font-weight: 500 !important;
-}
+  .print-programacao .text-gray-900 {
+    color: #212529 !important;
+    font-weight: 500 !important;
+  }
 
-.print-programacao .text-gray-600 {
-  color: #495057 !important;
-}
+  .print-programacao .text-gray-600 {
+    color: #495057 !important;
+  }
 
-.print-programacao .text-gray-500 {
-  color: #6c757d !important;
+  .print-programacao .text-gray-500 {
+    color: #6c757d !important;
+  }
 }
 
 /* ===== ESTILOS PARA VISUALIZAÇÃO DIÁRIA ===== */

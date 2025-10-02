@@ -78,9 +78,7 @@ self.addEventListener('push', function(event) {
     try {
       const pushData = event.data.json();
       data = { ...data, ...pushData };
-      console.log('Service Worker: Dados do push:', pushData);
     } catch (e) {
-      console.log('Service Worker: Dados como texto:', event.data.text());
       data.body = event.data.text();
     }
   }
@@ -166,9 +164,3 @@ self.addEventListener('message', function(event) {
 });
 
 console.log('Service Worker: Carregado com sucesso!');
-
-// Debug: Verificar se as APIs estão disponíveis
-console.log('🔍 Debug Service Worker:');
-console.log('- Push API disponível:', 'PushManager' in window);
-console.log('- Notification API disponível:', 'Notification' in window);
-console.log('- Service Worker registrado:', !!self.registration);

@@ -4,8 +4,6 @@ import { useAuth } from '../lib/auth-hooks'
 import { APP_CONFIG } from '../utils/constants'
 import { Sidebar, SidebarBody, SidebarLink } from './ui/sidebar'
 import { BottomTabs } from './layout/BottomTabs'
-import { NotificationManager } from './NotificationManager'
-import { NotificationProvider } from './NotificationProvider'
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -25,10 +23,6 @@ interface LayoutProps {
   children: ReactNode
 }
 
-interface NotificationContextProps {
-  notifications: { [key: string]: number }
-  clearNotification: (tabName: string) => void
-}
 
 const navigation = [
   { 
@@ -144,10 +138,7 @@ export function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <NotificationProvider>
-      <NotificationManager>
-        {({ notifications, clearNotification }: NotificationContextProps) => (
-        <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
           {/* Sidebar */}
           <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">
             <Sidebar open={open} setOpen={setOpen}>
@@ -209,13 +200,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Bottom Tabs - Mobile Only */}
-          <BottomTabs 
-            notifications={notifications}
-            onTabClick={(tabName) => clearNotification(tabName)}
-          />
-        </div>
-        )}
-      </NotificationManager>
-    </NotificationProvider>
+          <BottomTabs />
+    </div>
   )
 }

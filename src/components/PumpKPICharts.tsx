@@ -474,5 +474,3 @@ export function PumpComparisonChart({ pumpIds }: { pumpIds: string[] }) {
     </div>
   )
 }
-
-

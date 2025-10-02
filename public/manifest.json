@@ -33,7 +33,7 @@
       "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable any"
     },
     {
       "src": "/icons/icon-152x152.png",
@@ -125,9 +125,5 @@
   },
   "launch_handler": {
     "client_mode": "navigate-existing"
-  },
-  "gcm_sender_id": "103953800507",
-  "permissions": [
-    "notifications"
-  ]
+  }
 }

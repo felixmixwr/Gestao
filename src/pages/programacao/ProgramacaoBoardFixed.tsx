@@ -311,15 +311,9 @@ export default function ProgramacaoBoardFixed() {
                               programacao.bairro
                             )}</p>
                             
-                            {programacao.motorista_nome && (
+                            {programacao.auxiliares_bomba && programacao.auxiliares_bomba.length > 0 && (
                               <p className="text-xs">
-                                🚗 {programacao.motorista_nome}
-                              </p>
-                            )}
-                            
-                            {programacao.auxiliares_nomes && programacao.auxiliares_nomes.length > 0 && (
-                              <p className="text-xs">
-                                👥 {programacao.auxiliares_nomes.join(', ')}
+                                👥 {programacao.auxiliares_bomba.length} auxiliar(es)
                               </p>
                             )}
                             

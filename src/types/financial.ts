@@ -238,16 +238,6 @@ export interface ExportOptions {
   };
 }
 
-// Interface para notificações financeiras
-export interface FinancialNotification {
-  id: string;
-  type: 'expense_created' | 'expense_updated' | 'budget_alert' | 'payment_due';
-  title: string;
-  message: string;
-  expense_id?: string;
-  created_at: string;
-  read: boolean;
-}
 
 // Interface para alertas de orçamento
 export interface BudgetAlert {

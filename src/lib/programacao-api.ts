@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { Programacao, ProgramacaoFormData, ProgramacaoFilters } from '../types/programacao';
-import { notificationService } from '../services/notificationService';
 
 export class ProgramacaoAPI {
   // Criar nova programação
@@ -36,15 +35,6 @@ export class ProgramacaoAPI {
     }
 
     console.log('✅ [ProgramacaoAPI] Programação criada com sucesso:', programacao);
-
-    // Enviar notificação push para todos os usuários da empresa
-    try {
-      await ProgramacaoAPI.sendNewProgramacaoNotification(programacao);
-    } catch (notificationError) {
-      console.warn('⚠️ [ProgramacaoAPI] Erro ao enviar notificação (não crítico):', notificationError);
-      // Não falha a criação da programação se a notificação falhar
-    }
-
     return programacao;
   }
 
@@ -242,7 +232,7 @@ export class ProgramacaoAPI {
       const foundPumpIds = pumpsData?.map(p => p.id) || [];
       const missingPumpIds = pumpIds.filter(id => !foundPumpIds.includes(id));
       
-      let bombasTerceirasData: any[] = [];
+      let bombasTerceirasData = [];
       if (missingPumpIds.length > 0) {
         console.log('🔍 [ProgramacaoAPI] Buscando bombas terceiras para IDs:', missingPumpIds);
         const { data: bombasTerceiras } = await supabase
@@ -253,33 +243,15 @@ export class ProgramacaoAPI {
         bombasTerceirasData = bombasTerceiras || [];
         console.log('📊 [ProgramacaoAPI] Bombas terceiras carregadas:', bombasTerceirasData.length);
       }
-
-      // 4. Buscar dados dos colaboradores (motoristas e auxiliares)
-      const colaboradorIds = [
-        ...new Set(programacoesData.map(p => p.motorista_operador).filter(Boolean)),
-        ...new Set(programacoesData.flatMap(p => p.auxiliares_bomba || []))
-      ];
       
-      let colaboradoresData: any[] = [];
-      if (colaboradorIds.length > 0) {
-        console.log('🔍 [ProgramacaoAPI] Buscando colaboradores para IDs:', colaboradorIds);
-        const { data: colaboradores } = await supabase
-          .from('colaboradores')
-          .select('id, nome, funcao')
-          .in('id', colaboradorIds);
-        
-        colaboradoresData = colaboradores || [];
-        console.log('📊 [ProgramacaoAPI] Colaboradores carregados:', colaboradoresData.length);
-      }
-      
-      // 5. Enriquecer programações com dados das bombas e colaboradores
+      // 4. Enriquecer programações com dados das bombas
       const enrichedProgramacoes = programacoesData.map(programacao => {
         // Buscar bomba interna primeiro
         let pumpData = pumpsData?.find(p => p.id === programacao.bomba_id);
         
         // Se não encontrou bomba interna, buscar bomba terceira
         if (!pumpData) {
-          const bombaTerceira = bombasTerceirasData?.find((bt: any) => bt.id === programacao.bomba_id);
+          const bombaTerceira = bombasTerceirasData?.find(bt => bt.id === programacao.bomba_id);
           if (bombaTerceira) {
             pumpData = {
               id: bombaTerceira.id,
@@ -289,33 +261,19 @@ export class ProgramacaoAPI {
               is_terceira: true,
               empresa_nome: bombaTerceira.empresa_nome_fantasia,
               valor_diaria: bombaTerceira.valor_diaria
-            } as any;
+            };
           }
         }
-
-        // Buscar nome do motorista
-        const motorista = programacao.motorista_operador ? 
-          colaboradoresData?.find((c: any) => c.id === programacao.motorista_operador)?.nome || programacao.motorista_operador : 
-          null;
-
-        // Buscar nomes dos auxiliares
-        const auxiliares = programacao.auxiliares_bomba && programacao.auxiliares_bomba.length > 0 ?
-          programacao.auxiliares_bomba
-            .map((id: string) => colaboradoresData?.find((c: any) => c.id === id)?.nome || id)
-            .filter(Boolean) :
-          [];
         
         return {
           ...programacao,
-          pumps: pumpData,
-          motorista_nome: motorista,
-          auxiliares_nomes: auxiliares
+          pumps: pumpData
         };
       });
       
       console.log('✅ [ProgramacaoAPI] Programações enriquecidas:', enrichedProgramacoes.length);
       
-      // 6. Garantir que todas as programações tenham status definido
+      // 5. Garantir que todas as programações tenham status definido
       enrichedProgramacoes.forEach(programacao => {
         if (!programacao.status) {
           programacao.status = 'programado';
@@ -490,59 +448,6 @@ export class ProgramacaoAPI {
     }
 
     return (conflict && conflict.length > 0);
-  }
-
-  // Enviar notificação push quando nova programação for criada
-  static async sendNewProgramacaoNotification(programacao: Programacao): Promise<void> {
-    try {
-      // Como você usa JWT, vamos buscar usuários ativos pelos tokens de push
-      const { data: pushTokens, error: tokensError } = await supabase
-        .from('user_push_tokens')
-        .select('user_id')
-        .eq('is_active', true);
-
-      if (tokensError) {
-        console.warn('⚠️ [ProgramacaoAPI] Erro ao buscar tokens de push:', tokensError.message);
-        return;
-      }
-
-      if (!pushTokens || pushTokens.length === 0) {
-        console.log('📱 [ProgramacaoAPI] Nenhum token de push ativo encontrado');
-        return;
-      }
-
-      // Preparar dados da notificação
-      const title = '📅 Nova Programação Adicionada!';
-      const body = `Obra: ${programacao.prefixo_obra} - ${programacao.cliente}\nData: ${new Date(programacao.data).toLocaleDateString('pt-BR')} às ${programacao.horario}`;
-      
-      const notificationData = {
-        type: 'new_programacao',
-        programacao_id: programacao.id,
-        prefixo_obra: programacao.prefixo_obra,
-        cliente: programacao.cliente,
-        data: programacao.data,
-        horario: programacao.horario,
-        company_id: programacao.company_id
-      };
-
-      // Enviar notificação para todos os usuários com tokens ativos
-      const userIds = pushTokens.map(token => token.user_id);
-      console.log('🔍 [ProgramacaoAPI] Enviando notificação para usuários:', userIds);
-      
-      const result = await notificationService.sendBulkNotification(
-        userIds,
-        title,
-        body,
-        notificationData,
-        `/programacao/${programacao.id}`
-      );
-
-      console.log(`📱 [ProgramacaoAPI] Notificação enviada para ${result.success} usuários (${result.failed} falharam)`);
-
-    } catch (error) {
-      console.error('❌ [ProgramacaoAPI] Erro ao enviar notificação:', error);
-      throw error;
-    }
   }
 }
 

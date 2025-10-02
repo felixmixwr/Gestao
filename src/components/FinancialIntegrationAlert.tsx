@@ -327,5 +327,3 @@ export function FinancialAlertsHistory({ pumpId }: { pumpId?: string }) {
     </div>
   )
 }
-
-

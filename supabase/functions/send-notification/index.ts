@@ -1,187 +1,264 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import webpush from 'https://esm.sh/web-push@3.6.6'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-}
+// VAPID Keys - substitua pelas suas chaves
+const VAPID_PUBLIC_KEY = 'BDt2hT6Ec-UakV-tAoO7ka2TrwcSXopaQzqXokawxm4xtPbj8YenBDYUcI2XOmtleMb8y732w25PLD3lzUekoHI'
+const VAPID_PRIVATE_KEY = 'RB7G3TF1XYtizmaQa1lVCmx2dbNoEb3hrg3LukmYFqc'
+const VAPID_EMAIL = 'mailto:admin@worldrental.com'
 
-interface PushSubscription {
-  endpoint: string
-  keys: {
-    p256dh: string
-    auth: string
-  }
-}
+// Configurar webpush
+webpush.setVapidDetails(
+  VAPID_EMAIL,
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+)
 
 interface NotificationPayload {
   title: string
   body: string
   icon?: string
   badge?: string
+  tag?: string
+  requireInteraction?: boolean
+  actions?: Array<{
+    action: string
+    title: string
+    icon?: string
+  }>
   data?: any
-  url?: string
+}
+
+interface SendNotificationRequest {
+  user_id?: string
+  notification_type: 'maintenance' | 'diesel' | 'investment' | 'general'
+  title: string
+  body: string
+  data?: any
+  send_to_all?: boolean
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { 
-      headers: corsHeaders,
-      status: 200 
-    })
-  }
-
   try {
-    // Initialize Supabase client
+    // Verificar método HTTP
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Método não permitido' }),
+        { 
+          status: 405,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Criar cliente Supabase
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Note: web-push não está disponível no Deno, vamos simular o envio
-    console.log('📱 Configurando notificações (simulação)')
+    // Parse do body da requisição
+    const { 
+      user_id, 
+      notification_type, 
+      title, 
+      body, 
+      data, 
+      send_to_all = false 
+    }: SendNotificationRequest = await req.json()
 
-    // Parse request body
-    const { userIds, title, body, icon, badge, data, url } = await req.json() as {
-      userIds: string[]
-      title: string
-      body: string
-      icon?: string
-      badge?: string
-      data?: any
-      url?: string
+    if (!title || !body || !notification_type) {
+      return new Response(
+        JSON.stringify({ error: 'Campos obrigatórios: title, body, notification_type' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
     }
 
-    if (!userIds || userIds.length === 0) {
-      return new Response(JSON.stringify({ error: 'Nenhum userId fornecido' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      })
+    let users: any[] = []
+
+    if (send_to_all) {
+      // Buscar todos os usuários com notificações ativadas
+      const { data: allUsers, error: allUsersError } = await supabaseClient
+        .from('users')
+        .select('id, push_token, notification_preferences')
+        .eq('notification_enabled', true)
+        .not('push_token', 'is', null)
+
+      if (allUsersError) {
+        throw allUsersError
+      }
+
+      users = allUsers || []
+    } else if (user_id) {
+      // Buscar usuário específico
+      const { data: user, error: userError } = await supabaseClient
+        .from('users')
+        .select('id, push_token, notification_preferences')
+        .eq('id', user_id)
+        .eq('notification_enabled', true)
+        .not('push_token', 'is', null)
+        .single()
+
+      if (userError) {
+        throw userError
+      }
+
+      if (user) {
+        users = [user]
+      }
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Deve fornecer user_id ou send_to_all=true' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
     }
 
-    // Fetch push subscriptions for the given user IDs
-    const { data: subscriptionsData, error: subscriptionsError } = await supabaseClient
-      .from('user_push_tokens')
-      .select('endpoint, p256dh, auth, user_id, id')
-      .in('user_id', userIds)
-      .eq('is_active', true)
-
-    if (subscriptionsError) {
-      throw new Error(`Erro ao buscar inscrições: ${subscriptionsError.message}`)
+    if (users.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          message: 'Nenhum usuário encontrado com notificações ativadas',
+          sent: 0 
+        }),
+        { 
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
     }
 
-    if (!subscriptionsData || subscriptionsData.length === 0) {
-      return new Response(JSON.stringify({ message: 'Nenhuma inscrição ativa encontrada para os usuários fornecidos.' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      })
-    }
-
-    // For now, simulate sending notifications (since web-push might not be available in Deno)
-    const notificationPayload: NotificationPayload = {
+    // Preparar payload da notificação
+    const payload: NotificationPayload = {
       title,
       body,
-      icon: icon || '/icon-192x192.png',
-      badge: badge || '/badge-72x72.png',
-      data: data || {},
-      url: url || '/',
+      icon: '/icon-192x192.png',
+      badge: '/badge-72x72.png',
+      tag: `worldrental-${notification_type}`,
+      requireInteraction: true,
+      actions: [
+        {
+          action: 'open',
+          title: 'Abrir App',
+          icon: '/icon-72x72.png'
+        },
+        {
+          action: 'close',
+          title: 'Fechar',
+          icon: '/icon-72x72.png'
+        }
+      ],
+      data: {
+        type: notification_type,
+        timestamp: new Date().toISOString(),
+        ...data
+      }
     }
 
     const results = []
-    let successfulSends = 0
-    let failedSends = 0
+    let successCount = 0
+    let errorCount = 0
 
-    for (const sub of subscriptionsData) {
+    // Enviar notificação para cada usuário
+    for (const user of users) {
       try {
-        console.log(`📱 Enviando notificação real para endpoint: ${sub.endpoint}`)
+        // Verificar se o usuário quer receber este tipo de notificação
+        const preferences = user.notification_preferences || {}
+        const notificationKey = `${notification_type}_enabled`
         
-        // Create push subscription object
-        const pushSubscription = {
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth,
-          },
+        if (preferences[notificationKey] === false) {
+          console.log(`Usuário ${user.id} desabilitou notificações do tipo ${notification_type}`)
+          continue
         }
 
-        // Simular envio de notificação (web-push não disponível no Deno)
-        console.log(`📱 Simulando envio para: ${sub.endpoint}`)
-        console.log(`📱 Payload:`, notificationPayload)
+        // Parse do token de push
+        const subscription = JSON.parse(user.push_token)
         
+        // Enviar notificação
+        await webpush.sendNotification(subscription, JSON.stringify(payload))
+        
+        // Log da notificação enviada
+        const { error: logError } = await supabaseClient
+          .from('notification_logs')
+          .insert({
+            user_id: user.id,
+            notification_type,
+            title,
+            body,
+            data: payload.data,
+            delivered: true
+          })
+
+        if (logError) {
+          console.error('Erro ao salvar log:', logError)
+        }
+
+        successCount++
         results.push({
-          userId: sub.user_id,
-          tokenId: sub.id,
-          success: true,
-          endpoint: sub.endpoint
-        })
-        successfulSends++
-
-        // Log successful notification
-        await supabaseClient.from('notification_logs').insert({
-          user_id: sub.user_id,
-          title: notificationPayload.title,
-          body: notificationPayload.body,
-          type: 'push',
-          notification_type: notificationPayload.data?.type || 'general',
-          data: notificationPayload.data,
-          url: notificationPayload.url,
-          delivered: true,
-          status: 'sent',
+          user_id: user.id,
+          status: 'success'
         })
 
-      } catch (error: any) {
-        console.error(`❌ Erro ao enviar para ${sub.user_id}:`, error)
+        console.log(`Notificação enviada para usuário ${user.id}`)
+      } catch (error) {
+        errorCount++
+        console.error(`Erro ao enviar notificação para usuário ${user.id}:`, error)
+
+        // Log do erro
+        const { error: logError } = await supabaseClient
+          .from('notification_logs')
+          .insert({
+            user_id: user.id,
+            notification_type,
+            title,
+            body,
+            data: payload.data,
+            delivered: false,
+            error_message: error.message
+          })
+
+        if (logError) {
+          console.error('Erro ao salvar log de erro:', logError)
+        }
+
         results.push({
-          userId: sub.user_id,
-          tokenId: sub.id,
-          success: false,
-          error: error.message,
-          endpoint: sub.endpoint
-        })
-        failedSends++
-
-        // Log failed notification
-        await supabaseClient.from('notification_logs').insert({
-          user_id: sub.user_id,
-          title: notificationPayload.title,
-          body: notificationPayload.body,
-          type: 'push',
-          notification_type: notificationPayload.data?.type || 'general',
-          data: notificationPayload.data,
-          url: notificationPayload.url,
-          delivered: false,
-          status: 'failed',
-          error_message: error.message,
+          user_id: user.id,
+          status: 'error',
+          error: error.message
         })
       }
     }
 
-    return new Response(JSON.stringify({
-      success: successfulSends,
-      failed: failedSends,
-      message: `Notificações enviadas para ${successfulSends} dispositivos, ${failedSends} falharam`,
-      results,
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+    return new Response(
+      JSON.stringify({
+        message: 'Notificações processadas',
+        sent: successCount,
+        errors: errorCount,
+        total_users: users.length,
+        results
+      }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
 
-  } catch (error: any) {
-    console.error('❌ Erro na Edge Function:', error.message)
-    console.error('❌ Stack trace:', error.stack)
+  } catch (error) {
+    console.error('Erro na função send-notification:', error)
     
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error', 
-      details: error.message,
-      success: 0,
-      failed: 1,
-      results: []
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500,
-    })
+    return new Response(
+      JSON.stringify({
+        error: 'Erro interno do servidor',
+        details: error.message
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    )
   }
 })

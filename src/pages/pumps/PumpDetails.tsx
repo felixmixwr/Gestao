@@ -478,7 +478,7 @@ function DieselTab({
                       <p className="font-medium">{entry.payment_method === 'cartao' ? 'Cartão' : 'PIX'}</p>
                     </div>
                     {entry.current_mileage && (
-                      <div>
+              <div>
                         <span className="text-gray-600">Quilometragem:</span>
                         <p className="font-medium">{entry.current_mileage.toLocaleString('pt-BR')} km</p>
                       </div>
@@ -605,7 +605,7 @@ function ReportsTab({ pumpDetails }: { pumpDetails: PumpDetailsType }) {
           ))}
             </div>
           )}
-    </div>
+        </div>
   )
 }
 
@@ -682,8 +682,8 @@ function MaintenanceForm({ onSubmit, onCancel, pumpDetails }: {
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Gerado automaticamente com dados da bomba: {pumpDetails?.prefix} {pumpDetails?.model && `- ${pumpDetails.model}`}
-          </p>
-        </div>
+              </p>
+            </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -27,5 +27,3 @@ COMMENT ON COLUMN expenses.payment_method IS 'Forma de pagamento: cartao ou pix'
 COMMENT ON COLUMN expenses.discount_type IS 'Tipo de desconto: fixed (valor fixo) ou percentage (percentual)';
 COMMENT ON COLUMN expenses.discount_value IS 'Valor do desconto (em reais ou percentual)';
 COMMENT ON COLUMN expenses.fuel_station IS 'Nome do posto de combustível';
-
-

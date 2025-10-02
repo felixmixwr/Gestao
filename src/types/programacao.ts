@@ -25,18 +25,6 @@ export interface Programacao {
   company_id: string;
   created_at: string;
   updated_at: string;
-  // Campos enriquecidos pela API
-  pumps?: {
-    id: string;
-    prefix: string;
-    model: string;
-    brand: string;
-    is_terceira?: boolean;
-    empresa_nome?: string;
-    valor_diaria?: number;
-  };
-  motorista_nome?: string; // Nome do motorista (enriquecido)
-  auxiliares_nomes?: string[]; // Nomes dos auxiliares (enriquecido)
 }
 
 export interface ProgramacaoFormData {

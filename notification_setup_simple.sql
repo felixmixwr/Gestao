@@ -34,5 +34,3 @@ CREATE INDEX IF NOT EXISTS idx_notification_logs_user_id ON notification_logs(us
 
 -- 4. Verificar se foi criado
 SELECT 'Tabelas criadas com sucesso!' as status;
-
-

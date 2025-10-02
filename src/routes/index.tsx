@@ -38,6 +38,7 @@ import { NovaProgramacao } from '../pages/programacao'
 // import ProgramacaoBoardFixed from '../pages/programacao/ProgramacaoBoardFixed'
 // import ProgramacaoWeeklyBoard from '../pages/programacao/ProgramacaoWeeklyBoard'
 import ProgramacaoGridBoardMobile from '../pages/programacao/ProgramacaoGridBoardMobile'
+import { ProgramacaoGridBoard } from '../pages/programacao/ProgramacaoGridBoard'
 import TestConnection from '../pages/programacao/TestConnection'
 import TestAPI from '../pages/programacao/TestAPI'
 // import Test from '../pages/Test'
@@ -355,7 +356,7 @@ export const router = createBrowserRouter([
     path: '/programacao',
     element: (
       <RequireAuth>
-        <ProgramacaoGridBoardMobile />
+        <ProgramacaoGridBoard />
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -364,7 +365,16 @@ export const router = createBrowserRouter([
     path: '/programacao/board',
     element: (
       <RequireAuth>
-        <ProgramacaoGridBoardMobile />
+        <ProgramacaoGridBoard />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/programacao/grid',
+    element: (
+      <RequireAuth>
+        <ProgramacaoGridBoard />
       </RequireAuth>
     ),
     errorElement: <GenericError />
