@@ -24,6 +24,7 @@ export default function ReportsList() {
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<Array<{ id: string; name: string }>>([])
   const [pumps, setPumps] = useState<Array<{ id: string; prefix: string }>>([])
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [totalReports, setTotalReports] = useState(0)
   const [filters, setFilters] = useState<ReportFilters>({})
   const [currentPage, setCurrentPage] = useState(1)
@@ -36,8 +37,12 @@ export default function ReportsList() {
   
   // Estados para busca
   const [searchTerm, setSearchTerm] = useState('')
-  const [searchType, setSearchType] = useState<'id' | 'date' | 'client' | 'pump' | 'volume' | 'value'>('id')
+  const [searchType, setSearchType] = useState<'id' | 'date' | 'client' | 'pump' | 'volume' | 'value' | 'company'>('id')
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false)
+  
+  // Estados para filtros de empresa
+  const [companySearchTerm, setCompanySearchTerm] = useState('')
+  const [filteredCompanies, setFilteredCompanies] = useState<Array<{ id: string; name: string }>>([])
   
   // Estados para exportação
   const [showExportModal, setShowExportModal] = useState(false)
@@ -111,7 +116,8 @@ export default function ReportsList() {
       
       console.log('✅ [SUCCESS] Empresas carregadas:', data?.length || 0)
       console.log('📊 [DATA] Lista de empresas:', data)
-      // setCompanies(data || []) // Removido - variável não existe mais
+      setCompanies(data || [])
+      setFilteredCompanies(data || [])
     } catch (error) {
       console.error('❌ [ERROR] Erro ao carregar empresas:', error)
     }
@@ -198,6 +204,11 @@ export default function ReportsList() {
             }
             break
           }
+          case 'company': {
+            // Buscar por nome da empresa através do relacionamento
+            query = query.ilike('companies.name', `%${searchTerm}%`)
+            break
+          }
         }
       }
 
@@ -208,6 +219,10 @@ export default function ReportsList() {
       
       if (filters.client_name) {
         query = query.ilike('client_rep_name', `%${filters.client_name}%`)
+      }
+      
+      if (filters.company_name) {
+        query = query.ilike('companies.name', `%${filters.company_name}%`)
       }
       
       if (filters.pump_name) {
@@ -281,6 +296,11 @@ export default function ReportsList() {
             if (!isNaN(valueNum)) {
               countQuery = countQuery.eq('total_value', valueNum)
             }
+            break
+          }
+          case 'company': {
+            // Buscar por nome da empresa através do relacionamento
+            countQuery = countQuery.ilike('companies.name', `%${searchTerm}%`)
             break
           }
         }
@@ -473,6 +493,8 @@ export default function ReportsList() {
   const clearSearch = () => {
     setSearchTerm('')
     setSearchType('id')
+    setCompanySearchTerm('')
+    setFilteredCompanies(companies)
     setFilters({})
     setCurrentPage(1)
     loadReports()
@@ -486,6 +508,8 @@ export default function ReportsList() {
 
   const clearAdvancedSearch = () => {
     setFilters({})
+    setCompanySearchTerm('')
+    setFilteredCompanies(companies)
     setCurrentPage(1)
     loadReports()
   }
@@ -624,6 +648,8 @@ const handleWhatsApp = (report: ReportWithRelations) => {
     setDateFilterType('all')
     setSearchTerm('')
     setSearchType('id')
+    setCompanySearchTerm('')
+    setFilteredCompanies(companies)
     setShowAdvancedSearch(false)
     setCurrentPage(1)
   }
@@ -637,6 +663,7 @@ const handleWhatsApp = (report: ReportWithRelations) => {
       searchTerm.trim() ||
       filters.report_number ||
       filters.client_name ||
+      filters.company_name ||
       filters.pump_name ||
       filters.volume_min !== undefined ||
       filters.volume_max !== undefined ||
@@ -660,18 +687,21 @@ const handleWhatsApp = (report: ReportWithRelations) => {
     {
       key: 'report_number' as keyof ReportWithRelations,
       label: 'NÚMERO',
-      className: 'w-20 font-mono text-xs font-semibold'
+      className: 'w-20 font-mono text-xs font-semibold',
+      sortable: true
     },
     {
       key: 'date' as keyof ReportWithRelations,
       label: 'DATA',
       className: 'w-20',
+      sortable: true,
       render: (value: string | null) => value ? formatDateLocal(value) : '-'
     },
     {
       key: 'client_rep_name' as keyof ReportWithRelations,
       label: 'CLIENTE',
       className: 'w-32',
+      sortable: true,
       render: (value: string | null, report: ReportWithRelations) => {
         const repName = value || '-'
         const companyName = report.clients?.name || report.clients?.company_name || '-'
@@ -687,18 +717,21 @@ const handleWhatsApp = (report: ReportWithRelations) => {
       key: 'pump_prefix' as keyof ReportWithRelations,
       label: 'BOMBA',
       className: 'w-16 font-mono text-xs font-semibold',
+      sortable: true,
       render: (value: string | null) => value || '-'
     },
     {
       key: 'realized_volume' as keyof ReportWithRelations,
       label: 'VOL (M³)',
       className: 'w-20',
+      sortable: true,
       render: (value: number | null) => value ? value.toLocaleString('pt-BR') : '-'
     },
     {
       key: 'total_value' as keyof ReportWithRelations,
       label: 'VALOR',
       className: 'w-24',
+      sortable: true,
       render: (value: number | null) => value ? formatCurrency(value) : '-'
     },
     {
@@ -818,6 +851,7 @@ const handleWhatsApp = (report: ReportWithRelations) => {
                     <option value="id">ID do Relatório</option>
                     <option value="date">Data</option>
                     <option value="client">Cliente</option>
+                    <option value="company">Empresa</option>
                     <option value="pump">Bomba</option>
                     <option value="volume">Volume (m³)</option>
                     <option value="value">Valor (R$)</option>
@@ -881,6 +915,52 @@ const handleWhatsApp = (report: ReportWithRelations) => {
                       onChange={(e) => setFilters(prev => ({ ...prev, client_name: e.target.value || undefined }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
+                  </div>
+
+                  {/* Nome da Empresa */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome da Empresa
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Ex: Felix Mix"
+                        value={companySearchTerm}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setCompanySearchTerm(value)
+                          
+                          // Filtrar empresas em tempo real
+                          if (value.trim()) {
+                            const filtered = companies.filter(company => 
+                              company.name.toLowerCase().includes(value.toLowerCase())
+                            )
+                            setFilteredCompanies(filtered)
+                          } else {
+                            setFilteredCompanies(companies)
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      {companySearchTerm && filteredCompanies.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                          {filteredCompanies.map((company) => (
+                            <div
+                              key={company.id}
+                              onClick={() => {
+                                setCompanySearchTerm(company.name)
+                                setFilters(prev => ({ ...prev, company_name: company.name }))
+                                setFilteredCompanies([])
+                              }}
+                              className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                            >
+                              {company.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Prefixo da Bomba */}
@@ -1086,6 +1166,11 @@ const handleWhatsApp = (report: ReportWithRelations) => {
                       {filters.client_id && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                           Cliente: {clients.find(c => c.id === filters.client_id)?.name}
+                        </span>
+                      )}
+                      {filters.company_name && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          Empresa: {filters.company_name}
                         </span>
                       )}
                     </div>

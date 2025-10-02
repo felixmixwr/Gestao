@@ -71,9 +71,10 @@ export interface ReportFilters {
   client_id?: string
   // Novos campos de busca
   searchTerm?: string
-  searchType?: 'id' | 'date' | 'client' | 'pump' | 'volume' | 'value'
+  searchType?: 'id' | 'date' | 'client' | 'pump' | 'volume' | 'value' | 'company'
   report_number?: string
   client_name?: string
+  company_name?: string
   pump_name?: string
   volume_min?: number
   volume_max?: number
