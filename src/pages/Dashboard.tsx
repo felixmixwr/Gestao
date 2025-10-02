@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Layout } from '../components/Layout'
 import { DashboardCard } from '../components/DashboardCard'
 import { NextBombaCard } from '../components/NextBombaCard'
+import { StatusCard } from '../components/StatusCard'
 import { Link } from 'react-router-dom'
 import { DashboardApi, DashboardStats } from '../lib/dashboard-api'
 import { GenericError } from './errors/GenericError'
@@ -234,6 +235,49 @@ export default function Dashboard() {
                 </svg>
               }
             />
+          </div>
+        )}
+
+        {/* Cards de Status dos Relatórios */}
+        {!error && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Relatórios por Status
+              </h3>
+              <Link to="/reports">
+                <span className="text-sm text-blue-600 hover:text-blue-800">
+                  Ver todos os relatórios →
+                </span>
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {loading ? (
+                // Skeleton loading para os cards de status
+                Array.from({ length: 7 }).map((_, index) => (
+                  <div key={index} className="p-6 rounded-lg border-2 border-gray-200 bg-gray-50 animate-pulse">
+                    <div className="absolute top-4 right-4">
+                      <div className="w-8 h-8 bg-gray-300 rounded" />
+                    </div>
+                    <div className="pr-12">
+                      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2" />
+                      <div className="h-8 bg-gray-300 rounded w-1/2 mb-1" />
+                      <div className="h-3 bg-gray-300 rounded w-1/3" />
+                    </div>
+                  </div>
+                ))
+              ) : (
+                stats?.relatorios_por_status?.map((statusData) => (
+                  <StatusCard
+                    key={statusData.status}
+                    status={statusData.status}
+                    quantidade={statusData.quantidade}
+                    valor_total={statusData.valor_total}
+                    loading={loading}
+                  />
+                ))
+              )}
+            </div>
           </div>
         )}
 

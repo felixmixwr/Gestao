@@ -58,6 +58,11 @@ export interface DashboardStats {
       categoria: string
     }>
   }
+  relatorios_por_status: Array<{
+    status: string
+    quantidade: number
+    valor_total: number
+  }>
 }
 
 export class DashboardApi {
@@ -89,7 +94,8 @@ export class DashboardApi {
         relatoriosDiaResult,
         relatoriosMesResult,
         notasResult,
-        financialStatsResult
+        financialStatsResult,
+        relatoriosPorStatusResult
       ] = await Promise.all([
         // Programação de hoje
         this.getProgramacaoDia(today),
@@ -131,7 +137,10 @@ export class DashboardApi {
         getFinancialStats({
           data_inicio: startOfCurrentMonth,
           data_fim: endOfCurrentMonth
-        })
+        }),
+        
+        // Relatórios por status
+        this.getRelatoriosPorStatus()
       ])
 
       // Calcular próxima bomba
@@ -165,7 +174,8 @@ export class DashboardApi {
           total_despesas_mes: financialStatsResult.total_despesas,
           despesas_por_categoria: financialStatsResult.total_por_categoria,
           proximas_despesas: await this.getProximasDespesas()
-        }
+        },
+        relatorios_por_status: relatoriosPorStatusResult
       }
     } catch (error) {
       console.error('Erro ao buscar estatísticas do dashboard:', error)
@@ -521,6 +531,72 @@ export class DashboardApi {
     } catch (error) {
       console.error('Erro ao buscar notas fiscais:', error)
       return { quantidade: 0, valor_total: 0 }
+    }
+  }
+
+  /**
+   * Buscar relatórios agrupados por status
+   */
+  private static async getRelatoriosPorStatus() {
+    try {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('status, total_value')
+
+      if (error) throw error
+
+      // Agrupar por status
+      const statusMap = new Map<string, { quantidade: number; valor_total: number }>()
+      
+      // Inicializar todos os status possíveis
+      const allStatuses = [
+        'ENVIADO_FINANCEIRO',
+        'RECEBIDO_FINANCEIRO', 
+        'AGUARDANDO_APROVACAO',
+        'NOTA_EMITIDA',
+        'AGUARDANDO_PAGAMENTO',
+        'PAGO'
+      ]
+
+      allStatuses.forEach(status => {
+        statusMap.set(status, { quantidade: 0, valor_total: 0 })
+      })
+
+      // Processar dados
+      data?.forEach(report => {
+        const status = report.status
+        const valor = Number(report.total_value) || 0
+        
+        if (statusMap.has(status)) {
+          const current = statusMap.get(status)!
+          statusMap.set(status, {
+            quantidade: current.quantidade + 1,
+            valor_total: current.valor_total + valor
+          })
+        }
+      })
+
+      // Converter para array e adicionar "Todos"
+      const result = Array.from(statusMap.entries()).map(([status, data]) => ({
+        status,
+        quantidade: data.quantidade,
+        valor_total: data.valor_total
+      }))
+
+      // Adicionar card "Todos"
+      const totalQuantidade = result.reduce((sum, item) => sum + item.quantidade, 0)
+      const totalValor = result.reduce((sum, item) => sum + item.valor_total, 0)
+      
+      result.unshift({
+        status: 'TODOS',
+        quantidade: totalQuantidade,
+        valor_total: totalValor
+      })
+
+      return result
+    } catch (error) {
+      console.error('Erro ao buscar relatórios por status:', error)
+      return []
     }
   }
 
