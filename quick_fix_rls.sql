@@ -50,3 +50,4 @@ INSERT INTO expenses (
 -- Para reabilitar RLS mais tarde (quando quiser segurança), execute:
 -- ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 -- E então crie políticas mais específicas.
+

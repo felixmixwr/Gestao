@@ -166,3 +166,4 @@ VALUES (
 
 -- 12. Verificar se tudo foi criado corretamente
 SELECT 'Setup concluído!' as status;
+

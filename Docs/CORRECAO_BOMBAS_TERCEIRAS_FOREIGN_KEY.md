@@ -96,3 +96,4 @@ Execute o script `scripts/test_bombas_terceiras_fix.sql` para verificar se as co
 
 
 
+
