@@ -8,11 +8,13 @@ import { KPICard, CategoryStatsCard } from '../../components/financial/ExpenseCa
 import { ExpenseTable, TableSummary } from '../../components/financial/ExpenseTable';
 import { ExpenseCharts, CompactCharts } from '../../components/financial/ExpenseCharts';
 import { ExpenseFilters, QuickFilters } from '../../components/financial/ExpenseFilters';
+import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { 
   getExpenses, 
   getFinancialStats, 
   getPumpsForSelect, 
-  getCompaniesForSelect
+  getCompaniesForSelect,
+  deleteExpense
 } from '../../lib/financialApi';
 import type { 
   ExpenseWithRelations, 
@@ -29,6 +31,11 @@ export function FinancialDashboard() {
   const [filters, setFilters] = useState<ExpenseFiltersType>({});
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Estados para modal de confirmação
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState<ExpenseWithRelations | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -104,17 +111,38 @@ export function FinancialDashboard() {
     navigate(`/financial/expenses/edit/${expense.id}`);
   };
 
-  const handleDeleteExpense = async (expense: ExpenseWithRelations) => {
-    if (window.confirm('Tem certeza que deseja excluir esta despesa?')) {
-      try {
-        // TODO: Implementar exclusão
-        console.log('Excluir despesa:', expense.id);
-        await loadExpenses();
-        await loadStats();
-      } catch (error) {
-        console.error('Erro ao excluir despesa:', error);
-      }
+  const handleDeleteExpense = (expense: ExpenseWithRelations) => {
+    setExpenseToDelete(expense);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteExpense = async () => {
+    if (!expenseToDelete) return;
+
+    try {
+      setDeleting(true);
+      await deleteExpense(expenseToDelete.id);
+      
+      // Recarregar dados após exclusão
+      await Promise.all([
+        loadExpenses(),
+        loadStats()
+      ]);
+      
+      // Fechar modal
+      setShowDeleteModal(false);
+      setExpenseToDelete(null);
+    } catch (error) {
+      console.error('Erro ao excluir despesa:', error);
+      alert('Erro ao excluir despesa. Tente novamente.');
+    } finally {
+      setDeleting(false);
     }
+  };
+
+  const cancelDeleteExpense = () => {
+    setShowDeleteModal(false);
+    setExpenseToDelete(null);
   };
 
   const handleViewExpense = (expense: ExpenseWithRelations) => {
@@ -342,6 +370,23 @@ export function FinancialDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Confirmação de Exclusão */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={cancelDeleteExpense}
+        onConfirm={confirmDeleteExpense}
+        title="Excluir Despesa"
+        message={
+          expenseToDelete 
+            ? `Tem certeza que deseja excluir a despesa "${expenseToDelete.descricao}"? Esta ação não pode ser desfeita.`
+            : 'Tem certeza que deseja excluir esta despesa?'
+        }
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
