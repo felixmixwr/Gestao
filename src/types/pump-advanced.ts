@@ -6,6 +6,9 @@ export interface PumpKPIs {
   total_diesel_consumed?: number
   total_revenue?: number
   total_costs?: number
+  total_maintenance_cost?: number
+  total_diesel_cost?: number
+  total_investment_cost?: number
   next_maintenance_date?: string
   maintenance_status?: string
   efficiency_ratio?: number
@@ -158,7 +161,11 @@ export interface PumpDetails {
   brand?: string
   status: string
   owner_company_id: string
+  year?: number
   kpis?: PumpKPIs
+  maintenances?: Maintenance[]
+  diesel_entries?: DieselEntry[]
+  investments?: Investment[]
   recent_maintenances?: Maintenance[]
   recent_diesel_entries?: DieselEntry[]
   recent_investments?: Investment[]
@@ -170,15 +177,19 @@ export interface Maintenance {
   os_name: string
   type: string
   description: string
-  scheduled_date: string
+  date: string
+  scheduled_date?: string
   status: string
-  cost: number
+  value: number
+  cost?: number
   pump_id: string
+  next_maintenance_date?: string
 }
 
 export interface DieselEntry {
   id: string
-  liters: number
+  liters_filled: number
+  liters?: number
   cost_per_liter: number
   total_cost: number
   date: string
@@ -187,6 +198,7 @@ export interface DieselEntry {
   payment_method?: string
   discount_type?: string
   discount_value?: number
+  notes?: string
 }
 
 export interface Investment {
@@ -197,4 +209,5 @@ export interface Investment {
   value: number
   date: string
   pump_id: string
+  supplier?: string
 }

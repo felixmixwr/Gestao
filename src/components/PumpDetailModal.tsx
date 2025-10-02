@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Plus, TrendingUp, TrendingDown, DollarSign, Fuel, Wrench, Package, Eye } from 'lucide-react'
 import { Badge } from './Badge'
 import { Button } from './Button'
-import { formatCurrency, formatVolume, formatLiters, formatDate, getMaintenanceTypeColor, getMaintenanceStatusColor, getInvestmentCategoryColor, getMaintenanceIcon, getDieselIcon, getInvestmentIcon } from '../types/pump-advanced'
-import { PumpDetails } from '../types/pump-advanced'
+import { formatCurrency, formatVolume, formatLiters, formatDate, getMaintenanceTypeColor, getMaintenanceStatusColor, getInvestmentCategoryColor, getMaintenanceIcon, getDieselIcon, getInvestmentIcon, PumpDetails, Maintenance, DieselEntry, Investment } from '../types/pump-advanced'
 import { PumpAdvancedAPI } from '../lib/pump-advanced-api'
 import { FinancialIntegrationAlert } from './FinancialIntegrationAlert'
 import { PumpKPICharts } from './PumpKPICharts'
@@ -236,7 +235,7 @@ function OverviewTab({ pumpDetails }: { pumpDetails: PumpDetails }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-blue-600">Volume Total</p>
-              <p className="text-2xl font-bold text-blue-900">{formatVolume(pumpDetails.kpis.total_volume_pumped)}</p>
+              <p className="text-2xl font-bold text-blue-900">{formatVolume(pumpDetails.kpis?.total_volume_pumped)}</p>
             </div>
             <TrendingUp className="w-8 h-8 text-blue-600" />
           </div>
@@ -246,7 +245,7 @@ function OverviewTab({ pumpDetails }: { pumpDetails: PumpDetails }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-green-600">Diesel Consumido</p>
-              <p className="text-2xl font-bold text-green-900">{formatLiters(pumpDetails.kpis.total_diesel_consumed)}</p>
+              <p className="text-2xl font-bold text-green-900">{formatLiters(pumpDetails.kpis?.total_diesel_consumed)}</p>
             </div>
             <Fuel className="w-8 h-8 text-green-600" />
           </div>
@@ -266,7 +265,7 @@ function OverviewTab({ pumpDetails }: { pumpDetails: PumpDetails }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-red-600">Custos</p>
-              <p className="text-2xl font-bold text-red-900">{formatCurrency(pumpDetails.kpis.total_maintenance_cost + pumpDetails.kpis.total_diesel_cost + pumpDetails.kpis.total_investment_cost)}</p>
+              <p className="text-2xl font-bold text-red-900">{formatCurrency((pumpDetails.kpis?.total_maintenance_cost || 0) + (pumpDetails.kpis?.total_diesel_cost || 0) + (pumpDetails.kpis?.total_investment_cost || 0))}</p>
             </div>
             <TrendingDown className="w-8 h-8 text-red-600" />
           </div>
@@ -302,15 +301,15 @@ function OverviewTab({ pumpDetails }: { pumpDetails: PumpDetails }) {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Manutenções:</span>
-              <span className="font-medium">{pumpDetails.maintenances.length}</span>
+              <span className="font-medium">{pumpDetails.maintenances?.length || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Abastecimentos:</span>
-              <span className="font-medium">{pumpDetails.diesel_entries.length}</span>
+              <span className="font-medium">{pumpDetails.diesel_entries?.length || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Investimentos:</span>
-              <span className="font-medium">{pumpDetails.investments.length}</span>
+              <span className="font-medium">{pumpDetails.investments?.length || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Relatórios:</span>
@@ -355,14 +354,14 @@ function MaintenanceTab({
         </Button>
       </div>
 
-      {pumpDetails.maintenances.length === 0 ? (
+      {(pumpDetails.maintenances?.length || 0) === 0 ? (
         <div className="text-center py-8">
           <Wrench className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Nenhuma manutenção registrada</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {pumpDetails.maintenances.map((maintenance) => (
+          {pumpDetails.maintenances?.map((maintenance: Maintenance) => (
             <div key={maintenance.id} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -381,7 +380,7 @@ function MaintenanceTab({
                     </div>
                     <div>
                       <span className="text-gray-600">Valor:</span>
-                      <p className="font-medium">{formatCurrency(maintenance.value)}</p>
+                      <p className="font-medium">{formatCurrency(maintenance.value || maintenance.cost)}</p>
                     </div>
                     <div>
                       <span className="text-gray-600">Status:</span>
@@ -441,14 +440,14 @@ function DieselTab({
         </Button>
       </div>
 
-      {pumpDetails.diesel_entries.length === 0 ? (
+      {(pumpDetails.diesel_entries?.length || 0) === 0 ? (
         <div className="text-center py-8">
           <Fuel className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Nenhum abastecimento registrado</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {pumpDetails.diesel_entries.map((entry) => (
+          {pumpDetails.diesel_entries?.map((entry: DieselEntry) => (
             <div key={entry.id} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -462,7 +461,7 @@ function DieselTab({
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="text-gray-600">Quantidade:</span>
-                      <p className="font-medium">{formatLiters(entry.liters_filled)}</p>
+                      <p className="font-medium">{formatLiters(entry.liters_filled || entry.liters)}</p>
                     </div>
                     <div>
                       <span className="text-gray-600">Custo/L:</span>
@@ -474,7 +473,7 @@ function DieselTab({
                     </div>
                     <div>
                       <span className="text-gray-600">Quilometragem:</span>
-                      <p className="font-medium">{entry.current_mileage.toLocaleString('pt-BR')} km</p>
+                      <p className="font-medium">{entry.current_mileage?.toLocaleString('pt-BR') || 'N/A'} km</p>
                     </div>
                   </div>
 
@@ -523,14 +522,14 @@ function InvestmentsTab({
         </Button>
       </div>
 
-      {pumpDetails.investments.length === 0 ? (
+      {(pumpDetails.investments?.length || 0) === 0 ? (
         <div className="text-center py-8">
           <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-500">Nenhum investimento registrado</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {pumpDetails.investments.map((investment) => (
+          {pumpDetails.investments?.map((investment: Investment) => (
             <div key={investment.id} className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
