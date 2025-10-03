@@ -743,7 +743,14 @@ function MaintenanceForm({ onSubmit, onCancel, pumpDetails }: {
 
 function DieselForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, onCancel: () => void }) {
   const [formData, setFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: (() => {
+      // Criar data local brasileira para evitar problemas de fuso horário
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    })(),
     liters_filled: 0,
     cost_per_liter: 0,
     current_mileage: undefined as number | undefined,
@@ -763,10 +770,16 @@ function DieselForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, onC
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    onSubmit({
+    
+    const submitData = {
       ...formData,
       total_cost: totalCost
-    })
+    };
+    
+    console.log('🔍 [DieselForm] Dados enviados:', submitData);
+    console.log('🔍 [DieselForm] Data no momento do envio:', submitData.date);
+    
+    onSubmit(submitData)
   }
 
   return (
@@ -777,7 +790,10 @@ function DieselForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void, onC
         <DatePicker
           label="Data"
           value={formData.date}
-          onChange={(value) => setFormData({ ...formData, date: value })}
+          onChange={(value) => {
+            console.log('🔍 [DieselForm] Data selecionada:', value);
+            setFormData({ ...formData, date: value });
+          }}
           required
           placeholder="Selecionar data do abastecimento"
         />
