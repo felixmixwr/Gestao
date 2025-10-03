@@ -123,7 +123,7 @@ export function CreateExpense() {
             <div className="flex items-center gap-2 text-blue-800">
               <span className="font-medium">Editando:</span>
               <span>{expense.descricao}</span>
-              <span className="text-sm">({new Date(expense.data_despesa).toLocaleDateString('pt-BR')})</span>
+              <span className="text-sm">({expense.data_despesa ? expense.data_despesa : 'Sem data'})</span>
             </div>
           </div>
         )}

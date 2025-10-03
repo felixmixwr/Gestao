@@ -19,7 +19,7 @@ import {
 } from '../ui/select';
 import { formatCurrency, getCategoryColor, getExpenseIcon, getTransactionTypeColor, getTransactionTypeIcon, EXPENSE_CATEGORY_OPTIONS, TRANSACTION_TYPE_OPTIONS } from '../../types/financial';
 import type { ExpenseWithRelations, ExpenseFilters } from '../../types/financial';
-import { ChevronLeft, ChevronRight, Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Filter, Download, Eye, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { DatePicker } from '../ui/date-picker';
 
 interface ExpenseTableProps {
@@ -53,6 +53,8 @@ export function ExpenseTable({
   onPageChange
 }: ExpenseTableProps) {
   const [showFilters, setShowFilters] = useState(false);
+  const [sortField, setSortField] = useState<string>('data_despesa');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const handleSearch = (value: string) => {
     if (onFiltersChange) {
@@ -81,6 +83,26 @@ export function ExpenseTable({
   const handleDateFilter = (field: 'data_inicio' | 'data_fim', value: string) => {
     if (onFiltersChange) {
       onFiltersChange({ ...filters, [field]: value });
+    }
+  };
+
+  const handleSort = (field: string) => {
+    if (field === sortField) {
+      // Se clicou no mesmo campo, alternar direção
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Se clicou em campo diferente, usar 'desc' por padrão para data
+      setSortField(field);
+      setSortDirection(field === 'data_despesa' ? 'desc' : 'desc');
+    }
+    
+    // Notificar componente pai sobre a ordenação
+    if (onFiltersChange) {
+      onFiltersChange({ 
+        ...filters, 
+        sortField: field, 
+        sortDirection: field === sortField && sortDirection === 'asc' ? 'desc' : 'desc'
+      });
     }
   };
 
@@ -144,7 +166,7 @@ export function ExpenseTable({
       {/* Filtros expandidos */}
       {showFilters && (
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Categoria</label>
               <Select onValueChange={handleCategoryFilter}>
@@ -198,6 +220,42 @@ export function ExpenseTable({
                 onChange={(value) => handleDateFilter('data_fim', value)}
                 placeholder="Selecionar data fim"
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Ordenação</label>
+              <div className="flex items-center gap-2">
+                <Select onValueChange={(value) => {
+                  if (value === 'data_despesa') {
+                    handleSort('data_despesa');
+                  } else if (value === 'valor') {
+                    handleSort('valor');
+                  } else if (value === 'descricao') {
+                    handleSort('descricao');
+                  }
+                }}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="data_despesa">Data</SelectItem>
+                    <SelectItem value="valor">Valor</SelectItem>
+                    <SelectItem value="descricao">Descrição</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleSort(sortField)}
+                  className="flex items-center gap-1"
+                >
+                  {sortDirection === 'asc' ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -276,7 +334,7 @@ export function ExpenseTable({
                   
                   <TableCell className="w-[100px]">
                     <span className="text-sm">
-                      {new Date(expense.data_despesa).toLocaleDateString('pt-BR')}
+                      {expense.data_despesa ? expense.data_despesa : 'Sem data'}
                     </span>
                   </TableCell>
                   

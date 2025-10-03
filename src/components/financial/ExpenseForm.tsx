@@ -494,7 +494,7 @@ export function ExpenseView({ expense, onEdit, onDelete, onClose }: ExpenseViewP
             <div>
               <Label className="text-sm text-gray-600">Data</Label>
               <p className="text-lg font-medium">
-                {new Date(expense.data_despesa).toLocaleDateString('pt-BR')}
+                {expense.data_despesa ? expense.data_despesa : 'Sem data'}
               </p>
             </div>
           </div>

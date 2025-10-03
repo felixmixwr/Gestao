@@ -107,7 +107,7 @@ export function ExpenseCard({
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Data:</span>
             <span className="font-medium">
-              {new Date(expense.data_despesa).toLocaleDateString('pt-BR')}
+              {expense.data_despesa ? expense.data_despesa : 'Sem data'}
             </span>
           </div>
 

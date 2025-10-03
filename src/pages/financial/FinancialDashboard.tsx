@@ -823,7 +823,7 @@ export function FinancialDashboard() {
                   <div className="flex-1">
                     <p className="font-medium text-sm">{expense.descricao}</p>
                     <p className="text-xs text-gray-500">
-                      {expense.bomba_prefix} • {expense.categoria} • {new Date(expense.data_despesa).toLocaleDateString('pt-BR')}
+                      {expense.bomba_prefix} • {expense.categoria} • {expense.data_despesa ? expense.data_despesa : 'Sem data'}
                     </p>
                   </div>
                   <div className="text-right">
