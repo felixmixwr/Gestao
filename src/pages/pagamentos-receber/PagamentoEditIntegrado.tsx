@@ -8,6 +8,7 @@ import { GenericError } from '../errors/GenericError'
 import { usePagamentosReceberIntegrado } from '../../lib/pagamentos-receber-api-integrado'
 import { PagamentoReceberIntegrado, FormaPagamento } from '../../lib/pagamentos-receber-api-integrado'
 import { toast } from '../../lib/toast-hooks'
+import { getCurrentDateString, formatDateToLocalString } from '../../utils/date-utils'
 
 const FORMA_PAGAMENTO_OPTIONS = [
   { value: 'sem_forma', label: 'Sem forma de pagamento' },
@@ -43,7 +44,7 @@ export default function PagamentoEditIntegrado() {
   useEffect(() => {
     if (formData.forma_pagamento === 'pix' || formData.forma_pagamento === 'a_vista') {
       // PIX e À Vista sempre vencem no mesmo dia
-      const hoje = new Date().toISOString().split('T')[0]
+      const hoje = getCurrentDateString()
       setFormData(prev => ({
         ...prev,
         prazo_data: hoje,
@@ -55,7 +56,7 @@ export default function PagamentoEditIntegrado() {
       const prazo30dias = new Date(hoje.getTime() + (30 * 24 * 60 * 60 * 1000))
       setFormData(prev => ({
         ...prev,
-        prazo_data: prazo30dias.toISOString().split('T')[0],
+        prazo_data: formatDateToLocalString(prazo30dias),
         prazo_dias: 30
       }))
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { getCurrentDateString } from '../../utils/date-utils';
 import {
   Card,
   CardContent,
@@ -86,7 +87,7 @@ export function ExpenseForm({
       categoria: expense?.categoria || 'Outros',
       valor: expense?.valor || 0,
       tipo_custo: expense?.tipo_custo || 'variável',
-      data_despesa: expense?.data_despesa || new Date().toISOString().split('T')[0],
+      data_despesa: expense?.data_despesa || getCurrentDateString(),
       pump_id: expense?.pump_id || '',
       company_id: expense?.company_id || '',
       quilometragem_atual: expense?.quilometragem_atual || 0,

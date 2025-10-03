@@ -1,115 +1,157 @@
-// =============================================
-// Utilitários para manipulação de datas no fuso horário de Brasília
-// =============================================
+/**
+ * Utilitários para manipulação de datas sem problemas de fuso horário
+ */
 
 /**
- * Converte uma data ISO para o fuso horário de Brasília (UTC-3)
+ * Obtém a data atual no formato YYYY-MM-DD no fuso horário local
+ * Evita problemas de fuso horário que ocorrem com toISOString()
  */
-export function toBrasiliaTime(dateString: string): Date {
-  const date = new Date(dateString);
-  
-  // Ajustar para o fuso horário de Brasília (UTC-3)
-  const brasiliaOffset = -3 * 60; // -3 horas em minutos
-  const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-  const brasiliaTime = new Date(utcTime + (brasiliaOffset * 60000));
-  
-  return brasiliaTime;
+export function getCurrentDateString(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**
- * Converte uma data para string no formato YYYY-MM-DD no fuso horário de Brasília
+ * Converte uma data para string no formato YYYY-MM-DD no fuso horário local
+ * @param date - Data a ser convertida
  */
-export function toBrasiliaDateString(dateString: string): string {
-  const date = toBrasiliaTime(dateString);
-  return date.toISOString().split('T')[0];
+export function formatDateToLocalString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 /**
- * Obtém os limites da semana no fuso horário de Brasília
+ * Converte uma string de data YYYY-MM-DD para Date no fuso horário local
+ * @param dateString - String de data no formato YYYY-MM-DD
  */
-export function getWeekBoundsBrasilia(date: Date) {
-  // Usar uma abordagem mais simples - criar datas locais
-  const start = new Date(date);
-  const day = start.getDay();
-  start.setDate(start.getDate() - day); // Domingo
-  start.setHours(0, 0, 0, 0);
-  
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6); // Sábado
-  end.setHours(23, 59, 59, 999);
-  
-  return { start, end };
+export function parseLocalDateString(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number)
+  return new Date(year, month - 1, day)
 }
 
 /**
- * Formata uma data para exibição no formato brasileiro
+ * Adiciona dias a uma data e retorna no formato YYYY-MM-DD
+ * @param date - Data base
+ * @param days - Número de dias a adicionar (pode ser negativo)
  */
-export function formatDateBR(date: Date): string {
-  return date.toLocaleDateString('pt-BR', {
-    timeZone: 'America/Sao_Paulo'
-  });
+export function addDaysToDateString(date: Date, days: number): string {
+  const newDate = new Date(date)
+  newDate.setDate(newDate.getDate() + days)
+  return formatDateToLocalString(newDate)
 }
 
 /**
- * Converte uma string de data para Date no fuso horário de Brasília
+ * Obtém o primeiro dia do mês atual no formato YYYY-MM-DD
  */
-export function parseDateBR(dateString: string): Date {
-  // Se a data já está no formato YYYY-MM-DD, criar diretamente
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-  
-  // Caso contrário, usar a função de conversão
-  return toBrasiliaTime(dateString);
+export function getFirstDayOfCurrentMonth(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}-01`
 }
 
 /**
- * Obtém o dia da semana (0-6) de uma data no fuso horário de Brasília
+ * Obtém o último dia do mês atual no formato YYYY-MM-DD
  */
-export function getDayOfWeekBR(dateString: string): number {
-  // Para strings no formato YYYY-MM-DD, criar data local diretamente
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return date.getDay();
-  }
-  
-  // Para outros formatos, usar a conversão
-  const date = toBrasiliaTime(dateString);
-  return date.getDay();
+export function getLastDayOfCurrentMonth(): string {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth() + 1
+  const lastDay = new Date(year, month, 0).getDate()
+  return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
 }
 
 /**
- * Converte uma data para string ISO no fuso horário de Brasília
+ * Obtém o primeiro dia da semana atual (segunda-feira) no formato YYYY-MM-DD
  */
-export function toBrasiliaISOString(date: Date): string {
-  // Para datas locais, usar diretamente o toISOString()
-  // O problema estava na conversão desnecessária
-  return date.toISOString();
+export function getFirstDayOfCurrentWeek(): string {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Se domingo, volta 6 dias; senão, calcula para segunda
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + mondayOffset)
+  return formatDateToLocalString(monday)
 }
 
 /**
- * Formata uma data de forma segura evitando problemas de fuso horário
- * Esta função é especialmente útil para datas no formato YYYY-MM-DD
+ * Obtém o último dia da semana atual (domingo) no formato YYYY-MM-DD
  */
-export function formatDateSafe(dateString: string | null | undefined): string {
-  if (!dateString) return 'N/A'
+export function getLastDayOfCurrentWeek(): string {
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const sundayOffset = dayOfWeek === 0 ? 0 : 7 - dayOfWeek // Se domingo, não move; senão, vai para domingo
+  const sunday = new Date(now)
+  sunday.setDate(now.getDate() + sundayOffset)
+  return formatDateToLocalString(sunday)
+}
+
+/**
+ * Formata uma data de forma segura, retornando string vazia se inválida
+ * @param date - Data a ser formatada (pode ser string ou Date)
+ */
+export function formatDateSafe(date: string | Date | null | undefined): string {
+  if (!date) return ''
   
   try {
-    // Se a data está no formato YYYY-MM-DD, criar diretamente para evitar problemas de fuso horário
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      const [year, month, day] = dateString.split('-').map(Number)
-      const date = new Date(year, month - 1, day) // Mês é 0-indexado
-      return date.toLocaleDateString('pt-BR')
-    }
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    if (isNaN(dateObj.getTime())) return ''
     
-    // Para outros formatos, usar a conversão normal
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return 'N/A'
-    return date.toLocaleDateString('pt-BR')
+    return formatDateToLocalString(dateObj)
   } catch (error) {
-    console.warn('⚠️ Erro ao formatar data:', dateString, error)
-    return 'N/A'
+    console.warn('Erro ao formatar data:', error)
+    return ''
   }
+}
+
+/**
+ * Converte uma data para string no formato brasileiro (DD/MM/YYYY)
+ * @param date - Data a ser convertida
+ */
+export function toBrasiliaDateString(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  return `${day}/${month}/${year}`
+}
+
+/**
+ * Converte uma string de data no formato brasileiro (DD/MM/YYYY) para Date
+ * @param dateString - String de data no formato DD/MM/YYYY
+ */
+export function parseDateBR(dateString: string): Date {
+  const [day, month, year] = dateString.split('/').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+/**
+ * Obtém os limites da semana (segunda a domingo) para uma data específica
+ * @param date - Data de referência
+ */
+export function getWeekBoundsBrasilia(date: Date): { start: Date; end: Date } {
+  const dayOfWeek = date.getDay()
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Se domingo, volta 6 dias; senão, calcula para segunda
+  
+  const start = new Date(date)
+  start.setDate(date.getDate() + mondayOffset)
+  start.setHours(0, 0, 0, 0)
+  
+  const end = new Date(start)
+  end.setDate(start.getDate() + 6)
+  end.setHours(23, 59, 59, 999)
+  
+  return { start, end }
+}
+
+/**
+ * Obtém o nome do dia da semana em português
+ * @param date - Data
+ */
+export function getDayOfWeekBR(date: Date): string {
+  const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
+  return days[date.getDay()]
 }

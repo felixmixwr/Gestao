@@ -7,6 +7,7 @@ import { Button } from './Button';
 import { FormField } from './FormField';
 import { CurrencyInputWithValidation } from './CurrencyInputWithValidation';
 import { integrarNFCriadaEnhanced } from '../lib/notas-fiscais-planner-integration-enhanced';
+import { getCurrentDateString } from '../utils/date-utils';
 
 // Schema de validação simplificado
 const notaFiscalSchema = z.object({
@@ -44,7 +45,7 @@ export const NotaFiscalForm: React.FC<NotaFiscalFormProps> = ({
     mode: 'onSubmit', // Validação apenas no submit
     defaultValues: {
       numero_nota: '',
-      data_emissao: new Date().toISOString().split('T')[0],
+      data_emissao: getCurrentDateString(),
       data_vencimento: '',
       valor: 0
     }

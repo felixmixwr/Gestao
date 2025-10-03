@@ -1,6 +1,7 @@
 // API avançada para gerenciamento de bombas com KPIs, manutenção, diesel e investimentos
 
 import { supabase } from './supabase'
+import { formatDateToLocalString } from '../utils/date-utils'
 import {
   Pump,
   PumpDetails,
@@ -143,7 +144,7 @@ export class PumpAdvancedAPI {
       if (lastMaintenance) {
         const lastDate = new Date(lastMaintenance.data_despesa)
         const nextDate = new Date(lastDate.getTime() + (6 * 30 * 24 * 60 * 60 * 1000)) // 6 meses
-        nextMaintenanceDate = nextDate.toISOString().split('T')[0]
+        nextMaintenanceDate = formatDateToLocalString(nextDate)
       }
 
       // Buscar quilometragem atual

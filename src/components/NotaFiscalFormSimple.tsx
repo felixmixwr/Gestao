@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Button } from './Button';
 import { DatePicker } from './ui/date-picker';
 import { integrarNFCriadaEnhanced } from '../lib/notas-fiscais-planner-integration-enhanced';
+import { getCurrentDateString } from '../utils/date-utils';
 
 interface NotaFiscalFormSimpleProps {
   reportId: string;
@@ -19,7 +20,7 @@ export const NotaFiscalFormSimple: React.FC<NotaFiscalFormSimpleProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     numero_nota: '',
-    data_emissao: new Date().toISOString().split('T')[0],
+    data_emissao: getCurrentDateString(),
     data_vencimento: '',
     valor: '',
     anexo: null as File | null
