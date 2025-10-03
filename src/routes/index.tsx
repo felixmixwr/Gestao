@@ -46,6 +46,17 @@ import TestAPI from '../pages/programacao/TestAPI'
 // Import do módulo financeiro
 import { FinancialModule } from '../pages/financial'
 
+// Import do módulo planner
+import PlannerMain from '../pages/planner/PlannerMain'
+import PlannerCalendar from '../pages/planner/PlannerCalendar'
+import PlannerAgenda from '../pages/planner/PlannerAgenda'
+import PlannerDia from '../pages/planner/PlannerDia'
+import PlannerHorario from '../pages/planner/PlannerHorario'
+import PlannerAulas from '../pages/planner/PlannerAulas'
+import PlannerAnos from '../pages/planner/PlannerAnos'
+import PlannerConfiguracoes from '../pages/planner/PlannerConfiguracoes'
+import NovaTarefa from '../pages/planner/NovaTarefa'
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -421,6 +432,88 @@ export const router = createBrowserRouter([
     element: (
       <RequireAuth>
         <FinancialModule />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  // Rotas do módulo planner
+  {
+    path: '/planner',
+    element: (
+      <RequireAuth>
+        <PlannerMain />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/calendario',
+    element: (
+      <RequireAuth>
+        <PlannerCalendar />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/agenda',
+    element: (
+      <RequireAuth>
+        <PlannerAgenda />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/dia',
+    element: (
+      <RequireAuth>
+        <PlannerDia />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/horario',
+    element: (
+      <RequireAuth>
+        <PlannerHorario />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/aulas',
+    element: (
+      <RequireAuth>
+        <PlannerAulas />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/anos',
+    element: (
+      <RequireAuth>
+        <PlannerAnos />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/configuracoes',
+    element: (
+      <RequireAuth>
+        <PlannerConfiguracoes />
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  {
+    path: '/planner/nova-tarefa',
+    element: (
+      <RequireAuth>
+        <NovaTarefa />
       </RequireAuth>
     ),
     errorElement: <GenericError />
