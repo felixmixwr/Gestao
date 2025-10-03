@@ -210,10 +210,11 @@ export function calcularValorHoraExtra(
 
 // Função para formatar salário
 export function formatarSalario(valor: number): string {
+  // Usar formatação nativa que já inclui o sinal de menos no lugar correto
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(valor)
+  }).format(valor);
 }
 
 // Função para formatar data

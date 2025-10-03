@@ -12,8 +12,9 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { Calendar, Filter, X, Search, RefreshCw } from 'lucide-react';
+import { DatePicker } from '../ui/date-picker';
 import { EXPENSE_CATEGORY_OPTIONS, EXPENSE_TYPE_OPTIONS, EXPENSE_STATUS_OPTIONS } from '../../types/financial';
-import type { ExpenseFilters as ExpenseFiltersType } from '../../types/financial';
+import type { ExpenseFilters as ExpenseFiltersType, ExpenseCategory, ExpenseType, ExpenseStatus } from '../../types/financial';
 
 interface ExpenseFiltersProps {
   filters: ExpenseFiltersType;
@@ -49,7 +50,7 @@ export function ExpenseFilters({
     } else {
       onFiltersChange({
         ...filters,
-        categoria: [category]
+        categoria: [category as ExpenseCategory]
       });
     }
   };
@@ -62,7 +63,7 @@ export function ExpenseFilters({
     } else {
       onFiltersChange({
         ...filters,
-        tipo_custo: [type]
+        tipo_custo: [type as ExpenseType]
       });
     }
   };
@@ -75,20 +76,20 @@ export function ExpenseFilters({
     } else {
       onFiltersChange({
         ...filters,
-        status: [status]
+        status: [status as ExpenseStatus]
       });
     }
   };
 
-  const handleBombaChange = (bombaId: string) => {
-    if (bombaId === 'all') {
+  const handleBombaChange = (pumpId: string) => {
+    if (pumpId === 'all') {
       const newFilters = { ...filters };
-      delete newFilters.bomba_id;
+      delete newFilters.pump_id;
       onFiltersChange(newFilters);
     } else {
       onFiltersChange({
         ...filters,
-        bomba_id: bombaId
+        pump_id: pumpId
       });
     }
   };
@@ -119,7 +120,7 @@ export function ExpenseFilters({
     if (filters.categoria && filters.categoria.length > 0) count++;
     if (filters.tipo_custo && filters.tipo_custo.length > 0) count++;
     if (filters.status && filters.status.length > 0) count++;
-    if (filters.bomba_id) count++;
+    if (filters.pump_id) count++;
     if (filters.company_id) count++;
     if (filters.data_inicio) count++;
     if (filters.data_fim) count++;
@@ -264,7 +265,7 @@ export function ExpenseFilters({
                 <div className="space-y-2">
                   <Label>Bomba</Label>
                   <Select
-                    value={filters.bomba_id || 'all'}
+                    value={filters.pump_id || 'all'}
                     onValueChange={handleBombaChange}
                     disabled={loading}
                   >
@@ -305,36 +306,20 @@ export function ExpenseFilters({
                 </div>
 
                 {/* Data de Início */}
-                <div className="space-y-2">
-                  <Label htmlFor="data_inicio">Data Início</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      id="data_inicio"
-                      type="date"
-                      value={filters.data_inicio || ''}
-                      onChange={(e) => handleDateRangeChange('data_inicio', e.target.value)}
-                      className="pl-10"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
+                <DatePicker
+                  label="Data Início"
+                  value={filters.data_inicio || ''}
+                  onChange={(value) => handleDateRangeChange('data_inicio', value)}
+                  placeholder="Selecionar data início"
+                />
 
                 {/* Data de Fim */}
-                <div className="space-y-2">
-                  <Label htmlFor="data_fim">Data Fim</Label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      id="data_fim"
-                      type="date"
-                      value={filters.data_fim || ''}
-                      onChange={(e) => handleDateRangeChange('data_fim', e.target.value)}
-                      className="pl-10"
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
+                <DatePicker
+                  label="Data Fim"
+                  value={filters.data_fim || ''}
+                  onChange={(value) => handleDateRangeChange('data_fim', value)}
+                  placeholder="Selecionar data fim"
+                />
               </div>
             </div>
           )}
@@ -399,9 +384,9 @@ export function ExpenseFilters({
                   </button>
                 </Badge>
               )}
-              {filters.bomba_id && (
+              {filters.pump_id && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  Bomba: {pumps.find(p => p.id === filters.bomba_id)?.prefix || 'N/A'}
+                  Bomba: {pumps.find(p => p.id === filters.pump_id)?.prefix || 'N/A'}
                   <button
                     onClick={() => handleBombaChange('all')}
                     className="ml-1 hover:text-red-600"
@@ -483,13 +468,13 @@ export function QuickFilters({ onApplyFilter, onClearFilters }: QuickFiltersProp
     {
       label: 'Apenas Diesel',
       filter: {
-        categoria: ['Diesel']
+        categoria: ['Diesel' as ExpenseCategory]
       }
     },
     {
       label: 'Custos Fixos',
       filter: {
-        tipo_custo: ['fixo']
+        tipo_custo: ['fixo' as ExpenseType]
       }
     }
   ];

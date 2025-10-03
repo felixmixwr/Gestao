@@ -288,6 +288,20 @@ export default function ProgramacaoWeeklyBoard() {
                                 📦 {programacao.volume_previsto} m³
                               </div>
                             )}
+                            
+                            {/* Quantidade de Material */}
+                            {programacao.quantidade_material && (
+                              <div className="text-xs text-blue-600">
+                                🧱 {programacao.quantidade_material} m³
+                              </div>
+                            )}
+                            
+                            {/* Peça a ser Concretada */}
+                            {programacao.peca_concretada && (
+                              <div className="text-xs text-purple-600">
+                                🏗️ {programacao.peca_concretada}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))

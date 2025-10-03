@@ -1,84 +1,223 @@
-import { Link } from 'react-router-dom'
-import { BombaTerceiraWithEmpresa, getCorStatus, formatarData } from '../types/bombas-terceiras'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Badge } from './Badge'
+import { 
+  BombaTerceiraWithEmpresa, 
+  getCorStatus, 
+  formatarData,
+  BombaTerceiraKPIs,
+  formatVolumeTerceira,
+  formatCurrencyTerceira,
+  getBombaTerceiraIcon,
+  isManutencaoVencida,
+  getStatusManutencao,
+  getCorStatusManutencao
+} from '../types/bombas-terceiras'
+import { BombasTerceirasService } from '../lib/bombas-terceiras-api'
 
 interface BombaTerceiraCardProps {
   bomba: BombaTerceiraWithEmpresa
 }
 
 export function BombaTerceiraCard({ bomba }: BombaTerceiraCardProps) {
+  const [kpis, setKpis] = useState<BombaTerceiraKPIs | null>(null)
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+
+  const loadKPIs = async () => {
+    try {
+      const bombaKPIs = await BombasTerceirasService.getBombaKPIs(bomba.prefixo)
+      setKpis(bombaKPIs)
+    } catch (error) {
+      console.error('Erro ao carregar KPIs da bomba terceira:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadKPIs()
+  }, [bomba.prefixo])
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'ativa':
+        return 'success'
+      case 'em manutenção':
+        return 'warning'
+      case 'indisponível':
+        return 'danger'
+      default:
+        return 'default'
+    }
+  }
+
+  const getCardBorderColor = () => {
+    if (bomba.status === 'indisponível') return 'border-red-200'
+    if (isManutencaoVencida(kpis?.next_maintenance_date)) return 'border-yellow-200'
+    if (bomba.status === 'em manutenção') return 'border-orange-200'
+    return 'border-gray-200'
+  }
+
+  const getCardBgColor = () => {
+    if (bomba.status === 'indisponível') return 'bg-red-50'
+    if (isManutencaoVencida(kpis?.next_maintenance_date)) return 'bg-yellow-50'
+    if (bomba.status === 'em manutenção') return 'bg-orange-50'
+    return 'bg-white'
+  }
+
+  const maintenanceStatus = getStatusManutencao(kpis?.next_maintenance_date)
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1">
+            <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+          <div className="h-6 bg-gray-200 rounded w-16"></div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="bg-gray-100 rounded-lg p-3">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
+    <div className={`${getCardBgColor()} rounded-lg border-2 ${getCardBorderColor()} p-6 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1`}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">{bomba.prefixo}</h3>
-              <p className="text-sm text-gray-600">{bomba.empresa_nome_fantasia}</p>
-            </div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-2xl">{getBombaTerceiraIcon(bomba.status)}</span>
+            <h3 className="text-lg font-bold text-gray-900">{bomba.prefixo}</h3>
           </div>
+          <p className="text-sm text-gray-600 font-medium">{bomba.modelo || 'Modelo não informado'}</p>
+          <p className="text-xs text-gray-500">{bomba.empresa_nome_fantasia}</p>
+        </div>
+        <Badge variant={getStatusVariant(bomba.status)} size="sm">
+          {bomba.status}
+        </Badge>
+      </div>
 
-          <div className="space-y-2 mb-4">
-            {bomba.modelo && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>{bomba.modelo}</span>
-              </div>
-            )}
-            
-            {bomba.ano && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Ano {bomba.ano}</span>
-              </div>
-            )}
+      {/* KPIs Grid */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        {/* Volume Bombeado */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+              <span className="text-blue-600 text-xs">📊</span>
+            </div>
+            <span className="text-xs font-medium text-gray-500">Volume Bombeado</span>
           </div>
+          <p className="text-lg font-bold text-blue-600">
+            {loading ? '...' : formatVolumeTerceira(kpis?.total_volume_pumped || 0)}
+          </p>
+        </div>
 
-          {/* Status e valor da diária */}
-          <div className="flex items-center gap-3 text-sm">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCorStatus(bomba.status)}`}>
-              {bomba.status}
+        {/* Receita Total */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+              <span className="text-green-600 text-xs">💰</span>
+            </div>
+            <span className="text-xs font-medium text-gray-500">Receita Total</span>
+          </div>
+          <p className="text-lg font-bold text-green-600">
+            {loading ? '...' : formatCurrencyTerceira(kpis?.total_revenue || 0)}
+          </p>
+        </div>
+
+        {/* Serviços Realizados */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+              <span className="text-purple-600 text-xs">🔧</span>
+            </div>
+            <span className="text-xs font-medium text-gray-500">Serviços</span>
+          </div>
+          <p className="text-lg font-bold text-purple-600">
+            {loading ? '...' : kpis?.total_services || 0}
+          </p>
+        </div>
+
+        {/* Valor da Diária */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center">
+              <span className="text-orange-600 text-xs">📅</span>
+            </div>
+            <span className="text-xs font-medium text-gray-500">Valor Diária</span>
+          </div>
+          <p className="text-lg font-bold text-orange-600">
+            {bomba.valor_diaria ? formatCurrencyTerceira(bomba.valor_diaria) : 'N/A'}
+          </p>
+        </div>
+      </div>
+
+      {/* Alertas */}
+      {kpis && (isManutencaoVencida(kpis.next_maintenance_date) || bomba.status === 'em manutenção') && (
+        <div className="mb-4 p-3 rounded-lg bg-yellow-100 border border-yellow-200">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-600">⚠️</span>
+            <p className="text-sm font-medium text-yellow-800">
+              {bomba.status === 'em manutenção' 
+                ? 'Bomba em manutenção'
+                : `Manutenção ${maintenanceStatus.toLowerCase()}`
+              }
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Informações Adicionais */}
+      <div className="space-y-2 mb-4 text-xs text-gray-600">
+        <div className="flex justify-between">
+          <span>Último serviço:</span>
+          <span className="font-medium">
+            {loading ? '...' : 
+             kpis?.last_service_date ? 
+               formatarData(kpis.last_service_date) : 
+               'Nenhum'
+            }
+          </span>
+        </div>
+        <div className="flex justify-between">
+          <span>Próxima manutenção:</span>
+          <span className={`font-medium ${getCorStatusManutencao(kpis?.next_maintenance_date)}`}>
+            {loading ? '...' : 
+             kpis?.next_maintenance_date ? 
+               maintenanceStatus : 
+               'Não agendada'
+            }
+          </span>
+        </div>
+        {kpis?.efficiency_ratio && kpis.efficiency_ratio > 0 && (
+          <div className="flex justify-between">
+            <span>Eficiência:</span>
+            <span className="font-medium">
+              {formatCurrencyTerceira(kpis.efficiency_ratio)}/m³
             </span>
-            
-            {bomba.valor_diaria && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                R$ {bomba.valor_diaria.toLocaleString('pt-BR', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })}/dia
-              </span>
-            )}
           </div>
+        )}
+      </div>
 
-          {/* Data de criação */}
-          <div className="mt-3 text-xs text-gray-500">
-            Cadastrada em {formatarData(bomba.created_at)}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Link 
-            to={`/bombas-terceiras/bombas/${bomba.id}`}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Ver detalhes
-          </Link>
-          
-          <Link 
-            to={`/bombas-terceiras/bombas/${bomba.id}/editar`}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Editar
-          </Link>
-        </div>
+      {/* Botão Ver Detalhes */}
+      <div className="flex justify-end">
+        <button 
+          onClick={() => navigate(`/bombas-terceiras/bombas/${bomba.id}`)}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 bg-orange-600 text-white border border-orange-600 hover:bg-orange-700 hover:border-orange-700 hover:text-white focus:ring-orange-600 transition-colors"
+        >
+          <span>Ver detalhes</span>
+          <span>→</span>
+        </button>
       </div>
     </div>
   )

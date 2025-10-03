@@ -175,85 +175,96 @@ export default function ClientsList() {
           )}
 
           {/* Tabela */}
-          <div className="overflow-x-auto -mx-6 px-6">
-            <Table<ClientRow>
-              data={clients}
-              loading={loading}
-              emptyMessage={debounced ? 'Nenhum cliente encontrado para o filtro.' : 'Nenhum cliente cadastrado.'}
-              columns={[
-                { 
-                  key: 'rep_name', 
-                  label: 'Representante', 
-                  className: 'w-[180px] max-w-[180px]',
-                  render: (v) => (
-                    <div className="font-medium text-gray-900 truncate max-w-[160px]" title={v as string}>
-                      {v ?? '-'}
-                    </div>
-                  )
-                },
-                { 
-                  key: 'company_name', 
-                  label: 'Empresa', 
-                  className: 'w-[160px] max-w-[160px]',
-                  render: (v) => (
-                    <div className="font-medium text-gray-900 truncate max-w-[140px]" title={v as string}>
-                      {v ?? '-'}
-                    </div>
-                  )
-                },
-                { 
-                  key: 'phone', 
-                  label: 'Telefone', 
-                  className: 'w-[120px] max-w-[120px]',
-                  render: (_v, item) => (
-                    <div className="text-gray-600 text-xs">
-                      {formatPhone(item.phone)}
-                    </div>
-                  )
-                },
-                { 
-                  key: 'email', 
-                  label: 'Email', 
-                  className: 'w-[180px] max-w-[180px]',
-                  render: (v) => (
-                    <div className="text-gray-600 truncate max-w-[160px] text-xs" title={v as string}>
-                      {formatEmail(v as string)}
-                    </div>
-                  )
-                },
-                { 
-                  key: 'id', 
-                  label: 'Status', 
-                  className: 'w-[120px] max-w-[120px]',
-                  render: (_v, item) => getClientStatusBadge(item)
-                },
-                { 
-                  key: 'id', 
-                  label: 'Ações', 
-                  className: 'w-[140px] max-w-[140px] sticky right-0 bg-white',
-                  render: (_v, item) => (
-                    <div className="flex gap-1 justify-center">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-xs px-2 py-1 min-w-[50px]"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/clients/${item.id}`) }}
-                      >
-                        Ver
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="text-xs px-2 py-1 min-w-[50px]"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/clients/${item.id}/edit`) }}
-                      >
-                        Editar
-                      </Button>
-                    </div>
-                  )
-                }
-              ]}
-            />
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <table className="w-full divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    REPRESENTANTE
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    EMPRESA
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    TELEFONE
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    EMAIL
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    STATUS
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    AÇÕES
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center">
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : clients.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      {debounced ? 'Nenhum cliente encontrado para o filtro.' : 'Nenhum cliente cadastrado.'}
+                    </td>
+                  </tr>
+                ) : (
+                  clients.map((client) => (
+                    <tr key={client.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          <div className="font-semibold text-gray-900 truncate">{client.rep_name || '-'}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          <div className="font-semibold text-gray-900 truncate">{client.company_name || '-'}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-gray-600 text-xs">
+                          {formatPhone(client.phone)}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-gray-600 truncate text-xs" title={client.email || ''}>
+                          {formatEmail(client.email)}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        {getClientStatusBadge(client)}
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/clients/${client.id}`)}
+                            className="px-2 py-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium"
+                          >
+                            Ver
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/clients/${client.id}/edit`)}
+                            className="px-2 py-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium"
+                          >
+                            Editar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Paginação */}

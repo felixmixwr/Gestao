@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { format, addDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns'
-import { getFinancialStats } from './financialApi'
+import { getFinancialStats, getColaboradoresCosts } from './financialApi'
 
 export interface DashboardStats {
   programacao_hoje: Array<{
@@ -51,6 +51,11 @@ export interface DashboardStats {
     saidas: number
     total_despesas_mes: number
     despesas_por_categoria: Record<string, number>
+    colaboradores: {
+      custo_salarios: number
+      custo_horas_extras: number
+      custo_total: number
+    }
     proximas_despesas: Array<{
       descricao: string
       valor: number
@@ -90,6 +95,7 @@ export class DashboardApi {
         faturamentoDiaResult,
         faturamentoMesResult,
         colaboradoresResult,
+        colaboradoresCostsResult,
         clientesResult,
         relatoriosDiaResult,
         relatoriosMesResult,
@@ -120,6 +126,9 @@ export class DashboardApi {
         
         // Colaboradores ativos
         this.getColaboradoresAtivos(),
+        
+        // Custos de colaboradores
+        getColaboradoresCosts(),
         
         // Clientes ativos
         this.getClientesAtivos(),
@@ -173,6 +182,11 @@ export class DashboardApi {
           saidas: financialStatsResult.total_despesas,
           total_despesas_mes: financialStatsResult.total_despesas,
           despesas_por_categoria: financialStatsResult.total_por_categoria,
+          colaboradores: {
+            custo_salarios: colaboradoresCostsResult.custo_salarios,
+            custo_horas_extras: colaboradoresCostsResult.custo_horas_extras,
+            custo_total: colaboradoresCostsResult.custo_total
+          },
           proximas_despesas: await this.getProximasDespesas()
         },
         relatorios_por_status: relatoriosPorStatusResult
@@ -398,40 +412,90 @@ export class DashboardApi {
   }
 
   /**
-   * Buscar faturamento do dia
+   * Buscar faturamento do dia (INTEGRADO)
    */
   private static async getFaturamentoDia(date: string) {
+    try {
+      // Usar a view integrada de KPIs
+      const { data, error } = await supabase
+        .from('view_kpis_financeiros_unificados')
+        .select('faturamento_hoje')
+        .single()
+
+      if (error) {
+        console.error('Erro ao buscar faturamento do dia (integrado):', error)
+        // Fallback para método antigo
+        return this.getFaturamentoDiaFallback(date)
+      }
+
+      return data?.faturamento_hoje || 0
+    } catch (err) {
+      console.error('Erro ao buscar faturamento do dia:', err)
+      return this.getFaturamentoDiaFallback(date)
+    }
+  }
+
+  /**
+   * Buscar faturamento do mês (INTEGRADO)
+   */
+  private static async getFaturamentoMes(startDate: string, endDate: string) {
+    try {
+      // Usar a view integrada de KPIs
+      const { data, error } = await supabase
+        .from('view_kpis_financeiros_unificados')
+        .select('faturamento_mes')
+        .single()
+
+      if (error) {
+        console.error('Erro ao buscar faturamento do mês (integrado):', error)
+        // Fallback para método antigo
+        return this.getFaturamentoMesFallback(startDate, endDate)
+      }
+
+      return data?.faturamento_mes || 0
+    } catch (err) {
+      console.error('Erro ao buscar faturamento do mês:', err)
+      return this.getFaturamentoMesFallback(startDate, endDate)
+    }
+  }
+
+  /**
+   * Método fallback para faturamento do dia
+   */
+  private static async getFaturamentoDiaFallback(date: string) {
     try {
       const { data, error } = await supabase
         .from('reports')
         .select('total_value')
         .eq('date', date)
+        .eq('status', 'PAGO')
 
       if (error) throw error
 
       return (data || []).reduce((sum, item) => sum + (Number(item.total_value) || 0), 0)
     } catch (error) {
-      console.error('Erro ao buscar faturamento do dia:', error)
+      console.error('Erro ao buscar faturamento do dia (fallback):', error)
       return 0
     }
   }
 
   /**
-   * Buscar faturamento do mês
+   * Método fallback para faturamento do mês
    */
-  private static async getFaturamentoMes(startDate: string, endDate: string) {
+  private static async getFaturamentoMesFallback(startDate: string, endDate: string) {
     try {
       const { data, error } = await supabase
         .from('reports')
         .select('total_value')
         .gte('date', startDate)
         .lte('date', endDate)
+        .eq('status', 'PAGO')
 
       if (error) throw error
 
       return (data || []).reduce((sum, item) => sum + (Number(item.total_value) || 0), 0)
     } catch (error) {
-      console.error('Erro ao buscar faturamento do mês:', error)
+      console.error('Erro ao buscar faturamento do mês (fallback):', error)
       return 0
     }
   }

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from './Button';
 import { formatCurrency } from '../utils/format';
 import { formatDateSafe } from '../utils/date-utils';
 import { NotaFiscalDetailsModal } from './NotaFiscalDetailsModal';
+import { NotaFiscalStatusManager } from './NotaFiscalStatusManager';
 import type { Database } from '../lib/supabase';
 
 type NotaFiscal = Database['public']['Tables']['notas_fiscais']['Row'];
@@ -26,11 +27,7 @@ export const NotasFiscaisLista: React.FC<NotasFiscaisListaProps> = ({
   const [selectedNota, setSelectedNota] = useState<NotaFiscal | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  useEffect(() => {
-    loadNotas();
-  }, [reportId, refreshTrigger, loadNotas]); // Adicionado refreshTrigger como dependência
-
-  const loadNotas = async () => {
+  const loadNotas = useCallback(async () => {
     try {
       setLoading(true);
       console.log('🔍 Carregando notas fiscais para relatório:', reportId);
@@ -58,7 +55,11 @@ export const NotasFiscaisLista: React.FC<NotasFiscaisListaProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [reportId, onHasNotaFiscalChange]);
+
+  useEffect(() => {
+    loadNotas();
+  }, [reportId, refreshTrigger, loadNotas]); // Adicionado refreshTrigger como dependência
 
   const handleDownloadAnexo = (anexoUrl: string, numeroNota: string) => {
     if (anexoUrl) {
@@ -180,13 +181,17 @@ export const NotasFiscaisLista: React.FC<NotasFiscaisListaProps> = ({
                           {nota.numero_nota}
                         </h4>
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-                          nota.status
-                        )}`}
-                      >
-                        {nota.status}
-                      </span>
+                      <NotaFiscalStatusManager
+                        notaId={nota.id}
+                        numeroNota={nota.numero_nota}
+                        valor={nota.valor}
+                        dataEmissao={nota.data_emissao}
+                        dataVencimento={nota.data_vencimento}
+                        statusAtual={nota.status}
+                        onStatusChanged={() => {
+                          loadNotas(); // Recarregar lista quando status mudar
+                        }}
+                      />
                     </div>
                     
                     {/* Informações da Nota */}

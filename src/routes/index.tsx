@@ -33,7 +33,7 @@ import BombaForm from '../pages/bombas-terceiras/BombaForm'
 import BombaDetails from '../pages/bombas-terceiras/BombaDetails'
 import PagamentosList from '../pages/pagamentos-receber/PagamentosList'
 import PagamentoDetails from '../pages/pagamentos-receber/PagamentoDetails'
-import PagamentoEdit from '../pages/pagamentos-receber/PagamentoEdit'
+import PagamentoEditIntegrado from '../pages/pagamentos-receber/PagamentoEditIntegrado'
 import { NovaProgramacao } from '../pages/programacao'
 // import ProgramacaoBoardFixed from '../pages/programacao/ProgramacaoBoardFixed'
 // import ProgramacaoWeeklyBoard from '../pages/programacao/ProgramacaoWeeklyBoard'
@@ -346,7 +346,7 @@ export const router = createBrowserRouter([
     path: '/pagamentos-receber/:id/edit',
     element: (
       <RequireAuth>
-        <PagamentoEdit />
+        <PagamentoEditIntegrado />
       </RequireAuth>
     ),
     errorElement: <GenericError />

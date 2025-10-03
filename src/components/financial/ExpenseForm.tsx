@@ -12,6 +12,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
+import { DatePicker } from '../ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -41,7 +42,7 @@ const expenseSchema = z.object({
     required_error: 'Selecione um tipo de custo'
   }),
   data_despesa: z.string().min(1, 'Data é obrigatória'),
-  bomba_id: z.string().min(1, 'Selecione uma bomba'),
+  pump_id: z.string().min(1, 'Selecione uma bomba'),
   company_id: z.string().min(1, 'Selecione uma empresa'),
   quilometragem_atual: z.number().min(0).optional(),
   quantidade_litros: z.number().min(0).optional(),
@@ -86,7 +87,7 @@ export function ExpenseForm({
       valor: expense?.valor || 0,
       tipo_custo: expense?.tipo_custo || 'variável',
       data_despesa: expense?.data_despesa || new Date().toISOString().split('T')[0],
-      bomba_id: expense?.bomba_id || '',
+      pump_id: expense?.pump_id || '',
       company_id: expense?.company_id || '',
       quilometragem_atual: expense?.quilometragem_atual || 0,
       quantidade_litros: expense?.quantidade_litros || 0,
@@ -294,28 +295,30 @@ export function ExpenseForm({
             </div>
 
             {/* Data da Despesa */}
-            <div className="space-y-2">
-              <Label htmlFor="data_despesa">Data da Despesa *</Label>
-              <Input
-                id="data_despesa"
-                type="date"
-                {...register('data_despesa')}
-                className={errors.data_despesa ? 'border-red-500' : ''}
-              />
-              {errors.data_despesa && (
-                <p className="text-sm text-red-600">{errors.data_despesa.message}</p>
+            <Controller
+              name="data_despesa"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  label="Data da Despesa"
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                  placeholder="Selecionar data"
+                  required
+                  error={errors.data_despesa?.message}
+                />
               )}
-            </div>
+            />
 
             {/* Bomba */}
             <div className="space-y-2">
               <Label>Bomba *</Label>
               <Controller
-                name="bomba_id"
+                name="pump_id"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className={errors.bomba_id ? 'border-red-500' : ''}>
+                    <SelectTrigger className={errors.pump_id ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Selecione uma bomba" />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,8 +331,8 @@ export function ExpenseForm({
                   </Select>
                 )}
               />
-              {errors.bomba_id && (
-                <p className="text-sm text-red-600">{errors.bomba_id.message}</p>
+              {errors.pump_id && (
+                <p className="text-sm text-red-600">{errors.pump_id.message}</p>
               )}
             </div>
 
@@ -462,9 +465,9 @@ export function ExpenseView({ expense, onEdit, onDelete, onClose }: ExpenseViewP
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm text-gray-600">Categoria</Label>
-              <Badge className="text-base px-3 py-1">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-base font-medium bg-blue-100 text-blue-800">
                 {expense.categoria}
-              </Badge>
+              </span>
             </div>
             <div>
               <Label className="text-sm text-gray-600">Tipo</Label>

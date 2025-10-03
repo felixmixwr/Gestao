@@ -5,6 +5,7 @@ import { FinancialDashboard } from './FinancialDashboard';
 import { CreateExpense, ViewExpense } from './CreateExpense';
 import { InvoicesIntegration } from './InvoicesIntegration';
 import { FinancialReports } from './FinancialReports';
+import { FolhaSalarial } from './FolhaSalarial';
 
 export function FinancialModule() {
   return (
@@ -24,6 +25,9 @@ export function FinancialModule() {
         {/* Relatórios */}
         <Route path="/reports" element={<FinancialReports />} />
         
+        {/* Folha Salarial */}
+        <Route path="/folha-salarial" element={<FolhaSalarial />} />
+        
         {/* Redirecionamento padrão */}
         <Route path="*" element={<Navigate to="/financial" replace />} />
       </Routes>
@@ -36,4 +40,5 @@ export { FinancialDashboard } from './FinancialDashboard';
 export { CreateExpense, ViewExpense } from './CreateExpense';
 export { InvoicesIntegration } from './InvoicesIntegration';
 export { FinancialReports } from './FinancialReports';
+export { FolhaSalarial } from './FolhaSalarial';
 

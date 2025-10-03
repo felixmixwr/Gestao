@@ -184,16 +184,16 @@ export function KPICard({
   };
 
   return (
-    <Card className={`${colorClasses[color]} transition-all duration-200 hover:shadow-md`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium opacity-75">{title}</p>
-            <p className="text-2xl font-bold mt-1">
-              {typeof value === 'number' ? formatCurrency(value) : value}
+    <Card className={`${colorClasses[color]} transition-all duration-200 hover:shadow-md h-full`}>
+      <CardContent className="p-4 lg:p-6 h-full flex flex-col">
+        <div className="flex items-start justify-between h-full">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium opacity-75 truncate">{title || 'Título'}</p>
+            <p className="text-lg lg:text-2xl font-bold mt-1 break-words">
+              {typeof value === 'number' ? formatCurrency(value || 0) : value || '0'}
             </p>
             {subtitle && (
-              <p className="text-xs opacity-75 mt-1">{subtitle}</p>
+              <p className="text-xs opacity-75 mt-1 truncate">{subtitle}</p>
             )}
             {trend && (
               <div className={`flex items-center mt-2 text-xs ${
@@ -206,8 +206,8 @@ export function KPICard({
               </div>
             )}
           </div>
-          <div className={`p-3 rounded-full ${iconClasses[color]}`}>
-            <span className="text-2xl">{icon}</span>
+          <div className={`p-2 lg:p-3 rounded-full ${iconClasses[color]} flex-shrink-0 ml-3`}>
+            <span className="text-lg lg:text-xl">{icon}</span>
           </div>
         </div>
       </CardContent>
@@ -240,16 +240,16 @@ export function CategoryStatsCard({
               <span className="text-lg">{icon}</span>
             </div>
             <div>
-              <p className="font-medium">{category}</p>
-              <p className="text-sm text-gray-600">{percentage.toFixed(1)}% do total</p>
+              <p className="font-medium">{category || 'Categoria'}</p>
+              <p className="text-sm text-gray-600">{(percentage || 0).toFixed(1)}% do total</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold">{formatCurrency(total)}</p>
+            <p className="text-lg font-bold">{formatCurrency(total || 0)}</p>
             <div className="w-16 bg-gray-200 rounded-full h-2 mt-1">
               <div 
                 className="h-2 rounded-full bg-blue-500" 
-                style={{ width: `${percentage}%` }}
+                style={{ width: `${percentage || 0}%` }}
               />
             </div>
           </div>

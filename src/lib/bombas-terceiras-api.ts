@@ -11,7 +11,8 @@ import {
   EmpresaTerceiraFilters,
   BombaTerceiraFilters,
   EmpresaTerceiraStats,
-  BombaTerceiraStatsByEmpresa
+  BombaTerceiraStatsByEmpresa,
+  BombaTerceiraKPIs
 } from '../types/bombas-terceiras'
 
 /**
@@ -333,6 +334,59 @@ export class BombasTerceirasService {
     })
 
     return Array.from(statsMap.values())
+  }
+
+  /**
+   * Buscar KPIs de uma bomba terceira
+   */
+  static async getBombaKPIs(bombaId: string): Promise<BombaTerceiraKPIs> {
+    try {
+      // Buscar relatórios da bomba terceira
+      const { data: reports, error: reportsError } = await supabase
+        .from('reports')
+        .select('realized_volume, total_value, date')
+        .eq('pump_prefix', bombaId) // Usar prefixo como identificador
+        .order('date', { ascending: false })
+
+      if (reportsError) {
+        console.warn('Erro ao buscar relatórios da bomba terceira:', reportsError)
+      }
+
+      // Calcular KPIs baseado nos relatórios
+      const totalVolumePumped = reports?.reduce((sum, report) => sum + (report.realized_volume || 0), 0) || 0
+      const totalRevenue = reports?.reduce((sum, report) => sum + (report.total_value || 0), 0) || 0
+      const totalServices = reports?.length || 0
+      const averageDailyValue = totalServices > 0 ? totalRevenue / totalServices : 0
+
+      // Buscar última data de serviço
+      const lastServiceDate = reports?.[0]?.date
+
+      // Calcular próxima manutenção (baseado na última + 3 meses para bombas terceiras)
+      let nextMaintenanceDate: string | undefined
+      if (lastServiceDate) {
+        const lastDate = new Date(lastServiceDate)
+        const nextDate = new Date(lastDate.getTime() + (3 * 30 * 24 * 60 * 60 * 1000)) // 3 meses
+        nextMaintenanceDate = nextDate.toISOString().split('T')[0]
+      }
+
+      // Calcular eficiência (receita por m³)
+      const efficiencyRatio = totalVolumePumped > 0 ? totalRevenue / totalVolumePumped : 0
+
+      return {
+        bomba_id: bombaId,
+        total_volume_pumped: totalVolumePumped,
+        total_revenue: totalRevenue,
+        total_services: totalServices,
+        average_daily_value: averageDailyValue,
+        last_service_date: lastServiceDate,
+        next_maintenance_date: nextMaintenanceDate,
+        efficiency_ratio: efficiencyRatio,
+        last_updated: new Date().toISOString()
+      }
+    } catch (error) {
+      console.error('Erro ao buscar KPIs da bomba terceira:', error)
+      throw error
+    }
   }
 }
 

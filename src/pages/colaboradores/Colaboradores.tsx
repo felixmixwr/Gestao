@@ -217,108 +217,119 @@ export default function Colaboradores() {
           )}
 
           {/* Tabela */}
-          <div className="overflow-x-auto -mx-6 px-6">
-            <Table<ColaboradorRow>
-              data={colaboradores}
-              loading={loading}
-              emptyMessage={debounced ? 'Nenhum colaborador encontrado para o filtro.' : 'Nenhum colaborador cadastrado.'}
-            columns={[
-              { 
-                key: 'nome', 
-                label: 'Nome', 
-                className: 'w-[200px]',
-                render: (v) => (
-                  <div className="font-medium text-gray-900 truncate" title={v as string}>
-                    {v ?? '-'}
-                  </div>
-                )
-              },
-              { 
-                key: 'funcao', 
-                label: 'Função', 
-                className: 'w-[150px]',
-                render: (v) => (
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCorFuncao(v as any)}`}>
-                    {v}
-                  </span>
-                )
-              },
-              { 
-                key: 'tipo_contrato', 
-                label: 'Contrato', 
-                className: 'w-[90px]',
-                render: (v) => (
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCorTipoContrato(v as any)}`}>
-                    {v}
-                  </span>
-                )
-              },
-              { 
-                key: 'salario_fixo', 
-                label: 'Salário', 
-                className: 'w-[110px]',
-                render: (v) => (
-                  <div className="font-medium text-gray-900 text-right">
-                    {formatarSalario(v as number)}
-                  </div>
-                )
-              },
-              { 
-                key: 'equipamento_prefix', 
-                label: 'Equipamento', 
-                className: 'w-[110px]',
-                render: (v) => v ? (
-                  <span className="text-blue-600 font-medium">{v}</span>
+          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <table className="w-full divide-y divide-gray-200 table-fixed">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    NOME
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    FUNÇÃO
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    CONTRATO
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    SALÁRIO
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    EQUIPAMENTO
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                    STATUS
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                    AÇÕES
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center">
+                      <div className="flex justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : colaboradores.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                      {debounced ? 'Nenhum colaborador encontrado para o filtro.' : 'Nenhum colaborador cadastrado.'}
+                    </td>
+                  </tr>
                 ) : (
-                  <span className="text-gray-400">Não vinculado</span>
-                )
-              },
-              { 
-                key: 'registrado', 
-                label: 'Status', 
-                className: 'w-[130px]',
-                render: (_v, item) => (
-                  <div className="flex flex-col gap-1">
-                    {item.registrado && (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 w-fit">
-                        Registrado
-                      </span>
-                    )}
-                    {item.vale_transporte && (
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 w-fit">
-                        Vale Transporte
-                      </span>
-                    )}
-                  </div>
-                )
-              },
-              { 
-                key: 'id', 
-                label: 'Ações', 
-                className: 'w-[140px] max-w-[140px] sticky right-0 bg-white',
-                render: (_v, item) => (
-                  <div className="flex gap-1 justify-center">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-xs px-2 py-1 min-w-[50px]"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/colaboradores/${item.id}`) }}
-                    >
-                      Ver
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-xs px-2 py-1 min-w-[50px]"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/colaboradores/${item.id}/edit`) }}
-                    >
-                      Editar
-                    </Button>
-                  </div>
-                )
-              }
-            ]}
-            />
+                  colaboradores.map((colaborador) => (
+                    <tr key={colaborador.id} className="hover:bg-gray-50">
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          <div className="font-semibold text-gray-900 truncate">{colaborador.nome || '-'}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCorFuncao(colaborador.funcao as any)}`}>
+                          {colaborador.funcao}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getCorTipoContrato(colaborador.tipo_contrato as any)}`}>
+                          {colaborador.tipo_contrato}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="font-medium text-gray-900 text-right text-xs">
+                          {formatarSalario(colaborador.salario_fixo)}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="text-xs">
+                          {colaborador.equipamento_prefix ? (
+                            <span className="text-blue-600 font-medium">{colaborador.equipamento_prefix}</span>
+                          ) : (
+                            <span className="text-gray-400">Não vinculado</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col gap-1">
+                          {colaborador.registrado && (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 w-fit">
+                              Registrado
+                            </span>
+                          )}
+                          {colaborador.vale_transporte && (
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 w-fit">
+                              Vale Transporte
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/colaboradores/${colaborador.id}`)}
+                            className="px-2 py-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium"
+                          >
+                            Ver
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => navigate(`/colaboradores/${colaborador.id}/edit`)}
+                            className="px-2 py-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium"
+                          >
+                            Editar
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Paginação */}

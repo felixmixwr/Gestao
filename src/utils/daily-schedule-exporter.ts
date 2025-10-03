@@ -211,36 +211,64 @@ export class DailyScheduleExporter {
       // Cabeçalho da programação
       pdf.setFontSize(12);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`${index + 1}. ${programacao.horario} - ${programacao.prefixo_obra || 'S/N'}`, margin, currentY);
+      pdf.text(`${index + 1}. Programação ${programacao.prefixo_obra || 'S/N'}`, margin, currentY);
       currentY += 7;
 
-      // Cliente
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
+      // 1. Prefixo equipamento (Bomba)
+      const bomba = data.bombas.find(b => b.id === programacao.bomba_id);
+      if (bomba) {
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`Prefixo Equipamento: ${bomba.prefix} - ${bomba.model}`, margin + 5, currentY);
+        currentY += 5;
+      }
+
+      // 2. Horário Programado
+      pdf.text(`Horário Programado: ${programacao.horario}`, margin + 5, currentY);
+      currentY += 5;
+
+      // 3. Volume Previsto
+      if (programacao.volume_previsto) {
+        pdf.text(`Volume Previsto: ${programacao.volume_previsto} m³`, margin + 5, currentY);
+        currentY += 5;
+      }
+
+      // 4. Cliente
       pdf.text(`Cliente: ${programacao.cliente || 'Não informado'}`, margin + 5, currentY);
       currentY += 5;
 
-      // Endereço
+      // 5. Endereço
       const endereco = `${programacao.endereco}, ${programacao.numero}${programacao.bairro ? ` - ${programacao.bairro}` : ''}`;
       pdf.text(`Endereço: ${endereco}`, margin + 5, currentY);
       currentY += 5;
 
-      // Detalhes técnicos
-      if (programacao.volume_previsto || programacao.fck || programacao.slump) {
-        const detalhes = [
-          programacao.volume_previsto ? `${programacao.volume_previsto}m³` : '',
-          programacao.fck ? `FCK ${programacao.fck}` : '',
-          programacao.slump ? `Slump ${programacao.slump}` : ''
-        ].filter(Boolean).join(' | ');
-        
-        pdf.text(`Especificações: ${detalhes}`, margin + 5, currentY);
+      // 6. Peça a ser concretada
+      if (programacao.peca_concretada) {
+        pdf.text(`Peça a ser Concretada: ${programacao.peca_concretada}`, margin + 5, currentY);
         currentY += 5;
       }
 
-      // Bomba
-      const bomba = data.bombas.find(b => b.id === programacao.bomba_id);
-      if (bomba) {
-        pdf.text(`Bomba: ${bomba.prefix} - ${bomba.model}`, margin + 5, currentY);
+      // 7. FCK
+      if (programacao.fck) {
+        pdf.text(`FCK: ${programacao.fck} MPa`, margin + 5, currentY);
+        currentY += 5;
+      }
+
+      // 8. Brita
+      if (programacao.brita) {
+        pdf.text(`Brita: ${programacao.brita}`, margin + 5, currentY);
+        currentY += 5;
+      }
+
+      // 9. Slump
+      if (programacao.slump) {
+        pdf.text(`Slump: ${programacao.slump}`, margin + 5, currentY);
+        currentY += 5;
+      }
+
+      // 10. Quantidade de material
+      if (programacao.quantidade_material) {
+        pdf.text(`Quantidade de Material: ${programacao.quantidade_material} m³`, margin + 5, currentY);
         currentY += 5;
       }
 

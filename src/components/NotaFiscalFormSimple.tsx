@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Button } from './Button';
 import { DatePicker } from './ui/date-picker';
+import { integrarNFCriadaEnhanced } from '../lib/notas-fiscais-planner-integration-enhanced';
 
 interface NotaFiscalFormSimpleProps {
   reportId: string;
@@ -193,6 +194,24 @@ export const NotaFiscalFormSimple: React.FC<NotaFiscalFormSimpleProps> = ({
       }
 
       console.log('Nota fiscal salva com sucesso:', insertedData);
+      
+      // Integrar com o planner - criar evento de vencimento
+      try {
+        const notaSalva = insertedData[0];
+      await integrarNFCriadaEnhanced({
+        numero_nota: notaSalva.numero_nota,
+        valor: notaSalva.valor,
+        data_vencimento: notaSalva.data_vencimento,
+        data_emissao: notaSalva.data_emissao,
+        status: notaSalva.status,
+        relatorio_id: notaSalva.relatorio_id
+      });
+        console.log('✅ Integração com planner realizada com sucesso');
+      } catch (integrationError) {
+        console.warn('⚠️ Erro na integração com planner:', integrationError);
+        // Não falha a operação principal, apenas loga o aviso
+      }
+      
       alert('Nota fiscal criada com sucesso!');
       
       // Atualizar a lista de notas

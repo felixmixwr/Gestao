@@ -152,16 +152,16 @@ export class PumpAdvancedAPI {
         ?.sort((a, b) => new Date(b.data_despesa).getTime() - new Date(a.data_despesa).getTime())[0]
         ?.quilometragem_atual || 0
 
-      // Buscar volume total bombeado (simulado baseado nos relatórios)
+      // Buscar volume total bombeado baseado nos relatórios
       let totalVolumePumped = 0
       try {
         const { data: reports, error: reportsError } = await supabase
           .from('reports')
-          .select('total_hours')
+          .select('realized_volume')
           .eq('pump_id', pumpId)
 
         if (!reportsError && reports) {
-          totalVolumePumped = reports.reduce((sum, report) => sum + (report.total_hours || 0), 0)
+          totalVolumePumped = reports.reduce((sum, report) => sum + (report.realized_volume || 0), 0)
         }
       } catch (error) {
         console.warn('Erro ao buscar volume bombeado, usando valor simulado:', error)
@@ -599,11 +599,12 @@ export class PumpAdvancedAPI {
         .select(`
           id,
           report_number,
-          created_at,
+          realized_volume,
+          date,
           clients(rep_name, company_name)
         `)
         .eq('pump_id', pumpId)
-        .order('created_at', { ascending: false })
+        .order('date', { ascending: false })
         .limit(limit)
 
       if (error) {
@@ -624,8 +625,8 @@ export class PumpAdvancedAPI {
         id: report.id,
         report_number: report.report_number || 'Relatório',
         client_name: (report.clients as any)?.rep_name || (report.clients as any)?.company_name || 'Cliente não informado',
-        volume_pumped: 0, // Não temos dados de volume disponíveis
-        date: report.created_at
+        volume_pumped: report.realized_volume || 0, // Usar o volume realizado dos relatórios
+        date: report.date
       }))
     } catch (error) {
       console.error('Erro ao buscar relatórios recentes:', error)

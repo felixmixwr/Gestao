@@ -196,7 +196,34 @@ export class ProgramacaoAPI {
       const { data: programacoesData, error: programacoesError } = await supabase
         .from('programacao')
         .select(`
-          *,
+          id,
+          prefixo_obra,
+          data,
+          horario,
+          fc,
+          cliente_id,
+          cliente,
+          responsavel,
+          cep,
+          endereco,
+          numero,
+          bairro,
+          cidade,
+          estado,
+          volume_previsto,
+          quantidade_material,
+          peca_concretada,
+          fck,
+          brita,
+          slump,
+          equipe,
+          motorista_operador,
+          auxiliares_bomba,
+          bomba_id,
+          status,
+          company_id,
+          created_at,
+          updated_at,
           companies (
             id,
             name
@@ -216,6 +243,18 @@ export class ProgramacaoAPI {
         console.log('⚠️ [ProgramacaoAPI] Nenhuma programação encontrada');
         return [];
       }
+
+      // Debug: Log dos dados retornados
+      console.log('🔍 [ProgramacaoAPI] Dados retornados:', programacoesData.map(p => ({
+        id: p.id,
+        horario: p.horario,
+        volume_previsto: p.volume_previsto,
+        quantidade_material: p.quantidade_material,
+        peca_concretada: p.peca_concretada,
+        fck: p.fck,
+        brita: p.brita,
+        slump: p.slump
+      })));
 
       // 2. Buscar bombas internas
       const pumpIds = [...new Set(programacoesData.map(p => p.bomba_id).filter(Boolean))];
@@ -338,8 +377,8 @@ export class ProgramacaoAPI {
     }
   }
 
-  // Buscar bombas disponíveis (internas + terceiras)
-  static async getBombas(): Promise<Array<{ id: string; prefix: string; model: string; brand: string; is_terceira?: boolean; empresa_nome?: string; valor_diaria?: number }>> {
+  // Buscar bombas disponíveis (internas + terceiras) com priorização
+  static async getBombas(): Promise<Array<{ id: string; prefix: string; model: string; brand: string; is_terceira?: boolean; empresa_nome?: string; valor_diaria?: number; has_programacao?: boolean }>> {
     try {
       // Buscar bombas internas
       const { data: pumpsData, error: pumpsError } = await supabase
@@ -361,13 +400,32 @@ export class ProgramacaoAPI {
         throw new Error(`Erro ao buscar bombas terceiras: ${bombasTerceirasError.message}`);
       }
 
+      // Buscar programações ativas para identificar bombas com programação
+      const today = new Date();
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() + 7); // Próximos 7 dias
+      
+      const { data: programacoesData } = await supabase
+        .from('programacao')
+        .select('bomba_id, bomba_prefixo')
+        .gte('data', today.toISOString().split('T')[0])
+        .lte('data', endDate.toISOString().split('T')[0]);
+
+      // Criar conjunto de bombas com programação
+      const bombasComProgramacao = new Set<string>();
+      programacoesData?.forEach(p => {
+        if (p.bomba_id) bombasComProgramacao.add(p.bomba_id);
+        if (p.bomba_prefixo) bombasComProgramacao.add(p.bomba_prefixo);
+      });
+
       // Combinar as bombas internas e terceiras
       const bombasInternas = (pumpsData || []).map(pump => ({
         id: pump.id,
         prefix: pump.prefix,
         model: pump.model,
         brand: pump.brand,
-        is_terceira: false
+        is_terceira: false,
+        has_programacao: bombasComProgramacao.has(pump.id)
       }));
 
       const bombasTerceiras = (bombasTerceirasData || []).map(bomba => ({
@@ -377,21 +435,24 @@ export class ProgramacaoAPI {
         brand: `${bomba.empresa_nome_fantasia} - R$ ${bomba.valor_diaria || 0}/dia`,
         is_terceira: true,
         empresa_nome: bomba.empresa_nome_fantasia,
-        valor_diaria: bomba.valor_diaria
+        valor_diaria: bomba.valor_diaria,
+        has_programacao: bombasComProgramacao.has(bomba.prefixo)
       }));
 
-      // Combinar e ordenar por prefixo
+      // Combinar e ordenar com priorização
       const todasBombas = [...bombasInternas, ...bombasTerceiras].sort((a, b) => {
-        // Ordenar primeiro por prefixo
-        const prefixComparison = a.prefix.localeCompare(b.prefix);
-        if (prefixComparison !== 0) return prefixComparison;
+        // 1. PRIORIDADE: Bombas com programação primeiro
+        if (a.has_programacao !== b.has_programacao) {
+          return a.has_programacao ? -1 : 1;
+        }
         
-        // Se o prefixo for igual, ordenar bombas internas primeiro
+        // 2. PRIORIDADE: Bombas internas antes das terceiras
         if (a.is_terceira !== b.is_terceira) {
           return a.is_terceira ? 1 : -1;
         }
         
-        return 0;
+        // 3. Ordenar por prefixo dentro da mesma categoria
+        return a.prefix.localeCompare(b.prefix);
       });
 
       return todasBombas;

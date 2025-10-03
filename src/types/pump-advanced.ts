@@ -70,8 +70,8 @@ export const getPumpIcon = (status: string): string => {
 
 // Função para formatar volume
 export const formatVolume = (volume?: number | null): string => {
-  if (!volume) return '0 L'
-  return `${volume.toLocaleString('pt-BR')} L`
+  if (!volume) return '0 m³'
+  return `${volume.toLocaleString('pt-BR')} m³`
 }
 
 // Função para formatar litros

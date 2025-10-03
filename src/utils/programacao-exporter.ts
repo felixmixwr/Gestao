@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { Programacao } from '../types/programacao';
 import { BombaOption } from '../types/programacao';
-// import { formatDateBR } from './date-utils';
+import { toBrasiliaDateString, parseDateBR } from './date-utils';
 
 export interface ProgramacaoExportData {
   programacoes: Programacao[];
@@ -11,6 +11,13 @@ export interface ProgramacaoExportData {
   colaboradores: Array<{ id: string; nome: string; funcao: string }>;
   weekStart: Date;
   weekEnd: Date;
+}
+
+export interface ProgramacaoDailyExportData {
+  programacoes: Programacao[];
+  bombas: BombaOption[];
+  colaboradores: Array<{ id: string; nome: string; funcao: string }>;
+  selectedDate: Date;
 }
 
 export class ProgramacaoExporter {
@@ -55,6 +62,8 @@ export class ProgramacaoExporter {
           'Estado': '',
           'CEP': '',
           'Volume Previsto (m³)': 0,
+          'Quantidade de Material (m³)': 0,
+          'Peça a ser Concretada': '',
           'FCK': '',
           'Brita': '',
           'Slump': '',
@@ -114,7 +123,7 @@ export class ProgramacaoExporter {
       
     } catch (error) {
       console.error('❌ Erro ao exportar para XLSX:', error);
-      throw new Error(`Erro ao exportar para Excel: ${error.message}`);
+      throw new Error(`Erro ao exportar para Excel: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
   }
 
@@ -191,17 +200,339 @@ export class ProgramacaoExporter {
 
     } catch (error) {
       console.error('❌ Erro ao exportar para PDF:', error);
-      throw new Error(`Erro ao exportar para PDF: ${error.message}`);
+      throw new Error(`Erro ao exportar para PDF: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     }
+  }
+
+  /**
+   * Exporta programação diária para PDF com informações essenciais
+   */
+  static async exportDailyToPDF(data: ProgramacaoDailyExportData): Promise<void> {
+    try {
+      console.log('🚀 Iniciando exportação PDF diária...');
+      
+      // Validar dados
+      if (!data) {
+        throw new Error('Dados não fornecidos');
+      }
+      
+      if (!data.selectedDate) {
+        throw new Error('Data não fornecida');
+      }
+      
+      console.log('✅ Validação dos dados passou');
+      console.log('📅 Data selecionada:', data.selectedDate);
+      console.log('📊 Programações:', data.programacoes.length);
+      
+      // Filtrar programações do dia selecionado usando fuso horário brasileiro
+      const selectedDateStr = toBrasiliaDateString(data.selectedDate.toISOString());
+      console.log('🔍 Data selecionada (Brasília):', selectedDateStr);
+      console.log('🔍 Total de programações disponíveis:', data.programacoes.length);
+      
+      const dailyProgramacoes = data.programacoes.filter(p => {
+        if (!p.data) return false;
+        const programacaoDate = p.data.includes('T') ? p.data.split('T')[0] : p.data;
+        console.log('🔍 Comparando:', programacaoDate, 'com', selectedDateStr);
+        return programacaoDate === selectedDateStr;
+      });
+      
+      console.log('📊 Programações do dia:', dailyProgramacoes.length);
+      console.log('📊 Programações filtradas:', dailyProgramacoes.map(p => ({
+        id: p.id,
+        data: p.data,
+        horario: p.horario,
+        cliente: p.cliente,
+        bomba_id: p.bomba_id,
+        volume_previsto: p.volume_previsto,
+        quantidade_material: p.quantidade_material,
+        peca_concretada: p.peca_concretada,
+        fck: p.fck,
+        brita: p.brita,
+        slump: p.slump
+      })));
+      
+      if (dailyProgramacoes.length === 0) {
+        throw new Error('Nenhuma programação encontrada para o dia selecionado');
+      }
+      
+      // Criar PDF otimizado
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
+      
+      // Adicionar cabeçalho otimizado
+      this.addDailyPDFHeader(pdf, data);
+      
+      // Adicionar conteúdo da programação diária
+      this.addDailyPDFContent(pdf, dailyProgramacoes, data);
+      
+      // Adicionar rodapé
+      this.addDailyPDFFooter(pdf);
+      
+      // Gerar nome do arquivo
+      const fileName = this.generateDailyFileName(data.selectedDate);
+      console.log('📁 Nome do arquivo PDF:', fileName);
+      
+      // Salvar arquivo
+      pdf.save(fileName);
+      console.log('✅ PDF diário exportado com sucesso');
+      
+    } catch (error) {
+      console.error('❌ Erro ao exportar PDF diário:', error);
+      throw new Error(`Erro ao exportar PDF diário: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
+  }
+
+  /**
+   * Adiciona cabeçalho otimizado para PDF diário
+   */
+  private static addDailyPDFHeader(pdf: jsPDF, data: ProgramacaoDailyExportData): void {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    
+    // Cores
+    const primaryColor = [0, 102, 204]; // Azul
+    const secondaryColor = [128, 128, 128]; // Cinza
+    
+    // Título principal
+    pdf.setFontSize(16);
+    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('PROGRAMAÇÃO DIÁRIA', pageWidth / 2, 22, { align: 'center' });
+    
+    // Data
+    pdf.setFontSize(12);
+    pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+    const dateStr = data.selectedDate.toLocaleDateString('pt-BR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    pdf.text(dateStr.toUpperCase(), pageWidth / 2, 32, { align: 'center' });
+    
+    // Informações da empresa
+    pdf.setFontSize(10);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('FÉLIX MIX / WORLD RENTAL', pageWidth / 2, 42, { align: 'center' });
+    
+    // Linha separadora
+    pdf.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, 50, pageWidth - margin, 50);
+  }
+
+  /**
+   * Adiciona conteúdo da programação diária
+   */
+  private static addDailyPDFContent(pdf: jsPDF, programacoes: Programacao[], data: ProgramacaoDailyExportData): void {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    let yPosition = 58;
+    
+    // Cores
+    const primaryColor = [0, 102, 204];
+    const headerColor = [240, 248, 255];
+    
+    // Ordenar programações por horário
+    const sortedProgramacoes = programacoes.sort((a, b) => {
+      const timeA = a.horario || '00:00';
+      const timeB = b.horario || '00:00';
+      return timeA.localeCompare(timeB);
+    });
+    
+    // Cabeçalho da tabela
+    pdf.setFontSize(8);
+    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    pdf.setFont('helvetica', 'bold');
+    
+    // Desenhar fundo do cabeçalho
+    pdf.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+    pdf.rect(margin, yPosition - 5, pageWidth - (margin * 2), 15, 'F');
+    
+    // Cabeçalhos das colunas
+    const headers = ['Horário', 'Bomba', 'Cliente', 'Endereço', 'Vol. Prev.', 'Peça', 'FCK', 'Brita', 'Slump', 'Qtd Mat.', 'Motorista', 'Auxiliares'];
+    const colWidths = [12, 12, 20, 25, 15, 18, 10, 10, 12, 12, 18, 20];
+    const startX = margin + 5;
+    let currentX = startX;
+    
+    headers.forEach((header, index) => {
+      pdf.text(header, currentX, yPosition + 5);
+      currentX += colWidths[index];
+    });
+    
+    yPosition += 20;
+    
+    // Dados das programações
+    pdf.setFontSize(7);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    
+    sortedProgramacoes.forEach((programacao, index) => {
+      // Verificar se precisa de nova página
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = 20;
+        
+        // Redesenhar cabeçalho
+        pdf.setFontSize(8);
+        pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+        pdf.rect(margin, yPosition - 5, pageWidth - (margin * 2), 15, 'F');
+        
+        currentX = startX;
+        headers.forEach((header, headerIndex) => {
+          pdf.text(header, currentX, yPosition + 5);
+          currentX += colWidths[headerIndex];
+        });
+        
+        yPosition += 20;
+        pdf.setFontSize(7);
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFont('helvetica', 'normal');
+      }
+      
+      // Buscar nomes dos colaboradores
+      const motoristaNome = this.getColaboradorName(programacao.motorista_operador, data.colaboradores);
+      const auxiliaresNomes = this.getAuxiliaresNames(programacao.auxiliares_bomba, data.colaboradores);
+      
+      // Buscar prefixo da bomba
+      const bombaPrefix = this.getBombaPrefix(programacao.bomba_id, data.bombas);
+      
+      // Debug: Log dos dados da programação
+      console.log('🔍 [PDF Debug] Programação:', {
+        id: programacao.id,
+        horario: programacao.horario,
+        volume_previsto: programacao.volume_previsto,
+        quantidade_material: programacao.quantidade_material,
+        peca_concretada: programacao.peca_concretada,
+        fck: programacao.fck,
+        brita: programacao.brita,
+        slump: programacao.slump
+      });
+
+      // Função para formatar horário
+      const formatTime = (time: string) => {
+        if (!time || time === 'N/A') return 'N/A';
+        const [hours] = time.split(':');
+        return `${parseInt(hours)}h`;
+      };
+
+      // Dados da linha
+      const rowData = [
+        formatTime(programacao.horario || 'N/A'),
+        bombaPrefix,
+        (programacao.cliente || 'N/A').substring(0, 15),
+        (programacao.endereco || 'N/A').substring(0, 20),
+        `${programacao.volume_previsto || 0} m³`,
+        (programacao.peca_concretada || 'N/A').substring(0, 12),
+        programacao.fck || 'N/A',
+        programacao.brita || 'N/A',
+        programacao.slump || 'N/A',
+        `${programacao.quantidade_material || 0} m³`,
+        motoristaNome.substring(0, 12),
+        auxiliaresNomes.substring(0, 15)
+      ];
+
+      // Debug: Log dos dados da linha
+      console.log('🔍 [PDF Debug] Row Data:', rowData);
+      
+      // Desenhar linha com fundo alternado
+      if (index % 2 === 0) {
+        pdf.setFillColor(248, 248, 248);
+        pdf.rect(margin, yPosition - 3, pageWidth - (margin * 2), 12, 'F');
+      }
+      
+      // Desenhar dados
+      currentX = startX;
+      rowData.forEach((cell, cellIndex) => {
+        pdf.text(cell, currentX, yPosition + 5);
+        currentX += colWidths[cellIndex];
+      });
+      
+      yPosition += 10;
+    });
+    
+    // Resumo no final
+    yPosition += 6;
+    pdf.setFontSize(8);
+    pdf.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('RESUMO DO DIA', margin, yPosition);
+    
+    yPosition += 6;
+    pdf.setFontSize(7);
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont('helvetica', 'normal');
+    
+    const totalProgramacoes = sortedProgramacoes.length;
+    const bombasUtilizadas = [...new Set(sortedProgramacoes.map(p => this.getBombaPrefix(p.bomba_id, data.bombas)).filter(Boolean))];
+    const volumeTotal = sortedProgramacoes.reduce((sum, p) => sum + (p.volume_previsto || 0), 0);
+    const quantidadeMaterialTotal = sortedProgramacoes.reduce((sum, p) => sum + (p.quantidade_material || 0), 0);
+    
+    pdf.text(`Total de Programações: ${totalProgramacoes}`, margin, yPosition);
+    yPosition += 5;
+    pdf.text(`Bombas Utilizadas: ${bombasUtilizadas.join(', ')}`, margin, yPosition);
+    yPosition += 5;
+    pdf.text(`Volume Total Previsto: ${volumeTotal.toLocaleString('pt-BR')} m³`, margin, yPosition);
+    yPosition += 5;
+    pdf.text(`Quantidade Total de Material: ${quantidadeMaterialTotal.toLocaleString('pt-BR')} m³`, margin, yPosition);
+  }
+
+  /**
+   * Adiciona rodapé para PDF diário
+   */
+  private static addDailyPDFFooter(pdf: jsPDF): void {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    
+    pdf.setFontSize(8);
+    pdf.setTextColor(128, 128, 128);
+    pdf.text('Programação gerada pelo Sistema de Gestão Félix Mix', 
+             pageWidth / 2, pageHeight - 15, { align: 'center' });
+    
+    const now = new Date();
+    const timestamp = now.toLocaleString('pt-BR');
+    pdf.text(`Gerado em: ${timestamp}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
+
+  /**
+   * Gera nome do arquivo para PDF diário
+   */
+  private static generateDailyFileName(date: Date): string {
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+    const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '');
+    return `programacao_diaria_${dateStr}_${timeStr}.pdf`;
+  }
+
+  /**
+   * Busca o prefixo da bomba baseado no ID
+   */
+  private static getBombaPrefix(bombaId: string | undefined, bombas: BombaOption[]): string {
+    if (!bombaId) {
+      console.log('⚠️ Bomba ID não fornecido');
+      return 'N/A';
+    }
+    
+    const bomba = bombas.find(b => b.id === bombaId);
+    if (!bomba) {
+      console.log('⚠️ Bomba não encontrada para ID:', bombaId);
+      console.log('🔍 Bombas disponíveis:', bombas.map(b => ({ id: b.id, prefix: b.prefix })));
+      return 'N/A';
+    }
+    
+    console.log('✅ Bomba encontrada:', bomba.prefix, 'para ID:', bombaId);
+    return bomba.prefix || 'N/A';
   }
 
   private static prepareExcelData(data: ProgramacaoExportData): any[] {
     return data.programacoes.map(p => {
       try {
-        // Garantir que as datas são válidas
-        const dataObj = p.data ? new Date(p.data) : new Date();
-        const createdObj = p.created_at ? new Date(p.created_at) : new Date();
-        const updatedObj = p.updated_at ? new Date(p.updated_at) : new Date();
+        // Garantir que as datas são válidas usando fuso horário brasileiro
+        const dataObj = p.data ? parseDateBR(p.data) : new Date();
+        const createdObj = p.created_at ? parseDateBR(p.created_at) : new Date();
+        const updatedObj = p.updated_at ? parseDateBR(p.updated_at) : new Date();
         
         // Buscar nomes dos colaboradores
         const motoristaNome = this.getColaboradorName(p.motorista_operador, data.colaboradores);
@@ -216,6 +547,8 @@ export class ProgramacaoExporter {
           'Endereço Completo': `${p.endereco}, ${p.numero}${p.bairro ? ` - ${p.bairro}` : ''}${p.cidade ? ` - ${p.cidade}` : ''}${p.estado ? `/${p.estado}` : ''}`,
           'CEP': p.cep,
           'Volume Previsto (m³)': p.volume_previsto || 0,
+          'Quantidade de Material (m³)': p.quantidade_material || 0,
+          'Peça a ser Concretada': p.peca_concretada || '',
           'FCK': p.fck || '',
           'Brita': p.brita || '',
           'Slump': p.slump || '',
@@ -237,6 +570,8 @@ export class ProgramacaoExporter {
           'Endereço Completo': `${p.endereco || ''}, ${p.numero || ''}`,
           'CEP': p.cep || '',
           'Volume Previsto (m³)': p.volume_previsto || 0,
+          'Quantidade de Material (m³)': p.quantidade_material || 0,
+          'Peça a ser Concretada': p.peca_concretada || '',
           'FCK': p.fck || '',
           'Brita': p.brita || '',
           'Slump': p.slump || '',

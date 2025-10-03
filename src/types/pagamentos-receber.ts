@@ -163,10 +163,11 @@ export function getTextoFormaPagamento(forma: FormaPagamento): string {
 
 // Função para formatar valor monetário
 export function formatarValor(valor: number): string {
+  // Usar formatação nativa que já inclui o sinal de menos no lugar correto
   return valor.toLocaleString('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  })
+  });
 }
 
 // Função para formatar data

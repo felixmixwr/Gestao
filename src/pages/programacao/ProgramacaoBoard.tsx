@@ -383,6 +383,18 @@ export default function ProgramacaoBoard() {
                                           📦 {programacao.volume_previsto}m³
                                         </p>
                                       )}
+                                      
+                                      {programacao.quantidade_material && (
+                                        <p className="text-xs">
+                                          🧱 {programacao.quantidade_material}m³
+                                        </p>
+                                      )}
+                                      
+                                      {programacao.peca_concretada && (
+                                        <p className="text-xs">
+                                          🏗️ {programacao.peca_concretada}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
                                 </div>

@@ -20,6 +20,7 @@ import {
 import { formatCurrency, getCategoryColor, getExpenseIcon, EXPENSE_CATEGORY_OPTIONS } from '../../types/financial';
 import type { ExpenseWithRelations, ExpenseFilters } from '../../types/financial';
 import { ChevronLeft, ChevronRight, Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
+import { DatePicker } from '../ui/date-picker';
 
 interface ExpenseTableProps {
   expenses: ExpenseWithRelations[];
@@ -163,20 +164,20 @@ export function ExpenseTable({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Data Início</label>
-              <Input
-                type="date"
+              <DatePicker
+                label="Data Início"
                 value={filters.data_inicio || ''}
-                onChange={(e) => handleDateFilter('data_inicio', e.target.value)}
+                onChange={(value) => handleDateFilter('data_inicio', value)}
+                placeholder="Selecionar data início"
               />
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Data Fim</label>
-              <Input
-                type="date"
+              <DatePicker
+                label="Data Fim"
                 value={filters.data_fim || ''}
-                onChange={(e) => handleDateFilter('data_fim', e.target.value)}
+                onChange={(value) => handleDateFilter('data_fim', value)}
+                placeholder="Selecionar data fim"
               />
             </div>
           </div>
@@ -188,14 +189,14 @@ export function ExpenseTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Descrição</TableHead>
-              <TableHead>Categoria</TableHead>
-              <TableHead>Valor</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Data</TableHead>
-              <TableHead>Bomba</TableHead>
-              <TableHead>Empresa</TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="w-[300px]">Descrição</TableHead>
+              <TableHead className="w-[120px]">Categoria</TableHead>
+              <TableHead className="w-[120px] text-right">Valor</TableHead>
+              <TableHead className="w-[80px]">Tipo</TableHead>
+              <TableHead className="w-[100px]">Data</TableHead>
+              <TableHead className="w-[80px]">Bomba</TableHead>
+              <TableHead className="w-[120px]">Empresa</TableHead>
+              <TableHead className="w-[100px] text-center">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -208,13 +209,13 @@ export function ExpenseTable({
             ) : (
               expenses.map((expense) => (
                 <TableRow key={expense.id} className="hover:bg-gray-50">
-                  <TableCell>
+                  <TableCell className="w-[300px]">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">{getExpenseIcon(expense.categoria)}</span>
-                      <div>
-                        <p className="font-medium">{expense.descricao}</p>
+                      <span className="text-lg flex-shrink-0">{getExpenseIcon(expense.categoria)}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate">{expense.descricao}</p>
                         {expense.observacoes && (
-                          <p className="text-sm text-gray-500 line-clamp-1">
+                          <p className="text-sm text-gray-500 truncate">
                             {expense.observacoes}
                           </p>
                         )}
@@ -222,44 +223,46 @@ export function ExpenseTable({
                     </div>
                   </TableCell>
                   
-                  <TableCell>
-                    <Badge className={getCategoryColor(expense.categoria)}>
-                      {expense.categoria}
-                    </Badge>
+                  <TableCell className="w-[120px]">
+                    <div className="flex justify-center">
+                      <Badge className={getCategoryColor(expense.categoria)}>
+                        {expense.categoria}
+                      </Badge>
+                    </div>
                   </TableCell>
                   
-                  <TableCell>
-                    <span className="font-semibold text-green-600">
+                  <TableCell className="w-[120px] text-right">
+                    <span className="font-semibold text-red-600">
                       {formatCurrency(expense.valor)}
                     </span>
                   </TableCell>
                   
-                  <TableCell>
+                  <TableCell className="w-[80px]">
                     <span className="capitalize text-sm">
                       {expense.tipo_custo}
                     </span>
                   </TableCell>
                   
-                  <TableCell>
+                  <TableCell className="w-[100px]">
                     <span className="text-sm">
                       {new Date(expense.data_despesa).toLocaleDateString('pt-BR')}
                     </span>
                   </TableCell>
                   
-                  <TableCell>
+                  <TableCell className="w-[80px]">
                     <span className="text-sm font-medium">
                       {expense.bomba_prefix || 'N/A'}
                     </span>
                   </TableCell>
                   
-                  <TableCell>
-                    <span className="text-sm">
+                  <TableCell className="w-[120px]">
+                    <span className="text-sm truncate">
                       {expense.company_name || 'N/A'}
                     </span>
                   </TableCell>
                   
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
+                  <TableCell className="w-[100px] text-center">
+                    <div className="flex items-center justify-center gap-1">
                       {onView && (
                         <Button
                           variant="ghost"
@@ -359,23 +362,37 @@ interface TableSummaryProps {
   totalExpenses: number;
   totalValue: number;
   averageValue: number;
+  faturamentoBruto?: number;
 }
 
-export function TableSummary({ totalExpenses, totalValue, averageValue }: TableSummaryProps) {
+export function TableSummary({ totalExpenses, totalValue, averageValue, faturamentoBruto }: TableSummaryProps) {
+  // Calcular caixa da empresa (faturamento - despesas)
+  const caixaEmpresa = (faturamentoBruto || 0) + totalValue; // totalValue já é negativo (despesas)
+  const isPositive = caixaEmpresa >= 0;
+
   return (
     <div className="bg-blue-50 p-4 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="text-center">
           <p className="text-sm text-gray-600">Total de Despesas</p>
           <p className="text-2xl font-bold text-blue-600">{totalExpenses}</p>
         </div>
         <div className="text-center">
+          <p className="text-sm text-gray-600">Caixa de Empresa</p>
+          <p className={`text-2xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+            {formatCurrency(caixaEmpresa)}
+          </p>
+          <p className="text-xs text-gray-500">
+            Faturamento - Despesas
+          </p>
+        </div>
+        <div className="text-center">
           <p className="text-sm text-gray-600">Valor Total</p>
-          <p className="text-2xl font-bold text-green-600">{formatCurrency(totalValue)}</p>
+          <p className="text-2xl font-bold text-red-600">{formatCurrency(totalValue)}</p>
         </div>
         <div className="text-center">
           <p className="text-sm text-gray-600">Valor Médio</p>
-          <p className="text-2xl font-bold text-orange-600">{formatCurrency(averageValue)}</p>
+          <p className="text-2xl font-bold text-red-600">{formatCurrency(averageValue)}</p>
         </div>
       </div>
     </div>

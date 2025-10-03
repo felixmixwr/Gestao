@@ -45,6 +45,25 @@ const safeFormatDate = (dateString: string | null | undefined): string => {
   }
 }
 
+/**
+ * Formata o status de forma legível
+ */
+const formatStatus = (status: string | null | undefined): string => {
+  if (!status) return 'N/A'
+  
+  const statusMap: Record<string, string> = {
+    'PENDENTE': 'Pendente',
+    'PAGO': 'Pago',
+    'CANCELADO': 'Cancelado',
+    'EM_ANDAMENTO': 'Em Andamento',
+    'CONCLUIDO': 'Concluído',
+    'FATURADO': 'Faturado',
+    'NOTA_EMITIDA': 'Nota Emitida'
+  }
+  
+  return statusMap[status.toUpperCase()] || status
+}
+
 export interface ExportOptions {
   format: 'xlsx' | 'pdf'
   filename?: string
@@ -90,6 +109,7 @@ export const formatReportsForExport = (reports: ReportWithRelations[]): any[] =>
     'Auxiliar 1': report.assistant1_name || 'N/A',
     'Auxiliar 2': report.assistant2_name || 'N/A',
     'Valor Total (R$)': report.total_value || 0,
+    'Status': report.status || 'N/A',
     'Observações': report.observations || 'N/A',
     'Data Criação': report.created_at ? 
       safeFormatDate(report.created_at) + ' ' + format(new Date(report.created_at), 'HH:mm', { locale: ptBR }) : 'N/A'
@@ -164,7 +184,7 @@ export const exportToXLSX = (data: ExportData, options: ExportOptions = { format
       ['Total de Registros:', data.totalRecords.toString()],
       [''],
       // Cabeçalho da tabela
-      ['Nº', 'ID Relatório', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume (m³)', 'Valor (R$)'],
+      ['Nº', 'ID Relatório', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume (m³)', 'Valor (R$)', 'Status'],
       // Dados dos relatórios
       ...data.reports.map((report, index) => [
         index + 1,
@@ -174,7 +194,8 @@ export const exportToXLSX = (data: ExportData, options: ExportOptions = { format
         report.work_address || 'N/A',
         report.pumps?.prefix || report.pump_prefix || 'N/A',
         report.realized_volume || 0,
-        report.total_value || 0
+        report.total_value || 0,
+        formatStatus(report.status)
       ])
     ]
     
@@ -295,8 +316,8 @@ export const exportToPDF = (data: ExportData, options: ExportOptions = { format:
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.setFont('helvetica', 'bold')
     
-    const headers = ['Nº', 'ID', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume', 'Valor']
-    const colWidths = [15, 30, 25, 35, 40, 20, 25, 30]
+    const headers = ['Nº', 'ID', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume', 'Valor', 'Status']
+    const colWidths = [12, 25, 20, 30, 35, 18, 20, 25, 20]
     const startX = margin
     let currentX = startX
     
@@ -330,11 +351,12 @@ export const exportToPDF = (data: ExportData, options: ExportOptions = { format:
         (index + 1).toString(),
         report.report_number || 'N/A',
         safeFormatDate(report.date),
-        (report.clients?.name || report.client_rep_name || 'N/A').substring(0, 15),
-        (report.work_address || 'N/A').substring(0, 20),
+        (report.clients?.name || report.client_rep_name || 'N/A').substring(0, 12),
+        (report.work_address || 'N/A').substring(0, 18),
         report.pumps?.prefix || report.pump_prefix || 'N/A',
         (report.realized_volume || 0).toFixed(2),
-        safeFormatCurrency(report.total_value)
+        safeFormatCurrency(report.total_value),
+        formatStatus(report.status)
       ]
       
       currentX = startX

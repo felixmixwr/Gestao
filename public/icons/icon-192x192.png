@@ -1,0 +1,24 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#2563eb"/>
+  <rect x="16" y="16" width="160" height="160" rx="16" fill="white"/>
+  
+  <!-- Ícone de bomba/concreto -->
+  <g transform="translate(48, 48)">
+    <!-- Cilindro da bomba -->
+    <rect x="20" y="20" width="56" height="80" rx="8" fill="#2563eb"/>
+    
+    <!-- Mangueira -->
+    <path d="M76 40 Q100 30 120 50 Q140 70 120 90" stroke="#2563eb" stroke-width="8" fill="none" stroke-linecap="round"/>
+    
+    <!-- Base da bomba -->
+    <rect x="16" y="100" width="64" height="16" rx="8" fill="#1d4ed8"/>
+    
+    <!-- Controles -->
+    <circle cx="32" cy="40" r="4" fill="white"/>
+    <circle cx="48" cy="40" r="4" fill="white"/>
+    <circle cx="64" cy="40" r="4" fill="white"/>
+    
+    <!-- Texto "FM" -->
+    <text x="48" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#2563eb">FM</text>
+  </g>
+</svg>

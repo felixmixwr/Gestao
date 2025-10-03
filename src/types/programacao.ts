@@ -15,6 +15,8 @@ export interface Programacao {
   cidade?: string;
   estado?: string;
   volume_previsto?: number;
+  quantidade_material?: number;
+  peca_concretada?: string;
   fck?: string;
   brita?: string;
   slump?: string;
@@ -41,6 +43,8 @@ export interface ProgramacaoFormData {
   cidade?: string;
   estado?: string;
   volume_previsto?: number;
+  quantidade_material?: number;
+  peca_concretada?: string;
   fck?: string;
   brita?: string;
   slump?: string;
@@ -104,6 +108,7 @@ export interface BombaOption {
   is_terceira?: boolean;
   empresa_nome?: string;
   valor_diaria?: number;
+  has_programacao?: boolean;
 }
 
 export interface ClienteOption {

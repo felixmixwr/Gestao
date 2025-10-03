@@ -3,6 +3,8 @@ import { Layout } from '../components/Layout'
 import { DashboardCard } from '../components/DashboardCard'
 import { NextBombaCard } from '../components/NextBombaCard'
 import { StatusCard } from '../components/StatusCard'
+import { ExpenseCategoryCard } from '../components/ExpenseCategoryCard'
+import { PlannerDashboardCards } from '../components/planner/PlannerDashboardCards'
 import { Link } from 'react-router-dom'
 import { DashboardApi, DashboardStats } from '../lib/dashboard-api'
 import { GenericError } from './errors/GenericError'
@@ -235,6 +237,22 @@ export default function Dashboard() {
                 </svg>
               }
             />
+
+            {/* Custos de Colaboradores */}
+            <DashboardCard
+              title="Custos Colaboradores"
+              value={formatCurrency(stats?.financeiro?.colaboradores?.custo_total || 0)}
+              subtitle={`Salários: ${formatCurrency(stats?.financeiro?.colaboradores?.custo_salarios || 0)} + Extras: ${formatCurrency(stats?.financeiro?.colaboradores?.custo_horas_extras || 0)}`}
+              color="orange"
+              loading={loading}
+              linkTo="/colaboradores"
+              actionText="Ver colaboradores"
+              icon={
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+              }
+            />
           </div>
         )}
 
@@ -278,6 +296,23 @@ export default function Dashboard() {
                 ))
               )}
             </div>
+          </div>
+        )}
+
+        {/* Cards do Planner Pessoal */}
+        {!error && (
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg leading-6 font-medium text-gray-900">
+                Organização Pessoal
+              </h3>
+              <Link to="/planner/calendario">
+                <span className="text-sm text-blue-600 hover:text-blue-800">
+                  Ver calendário completo →
+                </span>
+              </Link>
+            </div>
+            <PlannerDashboardCards />
           </div>
         )}
 
@@ -358,6 +393,97 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Despesas por Categoria */}
+        {stats?.financeiro?.despesas_por_categoria && Object.keys(stats.financeiro.despesas_por_categoria).length > 0 && (
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                  Despesas por Categoria
+                </h3>
+                <Link to="/financial">
+                  <span className="text-sm text-blue-600 hover:text-blue-800">
+                    Ver módulo financeiro →
+                  </span>
+                </Link>
+              </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {loading ? (
+                  // Skeleton loading para os cards de categoria
+                  Array.from({ length: 4 }).map((_, index) => (
+                    <ExpenseCategoryCard
+                      key={index}
+                      category="Carregando..."
+                      amount={0}
+                      percentage={0}
+                      icon={<div />}
+                      color="gray"
+                      loading={true}
+                    />
+                  ))
+                ) : (
+                  Object.entries(stats.financeiro.despesas_por_categoria).map(([categoria, valor]) => {
+                    const total = stats.financeiro.total_despesas_mes || 1;
+                    const porcentagem = (valor / total) * 100;
+                    
+                    // Definir ícone e cor baseado na categoria
+                    let icon, color;
+                    switch (categoria.toLowerCase()) {
+                      case 'diesel':
+                        icon = (
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 2a1 1 0 011-1h10a1 1 0 011 1v16a1 1 0 01-1 1H5a1 1 0 01-1-1V2zm2 2v12h8V4H6zm2 2h4v2H8V6zm0 4h4v2H8v-2zm0 4h2v2H8v-2z" clipRule="evenodd" />
+                          </svg>
+                        );
+                        color = 'red';
+                        break;
+                      case 'manutenção':
+                      case 'manutencao':
+                        icon = (
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                          </svg>
+                        );
+                        color = 'gray';
+                        break;
+                      case 'mão de obra':
+                      case 'mao de obra':
+                      case 'mão-de-obra':
+                      case 'mao-de-obra':
+                        icon = (
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                          </svg>
+                        );
+                        color = 'yellow';
+                        break;
+                      default:
+                        icon = (
+                          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                          </svg>
+                        );
+                        color = 'brown';
+                    }
+                    
+                    return (
+                      <ExpenseCategoryCard
+                        key={categoria}
+                        category={categoria}
+                        amount={valor}
+                        percentage={porcentagem}
+                        icon={icon}
+                        color={color as 'red' | 'gray' | 'yellow' | 'brown'}
+                        loading={false}
+                      />
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>

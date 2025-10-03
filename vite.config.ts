@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
+import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -14,6 +15,17 @@ export default defineConfig({
     port: 3000,
     host: true,
     strictPort: true,
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    },
+    middlewareMode: false,
+    hmr: {
+      port: 3000,
+    },
+    fs: {
+      allow: ['..']
+    }
   },
   build: {
     outDir: 'dist',
@@ -40,5 +52,6 @@ export default defineConfig({
   define: {
     global: 'globalThis',
   },
+  assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.svg', '**/*.ico'],
 })
 

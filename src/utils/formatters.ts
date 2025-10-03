@@ -2,10 +2,11 @@
  * Formata um valor numérico como moeda brasileira (R$)
  */
 export function formatCurrency(value: number): string {
+  // Usar formatação nativa que já inclui o sinal de menos no lugar correto
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
-  }).format(value)
+  }).format(value);
 }
 
 /**

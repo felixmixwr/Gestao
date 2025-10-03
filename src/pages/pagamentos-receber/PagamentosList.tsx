@@ -4,11 +4,10 @@ import { Button } from '../../components/Button'
 import { Select } from '../../components/Select'
 import { Loading } from '../../components/Loading'
 import { GenericError } from '../errors/GenericError'
-import { PagamentoReceberCard } from '../../components/PagamentoReceberCard'
-import { PagamentoReceberStatsComponent } from '../../components/PagamentoReceberStats'
-import { ForceUpdateButton } from '../../components/ForceUpdateButton'
-import { usePagamentosReceber } from '../../lib/pagamentos-receber-api'
-import { PagamentoReceberCompleto, FormaPagamento, PagamentoReceberStats } from '../../types/pagamentos-receber'
+import { PagamentoReceberCardIntegrado } from '../../components/PagamentoReceberCardIntegrado'
+import { PagamentoReceberStatsIntegrado } from '../../components/PagamentoReceberStatsIntegrado'
+import { usePagamentosReceberIntegrado } from '../../lib/pagamentos-receber-api-integrado'
+import { PagamentoReceberIntegrado, KPIsFinanceirosIntegrados, FormaPagamento } from '../../lib/pagamentos-receber-api-integrado'
 import { toast } from '../../lib/toast-hooks'
 
 const STATUS_FILTER_OPTIONS = [
@@ -26,16 +25,97 @@ const FORMA_PAGAMENTO_FILTER_OPTIONS = [
   { value: 'a_vista', label: 'À Vista' }
 ]
 
+const NOTA_FISCAL_FILTER_OPTIONS = [
+  { value: '', label: 'Todas as situações' },
+  { value: 'com_nota', label: 'Com nota fiscal' },
+  { value: 'sem_nota', label: 'Sem nota fiscal' }
+]
+
 export default function PagamentosList() {
-  const { listarPagamentos, marcarComoPago, atualizarPagamento } = usePagamentosReceber()
+  const { 
+    listarPagamentosIntegrados, 
+    marcarComoPagoIntegrado, 
+    atualizarFormaPagamentoIntegrado,
+    obterKPIsIntegrados
+  } = usePagamentosReceberIntegrado()
   
-  const [pagamentos, setPagamentos] = useState<PagamentoReceberCompleto[]>([])
+  const [pagamentos, setPagamentos] = useState<PagamentoReceberIntegrado[]>([])
+  const [kpis, setKpis] = useState<KPIsFinanceirosIntegrados | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Função para extrair opções únicas de clientes
+  const getClientesOptions = () => {
+    const clientesUnicos = Array.from(
+      new Set(pagamentos.map(p => p.cliente_nome).filter(Boolean))
+    ).sort()
+    
+    return [
+      { value: '', label: 'Todos os clientes' },
+      ...clientesUnicos.map(cliente => ({ value: cliente!, label: cliente! }))
+    ]
+  }
+
+  // Função para extrair opções únicas de empresas
+  const getEmpresasOptions = () => {
+    const empresasUnicas = Array.from(
+      new Set(pagamentos.map(p => p.empresa_nome).filter(Boolean))
+    ).sort()
+    
+    return [
+      { value: '', label: 'Todas as empresas' },
+      ...empresasUnicas.map(empresa => ({ value: empresa!, label: empresa! }))
+    ]
+  }
+
+  // Função para extrair opções únicas de bombas
+  const getBombasOptions = () => {
+    // Criar um mapa único de bombas com identificação completa
+    const bombasMap = new Map<string, { prefix: string; model?: string; brand?: string }>()
+    
+    pagamentos.forEach(p => {
+      if (p.bomba_prefix) {
+        const key = p.bomba_prefix
+        if (!bombasMap.has(key)) {
+          bombasMap.set(key, {
+            prefix: p.bomba_prefix,
+            model: p.bomba_model,
+            brand: p.bomba_brand
+          })
+        }
+      }
+    })
+    
+    // Converter para array e ordenar
+    const bombasUnicas = Array.from(bombasMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([prefix, data]) => {
+        // Criar label descritivo
+        let label = prefix
+        if (data.brand && data.model) {
+          label = `${prefix} - ${data.brand} ${data.model}`
+        } else if (data.brand) {
+          label = `${prefix} - ${data.brand}`
+        } else if (data.model) {
+          label = `${prefix} - ${data.model}`
+        }
+        
+        return { value: prefix, label }
+      })
+    
+    return [
+      { value: '', label: 'Todas as bombas' },
+      ...bombasUnicas
+    ]
+  }
   const [filtros, setFiltros] = useState({
     status: '',
     forma_pagamento: '',
-    busca: ''
+    busca: '',
+    empresa: '',
+    cliente: '',
+    bomba: '',
+    nota_fiscal: ''
   })
 
   const fetchPagamentos = async () => {
@@ -43,22 +123,30 @@ export default function PagamentosList() {
       setLoading(true)
       setError(null)
       
-      console.log('🔄 [PagamentosList] Buscando pagamentos...')
-      const data = await listarPagamentos()
-      console.log('📋 [PagamentosList] Pagamentos recebidos:', data.length)
+      console.log('🔄 [PagamentosList-Integrado] Buscando pagamentos e KPIs...')
+      
+      // Buscar pagamentos e KPIs em paralelo
+      const [pagamentosData, kpisData] = await Promise.all([
+        listarPagamentosIntegrados(),
+        obterKPIsIntegrados()
+      ])
+      
+      console.log('📋 [PagamentosList-Integrado] Pagamentos recebidos:', pagamentosData.length)
+      console.log('📊 [PagamentosList-Integrado] KPIs recebidos:', kpisData)
       
       // Log detalhado dos pagamentos
-      data.forEach((pagamento, index) => {
+      pagamentosData.forEach((pagamento, index) => {
         if (index < 3) { // Log apenas os primeiros 3 para não poluir
-          console.log(`  ${index + 1}. ID: ${pagamento.id}, Status: ${pagamento.status}, Valor: ${pagamento.valor_total}`)
+          console.log(`  ${index + 1}. ID: ${pagamento.id}, Status: ${pagamento.status_unificado}, Valor: ${pagamento.valor_total}`)
         }
       })
       
-      setPagamentos(data)
-      console.log('✅ [PagamentosList] Estado dos pagamentos atualizado')
+      setPagamentos(pagamentosData)
+      setKpis(kpisData)
+      console.log('✅ [PagamentosList-Integrado] Estado atualizado com sucesso')
       
     } catch (err: any) {
-      console.error('❌ [PagamentosList] Erro ao buscar pagamentos:', err)
+      console.error('❌ [PagamentosList-Integrado] Erro ao buscar dados:', err)
       setError(err?.message || 'Erro ao carregar pagamentos')
       toast.error('Erro ao carregar pagamentos')
     } finally {
@@ -68,43 +156,42 @@ export default function PagamentosList() {
 
   const handleMarcarComoPago = async (id: string) => {
     try {
-      console.log('🔍 [PagamentosList] Iniciando marcação como pago para ID:', id)
+      console.log('🔍 [PagamentosList-Integrado] Iniciando marcação como pago para ID:', id)
       
       const observacao = `Pagamento confirmado em ${new Date().toLocaleDateString('pt-BR')}`
-      console.log('🔍 [PagamentosList] Observação:', observacao)
+      console.log('🔍 [PagamentosList-Integrado] Observação:', observacao)
       
       // Atualizar diretamente no estado local primeiro
       setPagamentos(prev => 
         prev.map(pagamento => 
           pagamento.id === id 
-            ? { ...pagamento, status: 'pago' as any, observacoes: observacao, updated_at: new Date().toISOString() }
+            ? { ...pagamento, status_unificado: 'pago' as any, observacoes: observacao, pagamento_updated_at: new Date().toISOString() }
             : pagamento
         )
       )
       
-      console.log('✅ [PagamentosList] Estado local atualizado')
+      console.log('✅ [PagamentosList-Integrado] Estado local atualizado')
       
-      // Depois fazer a chamada da API
-      const resultado = await marcarComoPago(id, observacao)
-      console.log('✅ [PagamentosList] Resultado da API:', resultado)
+      // Depois fazer a chamada da API integrada
+      const resultado = await marcarComoPagoIntegrado(id, observacao)
+      console.log('✅ [PagamentosList-Integrado] Resultado da API:', resultado)
       
-      toast.success('Pagamento marcado como pago!')
+      toast.success('Pagamento marcado como pago! Relatório sincronizado automaticamente.')
       
       // Aguardar um pouco e depois recarregar para garantir consistência
       setTimeout(async () => {
-        console.log('🔄 [PagamentosList] Recarregando lista de pagamentos com forceRefresh...')
+        console.log('🔄 [PagamentosList-Integrado] Recarregando dados integrados...')
         try {
-          const data = await listarPagamentos(undefined, true)
-          setPagamentos(data)
-          console.log('✅ [PagamentosList] Lista recarregada com sucesso')
+          await fetchPagamentos()
+          console.log('✅ [PagamentosList-Integrado] Dados recarregados com sucesso')
         } catch (err) {
-          console.error('❌ [PagamentosList] Erro ao recarregar:', err)
+          console.error('❌ [PagamentosList-Integrado] Erro ao recarregar:', err)
         }
       }, 1000)
       
     } catch (err: any) {
-      console.error('❌ [PagamentosList] Erro ao marcar como pago:', err)
-      console.error('❌ [PagamentosList] Detalhes do erro:', err.message)
+      console.error('❌ [PagamentosList-Integrado] Erro ao marcar como pago:', err)
+      console.error('❌ [PagamentosList-Integrado] Detalhes do erro:', err.message)
       
       // Reverter o estado local em caso de erro
       await fetchPagamentos()
@@ -115,7 +202,7 @@ export default function PagamentosList() {
 
   const handleAtualizarFormaPagamento = async (id: string, novaForma: FormaPagamento) => {
     try {
-      await atualizarPagamento({ id, forma_pagamento: novaForma })
+      await atualizarFormaPagamentoIntegrado(id, novaForma)
       toast.success('Forma de pagamento atualizada com sucesso!')
       
       // Atualizar a lista
@@ -130,91 +217,28 @@ export default function PagamentosList() {
     setFiltros(prev => ({ ...prev, [campo]: valor }))
   }
 
-  // Função de teste para forçar atualização
-  const handleForceUpdate = async () => {
-    console.log('🔄 [PagamentosList] Forçando atualização completa...')
-    
-    try {
-      setLoading(true)
-      
-      // Limpar estado
-      setPagamentos([])
-      
-      // Aguardar um pouco
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Recarregar com forceRefresh = true
-      const data = await listarPagamentos(undefined, true)
-      console.log('✅ [PagamentosList] Dados recarregados com forceRefresh:', data.length)
-      
-      setPagamentos(data)
-      toast.success('Lista atualizada com sucesso!')
-      
-    } catch (err: any) {
-      console.error('❌ [PagamentosList] Erro na força atualização:', err)
-      toast.error('Erro ao atualizar lista')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Calcular estatísticas dos pagamentos
-  const calcularEstatisticas = (pagamentos: PagamentoReceberCompleto[]): PagamentoReceberStats => {
-    const hoje = new Date()
-    
-    const stats = pagamentos.reduce((acc, pagamento) => {
-      acc.total_pagamentos++
-      acc.total_valor += pagamento.valor_total
-      
-      if (pagamento.status === 'aguardando') {
-        acc.aguardando++
-        acc.valor_aguardando += pagamento.valor_total
-      } else if (pagamento.status === 'pago') {
-        acc.pago++
-        acc.valor_pago += pagamento.valor_total
-      } else if (pagamento.status === 'vencido') {
-        acc.vencido++
-        acc.valor_vencido += pagamento.valor_total
-      }
-      
-      // Verificar próximo vencimento (próximos 7 dias)
-      if (pagamento.prazo_data && pagamento.status === 'aguardando') {
-        const dataVencimento = new Date(pagamento.prazo_data)
-        const diffDias = Math.ceil((dataVencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24))
-        
-        if (diffDias >= 0 && diffDias <= 7) {
-          acc.proximo_vencimento++
-          acc.valor_proximo_vencimento += pagamento.valor_total
-        }
-      }
-      
-      return acc
-    }, {
-      total_pagamentos: 0,
-      total_valor: 0,
-      aguardando: 0,
-      valor_aguardando: 0,
-      proximo_vencimento: 0,
-      valor_proximo_vencimento: 0,
-      vencido: 0,
-      valor_vencido: 0,
-      pago: 0,
-      valor_pago: 0
-    })
-    
-    return stats
-  }
 
   // Filtrar pagamentos baseado nos filtros
   const pagamentosFiltrados = pagamentos.filter(pagamento => {
-    const matchStatus = !filtros.status || pagamento.status === filtros.status
+    const matchStatus = !filtros.status || pagamento.status_unificado === filtros.status
     const matchForma = !filtros.forma_pagamento || pagamento.forma_pagamento === filtros.forma_pagamento
     const matchBusca = !filtros.busca || 
       pagamento.cliente_nome.toLowerCase().includes(filtros.busca.toLowerCase()) ||
       pagamento.empresa_nome?.toLowerCase().includes(filtros.busca.toLowerCase()) ||
+      pagamento.report_number.toLowerCase().includes(filtros.busca.toLowerCase()) ||
+      pagamento.numero_nota?.toLowerCase().includes(filtros.busca.toLowerCase()) ||
       pagamento.id.toLowerCase().includes(filtros.busca.toLowerCase())
     
-    return matchStatus && matchForma && matchBusca
+    // Filtros específicos (comparação exata)
+    const matchEmpresa = !filtros.empresa || pagamento.empresa_nome === filtros.empresa
+    const matchCliente = !filtros.cliente || pagamento.cliente_nome === filtros.cliente
+    const matchBomba = !filtros.bomba || pagamento.bomba_prefix === filtros.bomba
+    
+    const matchNotaFiscal = !filtros.nota_fiscal || 
+      (filtros.nota_fiscal === 'com_nota' && pagamento.tem_nota_fiscal) ||
+      (filtros.nota_fiscal === 'sem_nota' && !pagamento.tem_nota_fiscal)
+    
+    return matchStatus && matchForma && matchBusca && matchEmpresa && matchCliente && matchBomba && matchNotaFiscal
   })
 
   useEffect(() => {
@@ -264,12 +288,12 @@ export default function PagamentosList() {
           </div>
         </div>
 
-        {/* Estatísticas */}
-        <PagamentoReceberStatsComponent stats={calcularEstatisticas(pagamentos)} />
+        {/* Estatísticas Integradas */}
+        {kpis && <PagamentoReceberStatsIntegrado kpis={kpis} />}
 
         {/* Filtros */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {/* Busca */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -308,10 +332,66 @@ export default function PagamentosList() {
               />
             </div>
 
+            {/* Empresa */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Empresa
+              </label>
+              <Select
+                options={getEmpresasOptions()}
+                value={filtros.empresa}
+                onChange={(value) => handleFiltroChange('empresa', value)}
+              />
+            </div>
+
+            {/* Cliente */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Cliente
+              </label>
+              <Select
+                options={getClientesOptions()}
+                value={filtros.cliente}
+                onChange={(value) => handleFiltroChange('cliente', value)}
+              />
+            </div>
+
+            {/* Bomba */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bomba
+              </label>
+              <Select
+                options={getBombasOptions()}
+                value={filtros.bomba}
+                onChange={(value) => handleFiltroChange('bomba', value)}
+              />
+            </div>
+
+            {/* Nota Fiscal */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nota Fiscal
+              </label>
+              <Select
+                options={NOTA_FISCAL_FILTER_OPTIONS}
+                value={filtros.nota_fiscal}
+                onChange={(value) => handleFiltroChange('nota_fiscal', value)}
+              />
+            </div>
+
             {/* Limpar Filtros */}
             <div className="flex items-end">
               <Button
-                onClick={() => setFiltros({ status: '', forma_pagamento: '', busca: '' })}
+                onClick={() => setFiltros({ 
+                  status: '', 
+                  forma_pagamento: '', 
+                  busca: '',
+                  empresa: '',
+                  cliente: '',
+                  bomba: '',
+                  nota_fiscal: ''
+                })}
                 variant="outline"
                 className="w-full"
               >
@@ -345,10 +425,10 @@ export default function PagamentosList() {
                 </p>
               </div>
 
-              {/* Cards de Pagamentos */}
+              {/* Cards de Pagamentos Integrados */}
               <div className="grid grid-cols-1 gap-4">
                 {pagamentosFiltrados.map((pagamento) => (
-                  <PagamentoReceberCard
+                  <PagamentoReceberCardIntegrado
                     key={pagamento.id}
                     pagamento={pagamento}
                     onMarcarComoPago={handleMarcarComoPago}
@@ -360,12 +440,6 @@ export default function PagamentosList() {
           )}
         </div>
       </div>
-
-      {/* Botão de força atualização */}
-      <ForceUpdateButton 
-        onForceUpdate={handleForceUpdate}
-        loading={loading}
-      />
     </Layout>
   )
 }

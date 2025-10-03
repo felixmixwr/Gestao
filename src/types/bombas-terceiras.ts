@@ -107,6 +107,19 @@ export interface BombaTerceiraStatsByEmpresa {
   bombas_indisponiveis: number
 }
 
+// Interface para KPIs de bombas terceiras
+export interface BombaTerceiraKPIs {
+  bomba_id: string
+  total_volume_pumped?: number
+  total_revenue?: number
+  total_services?: number
+  average_daily_value?: number
+  last_service_date?: string
+  next_maintenance_date?: string
+  efficiency_ratio?: number
+  last_updated: string
+}
+
 // Constantes para as opções de select
 export const STATUS_BOMBA_TERCEIRA_OPTIONS: { value: StatusBombaTerceira; label: string }[] = [
   { value: 'ativa', label: 'Ativa' },
@@ -242,4 +255,37 @@ export function getCorStatusManutencao(dataManutencao?: string): string {
   if (diffDays <= 30) return 'bg-blue-100 text-blue-800'
   
   return 'bg-green-100 text-green-800'
+}
+
+// Função para formatar volume (similar às bombas próprias)
+export function formatVolumeTerceira(volume?: number | null): string {
+  if (!volume) return '0 m³'
+  return `${volume.toLocaleString('pt-BR')} m³`
+}
+
+// Função para formatar moeda
+export function formatCurrencyTerceira(value?: number | null): string {
+  if (!value) return 'R$ 0,00'
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value)
+}
+
+// Função para obter ícone da bomba terceira
+export function getBombaTerceiraIcon(status: StatusBombaTerceira): string {
+  switch (status) {
+    case 'ativa': return '🚛'
+    case 'em manutenção': return '🔧'
+    case 'indisponível': return '⏹️'
+    default: return '🚛'
+  }
+}
+
+// Função para verificar se a manutenção está vencida
+export function isManutencaoVencida(dataManutencao?: string): boolean {
+  if (!dataManutencao) return false
+  const manutencaoDate = new Date(dataManutencao)
+  const today = new Date()
+  return manutencaoDate <= today
 }

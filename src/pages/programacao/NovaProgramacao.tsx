@@ -185,6 +185,8 @@ function NovaProgramacaoContent() {
           cidade: data.cidade || '',
           estado: data.estado || '',
           volume_previsto: data.volume_previsto,
+          quantidade_material: data.quantidade_material,
+          peca_concretada: data.peca_concretada || '',
           fck: data.fck || '',
           brita: data.brita || '',
           slump: data.slump || '',
@@ -650,9 +652,13 @@ function NovaProgramacaoContent() {
           </div>
 
           {/* Seção 4 - Concreto */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Concreto</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="text-xl">🏗️</span>
+              Concreto
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">Especificações técnicas do concreto a ser bombeado</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Volume Previsto */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -669,6 +675,42 @@ function NovaProgramacaoContent() {
                 />
                 {errors.volume_previsto && (
                   <p className="mt-1 text-sm text-red-600">{errors.volume_previsto}</p>
+                )}
+              </div>
+
+              {/* Quantidade de Material */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quantidade de Material (m³)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.quantidade_material || ''}
+                  onChange={(e) => handleInputChange('quantidade_material', parseFloat(e.target.value) || undefined)}
+                  placeholder="0.0"
+                />
+                {errors.quantidade_material && (
+                  <p className="mt-1 text-sm text-red-600">{errors.quantidade_material}</p>
+                )}
+              </div>
+
+              {/* Peça a ser Concretada */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Peça a ser Concretada
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.peca_concretada || ''}
+                  onChange={(e) => handleInputChange('peca_concretada', e.target.value)}
+                  placeholder="Ex: Laje, Viga, Pilar, etc."
+                />
+                {errors.peca_concretada && (
+                  <p className="mt-1 text-sm text-red-600">{errors.peca_concretada}</p>
                 )}
               </div>
 
@@ -840,7 +882,9 @@ function NovaProgramacaoContent() {
                   <option value="">Selecione a bomba</option>
                   {bombas.map(bomba => (
                     <option key={bomba.id} value={bomba.id}>
-                      {bomba.is_terceira ? '🔗 ' : ''}{bomba.prefix} - {bomba.model} ({bomba.brand})
+                      {bomba.has_programacao ? '📅 ' : ''}
+                      {bomba.is_terceira ? '🔗 ' : ''}
+                      {bomba.prefix} - {bomba.model} ({bomba.brand})
                     </option>
                   ))}
                 </select>

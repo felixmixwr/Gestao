@@ -227,7 +227,7 @@ export function ProgramacaoGridBoard() {
             
             <Button
               onClick={() => navigate('/programacao/nova')}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Nova Programação
             </Button>
@@ -281,7 +281,19 @@ export function ProgramacaoGridBoard() {
                   <tr key={bomba.id} className={`${bombaIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} print-row`}>
                     {/* Coluna da bomba */}
                     <td className="w-32 p-4 font-medium text-gray-900 border-r border-gray-200 sticky left-0 bg-inherit print-cell">
-                      <div className="text-sm font-semibold">{bomba.prefix}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="text-sm font-semibold">{bomba.prefix}</div>
+                        {bomba.has_programacao && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-medium">
+                            📅
+                          </span>
+                        )}
+                        {bomba.is_terceira && (
+                          <span className="text-xs bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded-full font-medium">
+                            🔗
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">{bomba.model}</div>
                     </td>
 

@@ -8,6 +8,7 @@
  * @returns String formatada como moeda brasileira
  */
 export const formatCurrency = (value: number): string => {
+  // Usar formatação nativa que já inclui o sinal de menos no lugar correto
   return new Intl.NumberFormat('pt-BR', { 
     style: 'currency', 
     currency: 'BRL' 

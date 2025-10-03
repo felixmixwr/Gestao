@@ -15,7 +15,12 @@ import {
   DollarSign, 
   FileText,
   LogOut,
-  Calculator
+  Calculator,
+  NotebookPen,
+  CalendarDays,
+  Clock,
+  GraduationCap,
+  Calendar as CalendarIcon
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -74,6 +79,15 @@ const navigation = [
     name: 'Notas', 
     href: '/notes', 
     icon: <FileText className="text-white h-5 w-5 flex-shrink-0" />
+  },
+]
+
+// Seção de Organização Pessoal (simplificada)
+const organizacaoNavigation = [
+  { 
+    name: 'Organização', 
+    href: '/planner', 
+    icon: <NotebookPen className="text-white h-5 w-5 flex-shrink-0" />
   },
 ]
 
@@ -142,10 +156,28 @@ export function Layout({ children }: LayoutProps) {
           {/* Sidebar */}
           <div className="hidden md:fixed md:inset-y-0 md:flex md:flex-col z-10">
             <Sidebar open={open} setOpen={setOpen}>
-              <SidebarBody className="justify-between gap-10">
+              <SidebarBody className="justify-between gap-6">
                 <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
                   {open ? <Logo /> : <LogoIcon />}
-                  <div className="mt-8 flex flex-col gap-2">
+                  
+                  {/* Seção Organização Pessoal - Movida para o topo */}
+                  <div className="mt-6">
+                    <div className="flex flex-col gap-2">
+                      {organizacaoNavigation.map((item, idx) => (
+                        <SidebarLink 
+                          key={idx} 
+                          link={{
+                            label: item.name,
+                            href: item.href,
+                            icon: item.icon
+                          }} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Navegação Principal */}
+                  <div className="mt-6 flex flex-col gap-1">
                     {navigation.map((item, idx) => (
                       <SidebarLink 
                         key={idx} 
@@ -158,7 +190,17 @@ export function Layout({ children }: LayoutProps) {
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1">
+                  {/* Configurações */}
+                  <SidebarLink
+                    link={{
+                      label: "Configurações",
+                      href: "/planner/configuracoes",
+                      icon: <Settings className="text-white h-5 w-5 flex-shrink-0" />
+                    }}
+                  />
+                  
+                  {/* Perfil do Usuário */}
                   <SidebarLink
                     link={{
                       label: getUserDisplayName(),
@@ -170,6 +212,8 @@ export function Layout({ children }: LayoutProps) {
                       ),
                     }}
                   />
+                  
+                  {/* Logout */}
                   <SidebarLink
                     link={{
                       label: "Sair",

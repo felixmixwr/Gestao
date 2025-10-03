@@ -180,7 +180,7 @@ export function ProgramacaoGridBoardMobile() {
               <Button
                 onClick={() => navigate('/programacao/nova')}
                 size="sm"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-1" />
                 Nova
@@ -373,7 +373,7 @@ export function ProgramacaoGridBoardMobile() {
                 </p>
                 <Button
                   onClick={() => navigate('/programacao/nova')}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Programação
@@ -445,7 +445,7 @@ export function ProgramacaoGridBoardMobile() {
             
             <Button
               onClick={() => navigate('/programacao/nova')}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Nova Programação
             </Button>

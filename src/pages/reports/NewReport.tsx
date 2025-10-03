@@ -59,7 +59,8 @@ const parseCurrency = (formattedValue: string): number => {
   return numbers ? parseInt(numbers) / 100 : 0
 }
 
-const reportSchema = z.object({
+// Schema base para validação
+const baseReportSchema = z.object({
   date: z.string().min(1, 'Data é obrigatória'),
   client_id: z.string().min(1, 'Cliente é obrigatório'),
   client_rep_name: z.string().min(1, 'Nome do representante é obrigatório'),
@@ -71,15 +72,36 @@ const reportSchema = z.object({
   service_company_id: z.string().min(1, 'Empresa do serviço é obrigatória'),
   planned_volume: z.string().min(1, 'Volume planejado é obrigatório'),
   realized_volume: z.string().min(1, 'Volume realizado é obrigatório'),
-  driver_id: z.string().optional(),
-  assistants: z.array(z.object({
-    id: z.string().optional()
-  })).optional(),
   total_value: z.string().min(1, 'Valor total é obrigatório'),
   observations: z.string().optional()
 })
 
-type ReportFormData = z.infer<typeof reportSchema>
+// Schema para bombas internas (com equipe obrigatória)
+const internalPumpSchema = baseReportSchema.extend({
+  driver_id: z.string().min(1, 'Motorista é obrigatório para bombas internas'),
+  assistants: z.array(z.object({
+    id: z.string().min(1, 'Auxiliar é obrigatório')
+  })).min(1, 'Pelo menos um auxiliar é obrigatório para bombas internas')
+})
+
+// Schema para bombas terceiras (sem equipe obrigatória)
+const thirdPartyPumpSchema = baseReportSchema.extend({
+  driver_id: z.string().optional(),
+  assistants: z.array(z.object({
+    id: z.string().optional()
+  })).optional()
+})
+
+// Função para criar schema dinâmico baseado no tipo de bomba
+const createReportSchema = (isThirdPartyPump: boolean) => {
+  return isThirdPartyPump ? thirdPartyPumpSchema : internalPumpSchema
+}
+
+// Tipo união para ReportFormData que aceita tanto bombas internas quanto terceiras
+type ReportFormData = z.infer<typeof baseReportSchema> & {
+  driver_id: string;
+  assistants: Array<{ id: string }>;
+}
 
 interface Client {
   id: string
@@ -287,15 +309,34 @@ export default function NewReport() {
     const pump = pumps.find(p => p.id === pumpId)
     setSelectedPump(pump || null)
     
+    // Limpar campos de equipe se for bomba terceira
+    const isThirdPartyPump = pump?.is_terceira || false
+    
     setFormData(prev => ({
       ...prev,
       pump_id: pumpId,
       pump_prefix: pump?.prefix || '',
-      pump_owner_company_id: pump?.owner_company_id || ''
+      pump_owner_company_id: pump?.owner_company_id || '',
+      // Limpar campos de equipe para bombas terceiras
+      driver_id: isThirdPartyPump ? '' : prev.driver_id,
+      assistants: isThirdPartyPump ? [] : prev.assistants
     }))
+    
+    // Limpar erros relacionados à equipe quando trocar de bomba
+    if (isThirdPartyPump) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors.driver_id
+        delete newErrors.assistants
+        return newErrors
+      })
+    }
   }
 
   const addAssistant = () => {
+    // Não permitir adicionar auxiliares para bombas terceiras
+    if (selectedPump?.is_terceira) return
+    
     setFormData(prev => ({
       ...prev,
       assistants: [...(prev.assistants || []), { id: '' }]
@@ -303,10 +344,15 @@ export default function NewReport() {
   }
 
   const removeAssistant = (index: number) => {
-    if ((formData.assistants?.length || 0) > 1) {
+    // Para bombas terceiras, não há auxiliares para remover
+    if (selectedPump?.is_terceira) return
+    
+    // Para bombas internas, manter pelo menos um auxiliar
+    const currentAssistants = formData.assistants || []
+    if (currentAssistants.length > 1) {
       setFormData(prev => ({
         ...prev,
-        assistants: (prev.assistants || []).filter((_, i) => i !== index)
+        assistants: currentAssistants.filter((_, i) => i !== index)
       }))
     }
   }
@@ -389,8 +435,21 @@ export default function NewReport() {
       setLoading(true)
       setErrors({})
 
-      // Validar dados
-      const validatedData = reportSchema.parse(formData)
+      // Validação prévia para garantir integridade dos dados
+      const isThirdPartyPump = selectedPump?.is_terceira || false
+      
+      // Para bombas internas, garantir que pelo menos um auxiliar seja selecionado
+      if (!isThirdPartyPump) {
+        const hasValidAssistant = formData.assistants?.some(assistant => assistant.id && assistant.id.trim() !== '')
+        if (!hasValidAssistant) {
+          setErrors({ assistants: 'Pelo menos um auxiliar deve ser selecionado para bombas internas' })
+          return
+        }
+      }
+
+      // Validar dados com schema dinâmico baseado no tipo de bomba
+      const dynamicSchema = createReportSchema(isThirdPartyPump)
+      const validatedData = dynamicSchema.parse(formData)
 
       // Gerar número do relatório
       const reportNumber = await generateReportNumberLocal()
@@ -537,13 +596,15 @@ export default function NewReport() {
               error={errors.date}
             />
 
-            {/* Cliente */}
+              {/* Cliente */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Cliente *
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.client_id ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.client_id}
                 onChange={(e) => handleClientChange(e.target.value)}
               >
@@ -566,7 +627,9 @@ export default function NewReport() {
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.client_rep_name ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.client_rep_name ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, client_rep_name: e.target.value }))}
                 placeholder="Ex: João Silva"
@@ -583,7 +646,9 @@ export default function NewReport() {
               </label>
               <input
                 type="tel"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.client_phone ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.client_phone ?? ''}
                 onChange={(e) => {
                   const formatted = formatPhoneNumber(e.target.value)
@@ -603,7 +668,9 @@ export default function NewReport() {
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.work_address ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.work_address ?? ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, work_address: e.target.value }))}
                 placeholder="Ex: Rua das Flores, 123 - Centro"
@@ -626,7 +693,9 @@ export default function NewReport() {
                 Bomba *
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.pump_id ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.pump_id}
                 onChange={(e) => handlePumpChange(e.target.value)}
               >
@@ -665,7 +734,9 @@ export default function NewReport() {
                 Empresa do Serviço *
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.service_company_id ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.service_company_id}
                 onChange={(e) => setFormData(prev => ({ ...prev, service_company_id: e.target.value }))}
               >
@@ -689,7 +760,9 @@ export default function NewReport() {
               <input
                 type="number"
                 step="0.1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.planned_volume ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.planned_volume ?? ''}
                 onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
@@ -710,7 +783,9 @@ export default function NewReport() {
               <input
                 type="number"
                 step="0.1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.realized_volume ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.realized_volume ?? ''}
                 onChange={(e) => setFormData(prev => ({ 
                   ...prev, 
@@ -730,7 +805,9 @@ export default function NewReport() {
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.total_value ? 'border-red-300' : 'border-gray-300'
+                }`}
                 value={formData.total_value ?? ''}
                 onChange={(e) => {
                   const formatted = formatCurrency(e.target.value)
@@ -757,9 +834,12 @@ export default function NewReport() {
                   Motorista Operador da Bomba *
                 </label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.driver_id ? 'border-red-300' : 'border-gray-300'
+                  }`}
                   value={formData.driver_id ?? ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, driver_id: e.target.value }))}
+                  required={!selectedPump?.is_terceira}
                 >
                   <option value="">Selecione um motorista</option>
                   {motoristaOptions.map(option => (
@@ -798,9 +878,12 @@ export default function NewReport() {
                           Auxiliar {index + 1}
                         </label>
                         <select
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.assistants ? 'border-red-300' : 'border-gray-300'
+                          }`}
                           value={assistant.id}
                           onChange={(e) => updateAssistant(index, e.target.value)}
+                          required={!selectedPump?.is_terceira}
                         >
                           <option value="">Selecione um auxiliar</option>
                           {auxiliarOptions.map(option => (

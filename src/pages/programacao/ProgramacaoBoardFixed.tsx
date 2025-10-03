@@ -222,7 +222,7 @@ export default function ProgramacaoBoardFixed() {
                     { value: '', label: 'Todas as bombas' },
                     ...bombas.map(bomba => ({
                       value: bomba.id,
-                      label: `${bomba.is_terceira ? '🔗 ' : ''}${bomba.name} - ${bomba.model}`
+                      label: `${bomba.has_programacao ? '📅 ' : ''}${bomba.is_terceira ? '🔗 ' : ''}${bomba.prefix} - ${bomba.model}`
                     }))
                   ]}
                   placeholder="Filtrar por bomba"
@@ -320,6 +320,18 @@ export default function ProgramacaoBoardFixed() {
                             {programacao.volume_previsto && (
                               <p className="text-xs">
                                 📦 {programacao.volume_previsto}m³
+                              </p>
+                            )}
+                            
+                            {programacao.quantidade_material && (
+                              <p className="text-xs">
+                                🧱 {programacao.quantidade_material}m³
+                              </p>
+                            )}
+                            
+                            {programacao.peca_concretada && (
+                              <p className="text-xs">
+                                🏗️ {programacao.peca_concretada}
                               </p>
                             )}
                           </div>

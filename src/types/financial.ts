@@ -157,6 +157,7 @@ export const EXPENSE_STATUS_OPTIONS: { value: ExpenseStatus; label: string; colo
 
 // Funções utilitárias
 export function formatCurrency(value: number): string {
+  // Usar formatação nativa que já inclui o sinal de menos no lugar correto
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
