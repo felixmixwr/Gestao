@@ -5,9 +5,10 @@ import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { KPICard, CategoryStatsCard } from '../../components/financial/ExpenseCard';
-import { ExpenseTable, TableSummary } from '../../components/financial/ExpenseTable';
+import { TableSummary } from '../../components/financial/ExpenseTable';
+import { ExpensesExportButton } from '../../components/financial/ExpensesExportButton';
 import { ExpenseCharts, CompactCharts } from '../../components/financial/ExpenseCharts';
-import { AdvancedFilters, QuickFilters } from '../../components/financial/AdvancedFilters';
+import { AdvancedFilters } from '../../components/financial/AdvancedFilters';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import { FolhaSalarialAlert } from '../../components/financial/FolhaSalarialAlert';
 import { CompanyFinancialCard } from '../../components/financial/CompanyFinancialCard';
@@ -26,7 +27,8 @@ import {
   getPagamentosReceberStats,
   getPagamentosProximosVencimento,
   getColaboradoresCosts,
-  getDadosFinanceirosPorEmpresa
+  getDadosFinanceirosPorEmpresa,
+  getAllEntriesAndExits
 } from '../../lib/financialApi';
 import type { 
   ExpenseWithRelations, 
@@ -48,16 +50,23 @@ export function FinancialDashboard() {
   const [pagamentosProximos, setPagamentosProximos] = useState<any[]>([]);
   const [colaboradoresCosts, setColaboradoresCosts] = useState<any>(null);
   const [dadosPorEmpresa, setDadosPorEmpresa] = useState<any[]>([]);
+  const [entriesAndExits, setEntriesAndExits] = useState<any[]>([]);
   const [pumps, setPumps] = useState<Array<{ id: string; prefix: string; model?: string; brand?: string }>>([]);
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([]);
-  const [filters, setFilters] = useState<ExpenseFiltersType>({});
+  const [filters, setFilters] = useState<ExpenseFiltersType>(() => {
+    // Restaurar filtros do localStorage ao inicializar
+    const savedFilters = localStorage.getItem('financial-dashboard-filters');
+    return savedFilters ? JSON.parse(savedFilters) : {};
+  });
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [reloadingFilters, setReloadingFilters] = useState(false);
   
   // Estados para modal de confirmação
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<ExpenseWithRelations | null>(null);
   const [deleting, setDeleting] = useState(false);
+  
 
   // Carregar dados iniciais
   useEffect(() => {
@@ -66,12 +75,11 @@ export function FinancialDashboard() {
 
   // Recarregar dados quando filtros mudarem
   useEffect(() => {
-    if (!loading) {
-      console.log('🔄 [FinancialDashboard] Recarregando dados com filtros:', filters);
-      loadExpenses();
-      loadStats();
+    if (!loading && !reloadingFilters) {
+      reloadFilteredData();
     }
   }, [filters]);
+
 
   const loadInitialData = async () => {
     try {
@@ -96,7 +104,8 @@ export function FinancialDashboard() {
         loadPagamentosStats(),
         loadPagamentosProximos(),
         loadColaboradoresCosts(),
-        loadDadosPorEmpresa()
+        loadDadosPorEmpresa(),
+        loadEntriesAndExits()
       ]);
     } catch (error) {
       console.error('Erro ao carregar dados iniciais:', error);
@@ -125,7 +134,12 @@ export function FinancialDashboard() {
 
   const loadFaturamentoStats = async () => {
     try {
-      const data = await getFaturamentoBrutoStats();
+      // Preparar filtros para faturamento baseado nos filtros atuais
+      const faturamentoFilters = filters.pump_id ? { 
+        pump_prefix: pumps.find(p => p.id === filters.pump_id)?.prefix 
+      } : undefined;
+      
+      const data = await getFaturamentoBrutoStats(faturamentoFilters);
       setFaturamentoStats(data);
     } catch (error) {
       console.error('Erro ao carregar estatísticas de faturamento:', error);
@@ -152,7 +166,12 @@ export function FinancialDashboard() {
 
   const loadVolumeDiario = async () => {
     try {
-      const data = await getVolumeDiarioComBombas();
+      // Preparar filtros para volume baseado nos filtros atuais
+      const volumeFilters = filters.pump_id ? { 
+        pump_prefix: pumps.find(p => p.id === filters.pump_id)?.prefix 
+      } : undefined;
+      
+      const data = await getVolumeDiarioComBombas(volumeFilters);
       setVolumeDiario(data);
     } catch (error) {
       console.error('Erro ao carregar volume diário:', error);
@@ -161,7 +180,12 @@ export function FinancialDashboard() {
 
   const loadVolumeSemanal = async () => {
     try {
-      const data = await getVolumeSemanalComBombas();
+      // Preparar filtros para volume baseado nos filtros atuais
+      const volumeFilters = filters.pump_id ? { 
+        pump_prefix: pumps.find(p => p.id === filters.pump_id)?.prefix 
+      } : undefined;
+      
+      const data = await getVolumeSemanalComBombas(volumeFilters);
       setVolumeSemanal(data);
     } catch (error) {
       console.error('Erro ao carregar volume semanal:', error);
@@ -170,7 +194,12 @@ export function FinancialDashboard() {
 
   const loadVolumeMensal = async () => {
     try {
-      const data = await getVolumeMensalComBombas();
+      // Preparar filtros para volume baseado nos filtros atuais
+      const volumeFilters = filters.pump_id ? { 
+        pump_prefix: pumps.find(p => p.id === filters.pump_id)?.prefix 
+      } : undefined;
+      
+      const data = await getVolumeMensalComBombas(volumeFilters);
       setVolumeMensal(data);
     } catch (error) {
       console.error('Erro ao carregar volume mensal:', error);
@@ -179,7 +208,12 @@ export function FinancialDashboard() {
 
   const loadPagamentosStats = async () => {
     try {
-      const data = await getPagamentosReceberStats();
+      // Preparar filtros para pagamentos baseado nos filtros atuais
+      const pagamentosFilters = filters.pump_id ? { 
+        pump_prefix: pumps.find(p => p.id === filters.pump_id)?.prefix 
+      } : undefined;
+      
+      const data = await getPagamentosReceberStats(pagamentosFilters);
       setPagamentosStats(data);
     } catch (error) {
       console.error('Erro ao carregar estatísticas de pagamentos:', error);
@@ -213,24 +247,37 @@ export function FinancialDashboard() {
     }
   };
 
+  const loadEntriesAndExits = async () => {
+    try {
+      // Preparar filtros para entradas e saídas baseado nos filtros atuais
+      const entriesExitsFilters = filters.pump_id ? { 
+        pump_prefix: pumps.find(p => p.id === filters.pump_id)?.prefix 
+      } : undefined;
+      
+      console.log('🔄 [loadEntriesAndExits] Carregando entradas e saídas com filtros:', entriesExitsFilters);
+      const data = await getAllEntriesAndExits(entriesExitsFilters);
+      console.log('📊 [loadEntriesAndExits] Dados carregados:', data.length, 'transações');
+      setEntriesAndExits(data);
+    } catch (error) {
+      console.error('Erro ao carregar entradas e saídas:', error);
+    }
+  };
+
   const handleFiltersChange = (newFilters: ExpenseFiltersType) => {
     console.log('🔍 [FinancialDashboard] Filtros alterados:', newFilters);
     setFilters(newFilters);
+    
+    // Salvar filtros no localStorage
+    localStorage.setItem('financial-dashboard-filters', JSON.stringify(newFilters));
   };
 
   const handleClearFilters = () => {
     setFilters({});
+    // Limpar filtros do localStorage
+    localStorage.removeItem('financial-dashboard-filters');
   };
 
-  const handleQuickFilter = (filter: ExpenseFiltersType) => {
-    console.log('🚀 [FinancialDashboard] Aplicando filtro rápido:', filter);
-    setFilters(prev => ({ ...prev, ...filter }));
-  };
 
-  const handleExport = () => {
-    // TODO: Implementar exportação
-    console.log('Exportar dados');
-  };
 
   const handleEditExpense = (expense: ExpenseWithRelations) => {
     navigate(`/financial/expenses/edit/${expense.id}`);
@@ -274,9 +321,37 @@ export function FinancialDashboard() {
     navigate(`/financial/expenses/view/${expense.id}`);
   };
 
+  const reloadFilteredData = async () => {
+    if (reloadingFilters) return; // Evitar múltiplas chamadas simultâneas
+    
+    setReloadingFilters(true);
+    try {
+      console.log('🔄 [FinancialDashboard] Recarregando dados filtrados:', filters);
+      await Promise.all([
+        loadExpenses(),
+        loadStats(),
+        loadFaturamentoStats(),
+        loadVolumeDiario(),
+        loadVolumeSemanal(),
+        loadVolumeMensal(),
+        loadPagamentosStats(),
+        loadEntriesAndExits()
+      ]);
+    } catch (error) {
+      console.error('Erro ao recarregar dados filtrados:', error);
+    } finally {
+      setReloadingFilters(false);
+    }
+  };
+
+
   // Calcular totais para resumo
   const totalValue = expenses.reduce((sum, expense) => sum + expense.valor, 0);
   const averageValue = expenses.length > 0 ? totalValue / expenses.length : 0;
+
+  // Verificar se há filtro de bomba ativo
+  const bombaFiltrada = filters.pump_id ? pumps.find(p => p.id === filters.pump_id) : null;
+  const isFiltradoPorBomba = !!bombaFiltrada;
 
   if (loading) {
     return (
@@ -322,6 +397,17 @@ export function FinancialDashboard() {
             <Filter className="h-4 w-4" />
             {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
           </Button>
+          {isFiltradoPorBomba && (
+            <Button
+              variant="outline"
+              onClick={reloadFilteredData}
+              disabled={reloadingFilters}
+              className="flex items-center gap-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+            >
+              <Filter className="h-4 w-4" />
+              {reloadingFilters ? 'Aplicando...' : 'Aplicar Filtros'}
+            </Button>
+          )}
           <Button
             onClick={() => navigate('/financial/folha-salarial')}
             className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
@@ -339,6 +425,7 @@ export function FinancialDashboard() {
         </div>
       </div>
 
+
       {/* Filtros */}
       {showFilters && (
         <div className="space-y-4">
@@ -349,10 +436,18 @@ export function FinancialDashboard() {
             pumps={pumps}
             companies={companies}
           />
-          <QuickFilters
-            onApplyFilter={handleQuickFilter}
-            onClearFilters={handleClearFilters}
-          />
+        </div>
+      )}
+
+      {/* Indicador de Filtro Ativo */}
+      {isFiltradoPorBomba && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-600">🔍</span>
+            <span className="text-sm font-medium text-blue-800">
+              Dados filtrados para a bomba: <strong>{bombaFiltrada?.prefix}</strong>
+            </span>
+          </div>
         </div>
       )}
 
@@ -363,28 +458,28 @@ export function FinancialDashboard() {
           value={faturamentoStats?.total_faturado || 0}
           icon="💰"
           color="green"
-          subtitle={`${faturamentoStats?.total_relatorios_pagos || 0} relatórios pagos`}
+          subtitle={`${faturamentoStats?.total_relatorios_pagos || 0} relatórios pagos${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Faturado Hoje"
           value={faturamentoStats?.faturado_hoje || 0}
           icon="📈"
           color="blue"
-          subtitle={`${faturamentoStats?.relatorios_hoje || 0} relatórios hoje`}
+          subtitle={`${faturamentoStats?.relatorios_hoje || 0} relatórios hoje${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Total de Despesas"
           value={stats?.total_despesas || 0}
           icon="💸"
           color="red"
-          subtitle={`${expenses.length} despesas`}
+          subtitle={`${expenses.length} despesas${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Volume Bombeado"
           value={`${(faturamentoStats?.volume_total_bombeado || 0).toFixed(2)} m³`}
           icon="🚛"
           color="orange"
-          subtitle="volume total bombeado"
+          subtitle={`volume total bombeado${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
       </div>
 
@@ -395,28 +490,28 @@ export function FinancialDashboard() {
           value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pagamentosStats?.total_valor || 0)}
           icon="💰"
           color="green"
-          subtitle={`${pagamentosStats?.total_pagamentos || 0} pagamentos`}
+          subtitle={`${pagamentosStats?.total_pagamentos || 0} pagamentos${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Aguardando"
           value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pagamentosStats?.valor_aguardando || 0)}
           icon="⏳"
           color="blue"
-          subtitle={`${pagamentosStats?.aguardando || 0} pagamentos`}
+          subtitle={`${pagamentosStats?.aguardando || 0} pagamentos${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Próximo Vencimento"
           value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pagamentosStats?.valor_proximo_vencimento || 0)}
           icon="⚠️"
           color="orange"
-          subtitle={`${pagamentosStats?.proximo_vencimento || 0} pagamentos`}
+          subtitle={`${pagamentosStats?.proximo_vencimento || 0} pagamentos${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Vencidos"
           value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pagamentosStats?.valor_vencido || 0)}
           icon="🚨"
           color="red"
-          subtitle={`${pagamentosStats?.vencido || 0} pagamentos`}
+          subtitle={`${pagamentosStats?.vencido || 0} pagamentos${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
       </div>
 
@@ -427,28 +522,28 @@ export function FinancialDashboard() {
           value={faturamentoMensal.reduce((sum, item) => sum + (item.faturamento_total || 0), 0)}
           icon="📅"
           color="green"
-          subtitle={`${faturamentoMensal.reduce((sum, item) => sum + (item.total_relatorios || 0), 0)} relatórios no mês`}
+          subtitle={`${faturamentoMensal.reduce((sum, item) => sum + (item.total_relatorios || 0), 0)} relatórios no mês${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Volume Diário"
           value={`${volumeDiario.reduce((sum, item) => sum + (item.volume_total || 0), 0).toFixed(2)} m³`}
           icon="📊"
           color="blue"
-          subtitle={`${volumeDiario.length} bombas ativas hoje`}
+          subtitle={`${volumeDiario.length} bombas ativas hoje${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Volume Semanal"
           value={`${volumeSemanal.reduce((sum, item) => sum + (item.volume_total || 0), 0).toFixed(2)} m³`}
           icon="📈"
           color="purple"
-          subtitle={`${volumeSemanal.length} bombas na semana`}
+          subtitle={`${volumeSemanal.length} bombas na semana${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
         <KPICard
           title="Volume Mensal"
           value={`${volumeMensal.reduce((sum, item) => sum + (item.volume_total || 0), 0).toFixed(2)} m³`}
           icon="📋"
           color="purple"
-          subtitle={`${volumeMensal.length} bombas no mês`}
+          subtitle={`${volumeMensal.length} bombas no mês${isFiltradoPorBomba ? ` (${bombaFiltrada?.prefix})` : ''}`}
         />
       </div>
 
@@ -456,10 +551,58 @@ export function FinancialDashboard() {
       <FolhaSalarialAlert />
 
       {/* Resumo Financeiro por Empresa */}
-      <CompanyFinancialCard showAllCompanies={true} />
+      <CompanyFinancialCard 
+        showAllCompanies={true} 
+        filters={isFiltradoPorBomba ? { pump_prefix: bombaFiltrada?.prefix } : undefined}
+      />
+
+      {/* Faturamento por Bomba */}
+      {faturamentoStats?.faturamento_por_bomba && faturamentoStats.faturamento_por_bomba.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              💰 Faturamento por Bomba (Relatórios Pagos)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {faturamentoStats.faturamento_por_bomba.slice(0, 10).map((bomba: any) => (
+                <div key={bomba.bomba_prefix} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <span className="text-lg">🚛</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{bomba.bomba_prefix}</p>
+                      <p className="text-xs text-gray-500">
+                        {bomba.total_relatorios} relatórios • {bomba.volume_total?.toFixed(2) || 0} m³
+                      </p>
+                      {bomba.relatorios_hoje > 0 && (
+                        <p className="text-xs text-green-600 font-medium">
+                          {bomba.relatorios_hoje} relatório(s) hoje
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-green-600">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(bomba.total_faturado)}
+                    </p>
+                    {bomba.faturado_hoje > 0 && (
+                      <p className="text-xs text-blue-600">
+                        Hoje: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(bomba.faturado_hoje)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Detalhes por Bomba */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Volume Diário por Bomba */}
         {volumeDiario.length > 0 && (
           <Card>
@@ -753,39 +896,120 @@ export function FinancialDashboard() {
         faturamentoBruto={faturamentoStats?.total_faturado || 0}
       />
 
-      {/* Lista Completa de Despesas */}
+      {/* Lista Completa de Entradas/Saídas */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              📋 Lista Completa de Despesas
+              💰 Lista Completa de Entradas/Saídas
             </span>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                {expenses.length} despesas
+                {entriesAndExits.length} transações
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Exportar
-              </Button>
+              <ExpensesExportButton
+                expenses={entriesAndExits}
+                filters={filters}
+                disabled={loading || entriesAndExits.length === 0}
+              />
             </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ExpenseTable
-            expenses={expenses}
-            onEdit={handleEditExpense}
-            onDelete={handleDeleteExpense}
-            onView={handleViewExpense}
-            onExport={handleExport}
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-          />
+          <div className="overflow-x-auto">
+            <table className="w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Descrição
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Data
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Bomba
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Cliente/Empresa
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Valor
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {entriesAndExits.map((transaction) => (
+                  <tr key={`${transaction.type}-${transaction.id}`} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        transaction.type === 'entrada' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {transaction.type === 'entrada' ? '💰 Entrada' : '💸 Saída'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {transaction.description}
+                      </div>
+                      {transaction.type === 'saida' && transaction.categoria && (
+                        <div className="text-sm text-gray-500">
+                          {transaction.categoria} • {transaction.tipo_custo}
+                        </div>
+                      )}
+                      {transaction.type === 'entrada' && transaction.realized_volume && (
+                        <div className="text-sm text-gray-500">
+                          Volume: {transaction.realized_volume} m³
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {transaction.pump_prefix || 'N/A'}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm text-gray-900">
+                        {transaction.client_name || transaction.company_name || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        transaction.status === 'PAGO' || transaction.status === 'pago' 
+                          ? 'bg-green-100 text-green-800' 
+                          : transaction.status === 'Descontado'
+                          ? 'bg-red-100 text-red-800'
+                          : transaction.status === 'pendente'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {transaction.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <span className={transaction.type === 'entrada' ? 'text-green-600' : 'text-red-600'}>
+                        {transaction.type === 'entrada' ? '+' : '-'}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(transaction.value)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {entriesAndExits.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>Nenhuma transação encontrada</p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 

@@ -225,15 +225,23 @@ export class ProgramacaoExporter {
       console.log('📊 Programações:', data.programacoes.length);
       
       // Filtrar programações do dia selecionado usando fuso horário brasileiro
-      const selectedDateStr = toBrasiliaDateString(data.selectedDate.toISOString());
+      if (isNaN(data.selectedDate.getTime())) {
+        console.error('❌ Data selecionada é inválida:', data.selectedDate);
+        throw new Error('Data selecionada é inválida');
+      }
+      
+      const selectedDateStr = toBrasiliaDateString(data.selectedDate);
+      // Converter para formato ISO para comparação com programações
+      const selectedDateISO = data.selectedDate.toISOString().split('T')[0];
       console.log('🔍 Data selecionada (Brasília):', selectedDateStr);
+      console.log('🔍 Data selecionada (ISO para comparação):', selectedDateISO);
       console.log('🔍 Total de programações disponíveis:', data.programacoes.length);
       
       const dailyProgramacoes = data.programacoes.filter(p => {
         if (!p.data) return false;
         const programacaoDate = p.data.includes('T') ? p.data.split('T')[0] : p.data;
-        console.log('🔍 Comparando:', programacaoDate, 'com', selectedDateStr);
-        return programacaoDate === selectedDateStr;
+        console.log('🔍 Comparando:', programacaoDate, 'com', selectedDateISO);
+        return programacaoDate === selectedDateISO;
       });
       
       console.log('📊 Programações do dia:', dailyProgramacoes.length);
@@ -298,10 +306,20 @@ export class ProgramacaoExporter {
     pdf.setFont('helvetica', 'bold');
     pdf.text('PROGRAMAÇÃO DIÁRIA', pageWidth / 2, 22, { align: 'center' });
     
-    // Data
+    // Data (evitando problemas de fuso horário)
     pdf.setFontSize(12);
     pdf.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
-    const dateStr = data.selectedDate.toLocaleDateString('pt-BR', { 
+    
+    // Criar date usando componentes individuais para evitar problemas de fuso horário
+    const year = data.selectedDate.getFullYear();
+    const month = data.selectedDate.getMonth();
+    const day = data.selectedDate.getDate();
+    const safeDate = new Date(year, month, day);
+    
+    console.log('🔍 [addDailyPDFHeader] Data original:', data.selectedDate);
+    console.log('🔍 [addDailyPDFHeader] Data segura:', safeDate);
+    
+    const dateStr = safeDate.toLocaleDateString('pt-BR', { 
       weekday: 'long', 
       year: 'numeric', 
       month: 'long', 
@@ -501,9 +519,25 @@ export class ProgramacaoExporter {
    * Gera nome do arquivo para PDF diário
    */
   private static generateDailyFileName(date: Date): string {
-    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
-    const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '');
-    return `programacao_diaria_${dateStr}_${timeStr}.pdf`;
+    try {
+      if (isNaN(date.getTime())) {
+        console.error('❌ [generateDailyFileName] Data inválida:', date);
+        const fallbackDate = new Date();
+        const dateStr = fallbackDate.toISOString().split('T')[0].replace(/-/g, '');
+        const timeStr = fallbackDate.toTimeString().split(' ')[0].replace(/:/g, '');
+        return `programacao_diaria_${dateStr}_${timeStr}_fallback.pdf`;
+      }
+      
+      const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+      const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '');
+      return `programacao_diaria_${dateStr}_${timeStr}.pdf`;
+    } catch (error) {
+      console.error('❌ [generateDailyFileName] Erro ao gerar nome:', error);
+      const fallbackDate = new Date();
+      const dateStr = fallbackDate.toISOString().split('T')[0].replace(/-/g, '');
+      const timeStr = fallbackDate.toTimeString().split(' ')[0].replace(/:/g, '');
+      return `programacao_diaria_${dateStr}_${timeStr}_error.pdf`;
+    }
   }
 
   /**

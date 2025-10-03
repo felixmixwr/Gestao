@@ -110,17 +110,26 @@ export async function getFaturamentoMensal() {
 /**
  * Busca volume diário com bombas
  * CORRIGIDO: Agora busca TODOS os relatórios, não apenas os PAGOS
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getVolumeDiarioComBombas() {
+export async function getVolumeDiarioComBombas(filters?: { pump_prefix?: string }) {
   try {
     const today = new Date().toISOString().split('T')[0];
-    console.log('🔍 [getVolumeDiarioComBombas] Buscando dados para:', today);
+    console.log('🔍 [getVolumeDiarioComBombas] Buscando dados para:', today, filters);
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('reports')
       .select('pump_prefix, realized_volume, total_value, date, status')
       .eq('date', today);
       // REMOVIDO: .eq('status', 'PAGO') - Agora busca TODOS os relatórios
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getVolumeDiarioComBombas] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar volume diário:', error);
@@ -164,18 +173,30 @@ export async function getVolumeDiarioComBombas() {
 /**
  * Busca volume semanal com bombas
  * CORRIGIDO: Agora busca TODOS os relatórios, não apenas os PAGOS
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getVolumeSemanalComBombas() {
+export async function getVolumeSemanalComBombas(filters?: { pump_prefix?: string }) {
   try {
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Se domingo, volta 6 dias; senão, calcula para segunda
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() + mondayOffset);
     const startOfWeekStr = startOfWeek.toISOString().split('T')[0];
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('reports')
       .select('pump_prefix, realized_volume, total_value, date, status')
       .gte('date', startOfWeekStr);
       // REMOVIDO: .eq('status', 'PAGO') - Agora busca TODOS os relatórios
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getVolumeSemanalComBombas] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar volume semanal:', error);
@@ -216,17 +237,26 @@ export async function getVolumeSemanalComBombas() {
 /**
  * Busca volume mensal com bombas
  * CORRIGIDO: Agora busca TODOS os relatórios, não apenas os PAGOS
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getVolumeMensalComBombas() {
+export async function getVolumeMensalComBombas(filters?: { pump_prefix?: string }) {
   try {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('reports')
       .select('pump_prefix, realized_volume, total_value, date, status')
       .gte('date', startOfMonthStr);
       // REMOVIDO: .eq('status', 'PAGO') - Agora busca TODOS os relatórios
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getVolumeMensalComBombas] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar volume mensal:', error);
@@ -311,6 +341,11 @@ export async function getExpenses(filters?: ExpenseFilters): Promise<ExpenseWith
   if (filters?.tipo_custo && filters.tipo_custo.length > 0) {
     console.log('💰 [getExpenses] Filtrando por tipo de custo:', filters.tipo_custo);
     query = query.in('tipo_custo', filters.tipo_custo);
+  }
+
+  if (filters?.tipo_transacao && filters.tipo_transacao.length > 0) {
+    console.log('🔄 [getExpenses] Filtrando por tipo de transação:', filters.tipo_transacao);
+    query = query.in('tipo_transacao', filters.tipo_transacao);
   }
 
   if (filters?.status && filters.status.length > 0) {
@@ -465,7 +500,7 @@ export async function getExpenseById(id: string): Promise<ExpenseWithRelations |
 }
 
 /**
- * Cria uma nova despesa
+ * Cria uma nova transação financeira (despesa ou faturamento)
  */
 export async function createExpense(expenseData: CreateExpenseData): Promise<Expense> {
   // Se pump_id foi fornecido, buscar o company_id da bomba
@@ -483,35 +518,54 @@ export async function createExpense(expenseData: CreateExpenseData): Promise<Exp
     }
   }
 
+  // Determinar o valor baseado no tipo de transação
+  let valorFinal = Math.abs(expenseData.valor);
+  if (expenseData.tipo_transacao === 'Saída') {
+    valorFinal = -valorFinal; // Despesas são negativas (saída de dinheiro)
+  }
+  // Entradas já são positivas por padrão
+
+  // Remover campos que não existem na tabela
+  const { tipo_transacao, ...expenseDataClean } = expenseData;
+  
+  const insertData = {
+    ...expenseDataClean,
+    valor: valorFinal,
+    company_id: finalCompanyId, // Usar company_id da bomba se disponível
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  console.log('🔍 [createExpense] Dados para inserção:', insertData);
+
   const { data, error } = await supabase
     .from('expenses')
-    .insert({
-      ...expenseData,
-      valor: -Math.abs(expenseData.valor), // Garantir que seja negativo (saída de dinheiro)
-      company_id: finalCompanyId, // Usar company_id da bomba se disponível
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
+    .insert(insertData)
     .select()
     .single();
 
   if (error) {
-    console.error('Erro ao criar despesa:', error);
-    throw new Error('Erro ao criar despesa');
+    console.error('❌ [createExpense] Erro ao criar transação:', error);
+    console.error('❌ [createExpense] Dados que causaram erro:', insertData);
+    throw new Error('Erro ao criar transação');
   }
 
   return data;
 }
 
 /**
- * Atualiza uma despesa existente
+ * Atualiza uma transação financeira existente
  */
 export async function updateExpense(expenseData: UpdateExpenseData): Promise<Expense> {
   const { id, ...updateData } = expenseData;
 
-  // Se o valor está sendo atualizado, garantir que seja negativo
+  // Se o valor está sendo atualizado, aplicar a lógica de tipo de transação
   if (updateData.valor !== undefined) {
-    updateData.valor = -Math.abs(updateData.valor);
+    let valorFinal = Math.abs(updateData.valor);
+    if (updateData.tipo_transacao === 'Saída') {
+      valorFinal = -valorFinal; // Despesas são negativas (saída de dinheiro)
+    }
+    updateData.valor = valorFinal;
   }
 
   const { data, error } = await supabase
@@ -525,8 +579,8 @@ export async function updateExpense(expenseData: UpdateExpenseData): Promise<Exp
     .single();
 
   if (error) {
-    console.error('Erro ao atualizar despesa:', error);
-    throw new Error('Erro ao atualizar despesa');
+    console.error('Erro ao atualizar transação:', error);
+    throw new Error('Erro ao atualizar transação');
   }
 
   return data;
@@ -555,6 +609,8 @@ export async function deleteExpense(id: string): Promise<void> {
  * Busca estatísticas financeiras consolidadas
  */
 export async function getFinancialStats(filters?: ExpenseFilters): Promise<FinancialStats> {
+  console.log('🔍 [getFinancialStats] Buscando estatísticas financeiras...', filters);
+  
   let query = supabase
     .from('expenses')
     .select(`
@@ -577,6 +633,11 @@ export async function getFinancialStats(filters?: ExpenseFilters): Promise<Finan
     query = query.eq('company_id', filters.company_id);
   }
 
+  if (filters?.pump_id) {
+    console.log('🚛 [getFinancialStats] Filtrando por bomba:', filters.pump_id);
+    query = query.eq('pump_id', filters.pump_id);
+  }
+
   if (filters?.data_inicio) {
     query = query.gte('data_despesa', filters.data_inicio);
   }
@@ -593,9 +654,11 @@ export async function getFinancialStats(filters?: ExpenseFilters): Promise<Finan
   }
 
   const expenses = data || [];
+  console.log('📊 [getFinancialStats] Despesas encontradas:', expenses.length);
 
   // Calcular total de despesas
   const total_despesas = expenses.reduce((sum, expense) => sum + expense.valor, 0);
+  console.log('💰 [getFinancialStats] Total de despesas calculado:', total_despesas);
 
   // Calcular total por categoria
   const total_por_categoria = expenses.reduce((acc, expense) => {
@@ -668,6 +731,148 @@ export async function getFinancialStats(filters?: ExpenseFilters): Promise<Finan
     despesas_por_periodo,
     despesas_por_tipo
   };
+}
+
+// ============================================================================
+// FUNÇÕES DE INTEGRAÇÃO COM FATURAMENTO DE RELATÓRIOS
+// ============================================================================
+
+/**
+ * Cria entrada de faturamento a partir de relatório pago
+ */
+export async function createFaturamentoFromReport(
+  reportId: string,
+  additionalData: Partial<CreateExpenseData>
+): Promise<Expense> {
+  // Buscar dados do relatório
+  const { data: report, error: reportError } = await supabase
+    .from('reports')
+    .select(`
+      *,
+      pumps: pump_id (
+        prefix,
+        company_id
+      ),
+      clients: client_id (
+        companies: company_id (
+          name
+        )
+      )
+    `)
+    .eq('id', reportId)
+    .single();
+
+  if (reportError || !report) {
+    throw new Error('Relatório não encontrado');
+  }
+
+  // Verificar se já existe uma entrada para este relatório
+  const { data: existingEntry } = await supabase
+    .from('expenses')
+    .select('id')
+    .eq('relatorio_id', reportId)
+    .eq('tipo_transacao', 'Entrada')
+    .single();
+
+  if (existingEntry) {
+    throw new Error('Já existe uma entrada de faturamento para este relatório');
+  }
+
+  // Criar entrada de faturamento
+  const faturamentoData: CreateExpenseData = {
+    descricao: `Faturamento - Relatório ${report.report_number || report.id}`,
+    categoria: 'Outros', // Categoria padrão para faturamento
+    valor: Math.abs(report.total_value || 0), // Valor positivo para entrada
+    tipo_custo: 'variável',
+    tipo_transacao: 'Entrada', // Classificar como entrada
+    data_despesa: report.date,
+    pump_id: report.pump_id,
+    company_id: report.pumps?.company_id || report.client_id,
+    status: 'pago', // Faturamento sempre pago
+    relatorio_id: reportId,
+    observacoes: `Faturamento automático do relatório ${report.report_number || report.id} - Cliente: ${report.clients?.companies?.name || 'N/A'}`,
+    ...additionalData
+  };
+
+  return createExpense(faturamentoData);
+}
+
+/**
+ * Sincroniza todos os relatórios pagos como entradas de faturamento
+ */
+export async function syncFaturamentoFromReports(): Promise<{ created: number; errors: string[] }> {
+  try {
+    console.log('🔄 [syncFaturamentoFromReports] Iniciando sincronização de faturamento...');
+    
+    // Buscar todos os relatórios pagos que ainda não têm entrada de faturamento
+    const { data: reports, error } = await supabase
+      .from('reports')
+      .select(`
+        id,
+        report_number,
+        total_value,
+        date,
+        pump_id,
+        client_id,
+        pumps: pump_id (
+          prefix,
+          company_id
+        ),
+        clients: client_id (
+          companies: company_id (
+            name
+          )
+        )
+      `)
+      .eq('status', 'PAGO')
+      .not('total_value', 'is', null);
+
+    if (error) {
+      throw new Error('Erro ao buscar relatórios pagos');
+    }
+
+    if (!reports || reports.length === 0) {
+      console.log('⚠️ [syncFaturamentoFromReports] Nenhum relatório pago encontrado');
+      return { created: 0, errors: [] };
+    }
+
+    console.log(`📊 [syncFaturamentoFromReports] Encontrados ${reports.length} relatórios pagos`);
+
+    let created = 0;
+    const errors: string[] = [];
+
+    // Verificar quais relatórios já têm entrada de faturamento
+    const { data: existingEntries } = await supabase
+      .from('expenses')
+      .select('relatorio_id')
+      .eq('tipo_transacao', 'Entrada')
+      .not('relatorio_id', 'is', null);
+
+    const existingReportIds = new Set(existingEntries?.map(e => e.relatorio_id) || []);
+
+    // Criar entradas para relatórios que ainda não têm
+    for (const report of reports) {
+      if (existingReportIds.has(report.id)) {
+        continue; // Já existe entrada para este relatório
+      }
+
+      try {
+        await createFaturamentoFromReport(report.id, {});
+        created++;
+        console.log(`✅ [syncFaturamentoFromReports] Criada entrada para relatório ${report.id}`);
+      } catch (error) {
+        const errorMsg = `Erro ao criar entrada para relatório ${report.id}: ${error}`;
+        errors.push(errorMsg);
+        console.error(`❌ [syncFaturamentoFromReports] ${errorMsg}`);
+      }
+    }
+
+    console.log(`🎉 [syncFaturamentoFromReports] Sincronização concluída: ${created} entradas criadas, ${errors.length} erros`);
+    return { created, errors };
+  } catch (error) {
+    console.error('❌ [syncFaturamentoFromReports] Erro na sincronização:', error);
+    throw error;
+  }
 }
 
 // ============================================================================
@@ -751,6 +956,7 @@ export async function createExpenseFromInvoice(
     categoria: 'Outros', // Categoria padrão
     valor: invoice.valor,
     tipo_custo: 'variável',
+    tipo_transacao: 'Saída', // Notas fiscais são sempre despesas (saídas)
     data_despesa: invoice.data_emissao,
     pump_id: invoice.reports?.pump_id || '',
     company_id: invoice.reports?.clients?.company_id || '',
@@ -768,67 +974,59 @@ export async function createExpenseFromInvoice(
 // ============================================================================
 
 /**
- * Busca faturamento bruto por empresa (baseado na empresa proprietária da bomba)
+ * Busca faturamento bruto por empresa
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getFaturamentoBrutoPorEmpresa() {
+export async function getFaturamentoBrutoPorEmpresa(filters?: { pump_prefix?: string }) {
   try {
-    // Primeiro, buscar todos os relatórios pagos
-    const { data: reports, error: reportsError } = await supabase
+    console.log('🔍 [getFaturamentoBrutoPorEmpresa] Buscando faturamento por empresa...', filters);
+    
+    let query = supabase
       .from('reports')
-      .select('total_value, pump_id')
+      .select(`
+        total_value,
+        company_id,
+        pump_prefix,
+        companies:company_id(name)
+      `)
       .eq('status', 'PAGO');
 
-    if (reportsError) throw reportsError;
-
-    if (!reports || reports.length === 0) {
-      return [];
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getFaturamentoBrutoPorEmpresa] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
     }
 
-    // Buscar todas as bombas únicas
-    const pumpIds = [...new Set(reports.map(r => r.pump_id))];
-    const { data: pumps, error: pumpsError } = await supabase
-      .from('pumps')
-      .select('id, owner_company_id, companies:owner_company_id(name)')
-      .in('id', pumpIds);
+    const { data, error } = await query;
 
-    if (pumpsError) throw pumpsError;
+    if (error) throw error;
 
-    // Criar mapa de pump_id para empresa
-    const pumpToCompany = new Map();
-    pumps?.forEach((pump: any) => {
-      pumpToCompany.set(pump.id, {
-        company_id: pump.owner_company_id,
-        company_name: pump.companies?.name || 'Empresa não identificada'
-      });
-    });
+    console.log('📊 [getFaturamentoBrutoPorEmpresa] Dados encontrados:', data?.length || 0);
 
-    // Agrupar por empresa proprietária da bomba
-    const faturamentoPorEmpresa = reports.reduce((acc: any, report: any) => {
-      const companyInfo = pumpToCompany.get(report.pump_id);
+    // Agrupar por empresa
+    const faturamentoPorEmpresa = (data || []).reduce((acc: any, report: any) => {
+      const companyId = report.company_id;
+      const companyName = report.companies?.name || 'Empresa não identificada';
       
-      if (!companyInfo) {
-        console.warn('Relatório sem empresa proprietária da bomba:', report);
-        return acc;
-      }
-      
-      const { company_id, company_name } = companyInfo;
-      
-      if (!acc[company_id]) {
-        acc[company_id] = {
-          company_id: company_id,
-          company_name: company_name,
+      if (!acc[companyId]) {
+        acc[companyId] = {
+          company_id: companyId,
+          company_name: companyName,
           faturamento_bruto: 0,
           total_relatorios: 0
         };
       }
       
-      acc[company_id].faturamento_bruto += report.total_value || 0;
-      acc[company_id].total_relatorios += 1;
+      acc[companyId].faturamento_bruto += report.total_value || 0;
+      acc[companyId].total_relatorios += 1;
       
       return acc;
     }, {});
 
-    return Object.values(faturamentoPorEmpresa);
+    const result = Object.values(faturamentoPorEmpresa);
+    console.log('💰 [getFaturamentoBrutoPorEmpresa] Resultado final:', result);
+    
+    return result;
   } catch (error) {
     console.error('Erro ao buscar faturamento por empresa:', error);
     throw error;
@@ -837,18 +1035,47 @@ export async function getFaturamentoBrutoPorEmpresa() {
 
 /**
  * Busca despesas por empresa
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getDespesasPorEmpresa() {
+export async function getDespesasPorEmpresa(filters?: { pump_prefix?: string }) {
   try {
-    const { data, error } = await supabase
+    console.log('🔍 [getDespesasPorEmpresa] Buscando despesas por empresa...', filters);
+    
+    let query = supabase
       .from('expenses')
       .select(`
         valor,
         company_id,
-        companies:company_id(name)
+        pump_id,
+        companies:company_id(name),
+        pumps:pump_id(prefix)
       `);
 
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getDespesasPorEmpresa] Filtrando por bomba:', filters.pump_prefix);
+      // Primeiro, buscar o pump_id baseado no prefix
+      const { data: pumpData, error: pumpError } = await supabase
+        .from('pumps')
+        .select('id')
+        .eq('prefix', filters.pump_prefix)
+        .single();
+      
+      if (pumpError) {
+        console.error('Erro ao buscar bomba por prefix:', pumpError);
+        return [];
+      }
+      
+      if (pumpData) {
+        query = query.eq('pump_id', pumpData.id);
+      }
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
+
+    console.log('📊 [getDespesasPorEmpresa] Dados encontrados:', data?.length || 0);
 
     // Agrupar por empresa
     const despesasPorEmpresa = (data || []).reduce((acc: any, expense: any) => {
@@ -870,7 +1097,10 @@ export async function getDespesasPorEmpresa() {
       return acc;
     }, {});
 
-    return Object.values(despesasPorEmpresa);
+    const result = Object.values(despesasPorEmpresa);
+    console.log('💰 [getDespesasPorEmpresa] Resultado final:', result);
+    
+    return result;
   } catch (error) {
     console.error('Erro ao buscar despesas por empresa:', error);
     throw error;
@@ -879,12 +1109,13 @@ export async function getDespesasPorEmpresa() {
 
 /**
  * Busca dados financeiros completos por empresa
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getDadosFinanceirosPorEmpresa() {
+export async function getDadosFinanceirosPorEmpresa(filters?: { pump_prefix?: string }) {
   try {
     const [faturamentoData, despesasData] = await Promise.all([
-      getFaturamentoBrutoPorEmpresa(),
-      getDespesasPorEmpresa()
+      getFaturamentoBrutoPorEmpresa(filters),
+      getDespesasPorEmpresa(filters)
     ]);
 
     // Combinar dados por empresa
@@ -927,6 +1158,186 @@ export async function getDadosFinanceirosPorEmpresa() {
   } catch (error) {
     console.error('Erro ao buscar dados financeiros por empresa:', error);
     throw error;
+  }
+}
+
+// ============================================================================
+// FUNÇÕES PARA LISTA COMPLETA DE ENTRADAS/SAÍDAS
+// ============================================================================
+
+/**
+ * Busca todas as entradas (relatórios) para lista completa
+ */
+export async function getAllEntries(filters?: { pump_prefix?: string }) {
+  try {
+    console.log('🔍 [getAllEntries] Buscando todas as entradas...', filters);
+    
+    let query = supabase
+      .from('reports')
+      .select(`
+        id,
+        report_number,
+        total_value,
+        date,
+        pump_prefix,
+        status,
+        realized_volume,
+        client_id,
+        pump_id,
+        clients: client_id (
+          name,
+          company_id,
+          companies: company_id (
+            name
+          )
+        )
+      `)
+      .eq('status', 'PAGO')
+      .order('date', { ascending: false });
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getAllEntries] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar entradas:', error);
+      throw new Error('Erro ao buscar entradas');
+    }
+
+    console.log('📊 [getAllEntries] Entradas encontradas:', data?.length || 0);
+
+    return (data || []).map(report => ({
+      id: report.id,
+      type: 'entrada',
+      description: `Relatório ${report.report_number}`,
+      value: report.total_value || 0,
+      date: report.date,
+      pump_prefix: report.pump_prefix,
+      status: report.status,
+      realized_volume: report.realized_volume,
+      client_name: (report.clients as any)?.name || 'N/A',
+      company_name: (report.clients as any)?.companies?.name || 'N/A',
+      bomba_model: 'N/A',
+      bomba_brand: 'N/A'
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar entradas:', error);
+    return [];
+  }
+}
+
+/**
+ * Busca todas as saídas (despesas) para lista completa
+ */
+export async function getAllExits(filters?: { pump_prefix?: string }) {
+  try {
+    console.log('🔍 [getAllExits] Buscando todas as saídas...', filters);
+    
+    let query = supabase
+      .from('expenses')
+      .select(`
+        id,
+        descricao,
+        valor,
+        data_despesa,
+        categoria,
+        tipo_custo,
+        status,
+        pump_id,
+        company_id
+      `)
+      .order('data_despesa', { ascending: false });
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getAllExits] Filtrando por bomba:', filters.pump_prefix);
+      try {
+        // Primeiro, buscar o pump_id baseado no prefix
+        const { data: pumpData, error: pumpError } = await supabase
+          .from('pumps')
+          .select('id')
+          .eq('prefix', filters.pump_prefix)
+          .single();
+        
+        if (pumpError) {
+          console.error('❌ [getAllExits] Erro ao buscar bomba por prefix:', pumpError);
+          // Continuar sem filtro de bomba se não conseguir encontrar
+          console.log('⚠️ [getAllExits] Continuando sem filtro de bomba');
+        } else if (pumpData) {
+          console.log('✅ [getAllExits] Bomba encontrada:', pumpData.id);
+          query = query.eq('pump_id', pumpData.id);
+        } else {
+          console.log('⚠️ [getAllExits] Bomba não encontrada, continuando sem filtro');
+        }
+      } catch (error) {
+        console.error('❌ [getAllExits] Erro na busca da bomba:', error);
+        // Continuar sem filtro de bomba
+      }
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('❌ [getAllExits] Erro ao buscar saídas:', error);
+      throw new Error('Erro ao buscar saídas');
+    }
+
+    console.log('📊 [getAllExits] Saídas encontradas:', data?.length || 0);
+    console.log('📋 [getAllExits] Dados das saídas:', data);
+
+    return (data || []).map(expense => ({
+      id: expense.id,
+      type: 'saida',
+      description: expense.descricao,
+      value: Math.abs(expense.valor), // Saídas são sempre positivas para exibição
+      date: expense.data_despesa,
+      pump_prefix: 'N/A', // Simplificado para evitar problemas de relação
+      status: 'Descontado', // Todas as despesas aparecem como "Descontado"
+      categoria: expense.categoria,
+      tipo_custo: expense.tipo_custo,
+      company_name: 'N/A', // Simplificado para evitar problemas de relação
+      bomba_model: 'N/A',
+      bomba_brand: 'N/A'
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar saídas:', error);
+    return [];
+  }
+}
+
+/**
+ * Busca lista completa de entradas e saídas combinadas
+ */
+export async function getAllEntriesAndExits(filters?: { pump_prefix?: string }) {
+  try {
+    console.log('🔍 [getAllEntriesAndExits] Buscando entradas e saídas...', filters);
+    
+    const [entries, exits] = await Promise.all([
+      getAllEntries(filters),
+      getAllExits(filters)
+    ]);
+
+    console.log('📊 [getAllEntriesAndExits] Entradas recebidas:', entries.length);
+    console.log('📊 [getAllEntriesAndExits] Saídas recebidas:', exits.length);
+    console.log('📋 [getAllEntriesAndExits] Entradas:', entries);
+    console.log('📋 [getAllEntriesAndExits] Saídas:', exits);
+
+    // Combinar e ordenar por data
+    const allTransactions = [...entries, ...exits].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    console.log('📊 [getAllEntriesAndExits] Total de transações:', allTransactions.length);
+    console.log('📋 [getAllEntriesAndExits] Transações combinadas:', allTransactions);
+
+    return allTransactions;
+  } catch (error) {
+    console.error('Erro ao buscar entradas e saídas:', error);
+    return [];
   }
 }
 
@@ -1018,16 +1429,25 @@ export async function getFuelStatsForPump(pumpId: string, dateRange?: { inicio: 
 /**
  * Busca estatísticas de faturamento bruto
  * CORRIGIDO: Busca apenas relatórios PAGOS para KPIs de faturamento bruto
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getFaturamentoBrutoStats() {
+export async function getFaturamentoBrutoStats(filters?: { pump_prefix?: string }) {
   try {
-    console.log('🔍 [getFaturamentoBrutoStats] Buscando estatísticas de faturamento...');
+    console.log('🔍 [getFaturamentoBrutoStats] Buscando estatísticas de faturamento...', filters);
     
     // Buscar dados diretamente da tabela reports - APENAS relatórios PAGOS para faturamento bruto
-    const { data, error } = await supabase
+    let query = supabase
       .from('reports')
-      .select('total_value, realized_volume, date, status')
+      .select('total_value, realized_volume, date, status, pump_prefix')
       .eq('status', 'PAGO'); // RESTAURADO: Apenas relatórios PAGOS para faturamento bruto
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getFaturamentoBrutoStats] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar estatísticas de faturamento:', error);
@@ -1043,7 +1463,8 @@ export async function getFaturamentoBrutoStats() {
         total_faturado: 0,
         faturado_hoje: 0,
         relatorios_hoje: 0,
-        volume_total_bombeado: 0
+        volume_total_bombeado: 0,
+        faturamento_por_bomba: []
       };
     }
 
@@ -1055,17 +1476,26 @@ export async function getFaturamentoBrutoStats() {
     const totalFaturado = data.reduce((sum, report) => sum + (report.total_value || 0), 0);
     
     // CORRIGIDO: Volume total deve incluir TODOS os relatórios, não apenas PAGOS
-    // Buscar volume total de todos os relatórios separadamente
-    const { data: allReportsData, error: volumeError } = await supabase
+    // Buscar volume total de todos os relatórios separadamente, aplicando filtro se necessário
+    let volumeQuery = supabase
       .from('reports')
-      .select('realized_volume')
+      .select('realized_volume, pump_prefix')
       .not('realized_volume', 'is', null);
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getFaturamentoBrutoStats] Filtrando volume por bomba:', filters.pump_prefix);
+      volumeQuery = volumeQuery.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data: allReportsData, error: volumeError } = await volumeQuery;
     
     if (volumeError) {
       console.error('Erro ao buscar volume total:', volumeError);
     }
     
     const totalVolume = (allReportsData || []).reduce((sum, report) => sum + (report.realized_volume || 0), 0);
+    console.log('💧 [getFaturamentoBrutoStats] Volume total calculado:', totalVolume);
     
     // Faturamento de hoje
     const faturadoHoje = data
@@ -1073,12 +1503,44 @@ export async function getFaturamentoBrutoStats() {
       .reduce((sum, report) => sum + (report.total_value || 0), 0);
     
     const relatoriosHoje = data.filter(report => report.date === today).length;
+
+    // Calcular faturamento por bomba
+    const faturamentoPorBomba = data.reduce((acc, report) => {
+      const pumpPrefix = report.pump_prefix || 'N/A';
+      
+      if (!acc[pumpPrefix]) {
+        acc[pumpPrefix] = {
+          bomba_prefix: pumpPrefix,
+          total_faturado: 0,
+          total_relatorios: 0,
+          faturado_hoje: 0,
+          relatorios_hoje: 0,
+          volume_total: 0
+        };
+      }
+      
+      acc[pumpPrefix].total_faturado += report.total_value || 0;
+      acc[pumpPrefix].total_relatorios += 1;
+      acc[pumpPrefix].volume_total += report.realized_volume || 0;
+      
+      // Faturamento de hoje por bomba
+      if (report.date === today) {
+        acc[pumpPrefix].faturado_hoje += report.total_value || 0;
+        acc[pumpPrefix].relatorios_hoje += 1;
+      }
+      
+      return acc;
+    }, {} as Record<string, any>);
+
+    const faturamentoPorBombaArray = Object.values(faturamentoPorBomba)
+      .sort((a: any, b: any) => b.total_faturado - a.total_faturado);
     
     console.log('💰 [getFaturamentoBrutoStats] Cálculos:', {
       totalFaturado: `${totalFaturado} (apenas PAGOS)`,
       totalVolume: `${totalVolume} (TODOS os relatórios)`,
       faturadoHoje: `${faturadoHoje} (apenas PAGOS hoje)`,
       relatoriosHoje: `${relatoriosHoje} (apenas PAGOS hoje)`,
+      bombas: faturamentoPorBombaArray.length,
       today
     });
 
@@ -1087,7 +1549,8 @@ export async function getFaturamentoBrutoStats() {
       total_faturado: totalFaturado,
       faturado_hoje: faturadoHoje,
       relatorios_hoje: relatoriosHoje,
-      volume_total_bombeado: totalVolume
+      volume_total_bombeado: totalVolume,
+      faturamento_por_bomba: faturamentoPorBombaArray
     };
   } catch (error) {
     console.error('Erro ao buscar estatísticas de faturamento:', error);
@@ -1096,7 +1559,8 @@ export async function getFaturamentoBrutoStats() {
       total_faturado: 0,
       faturado_hoje: 0,
       relatorios_hoje: 0,
-      volume_total_bombeado: 0
+      volume_total_bombeado: 0,
+      faturamento_por_bomba: []
     };
   }
 }
@@ -1116,6 +1580,90 @@ export async function getFaturamentoBruto(limit: number = 50) {
   }
 
   return data || [];
+}
+
+/**
+ * Busca faturamento detalhado por bomba com filtros opcionais
+ */
+export async function getFaturamentoDetalhadoPorBomba(filters?: {
+  pump_prefix?: string;
+  data_inicio?: string;
+  data_fim?: string;
+  limit?: number;
+}) {
+  try {
+    console.log('🔍 [getFaturamentoDetalhadoPorBomba] Buscando faturamento detalhado por bomba...');
+    
+    let query = supabase
+      .from('reports')
+      .select(`
+        id,
+        report_number,
+        total_value,
+        date,
+        pump_prefix,
+        status,
+        realized_volume,
+        client_id,
+        pumps: pump_id (
+          prefix,
+          model,
+          brand
+        ),
+        clients: client_id (
+          name,
+          companies: company_id (
+            name
+          )
+        )
+      `)
+      .eq('status', 'PAGO')
+      .not('total_value', 'is', null)
+      .order('date', { ascending: false });
+
+    // Aplicar filtros
+    if (filters?.pump_prefix) {
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    if (filters?.data_inicio) {
+      query = query.gte('date', filters.data_inicio);
+    }
+
+    if (filters?.data_fim) {
+      query = query.lte('date', filters.data_fim);
+    }
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar faturamento detalhado:', error);
+      throw new Error('Erro ao buscar faturamento detalhado');
+    }
+
+    console.log('✅ [getFaturamentoDetalhadoPorBomba] Dados encontrados:', data?.length || 0);
+
+    return (data || []).map(report => ({
+      id: report.id,
+      report_number: report.report_number,
+      total_value: report.total_value,
+      date: report.date,
+      pump_prefix: report.pump_prefix,
+      realized_volume: report.realized_volume,
+      client_name: (report.clients as any)?.name || 'N/A',
+      company_name: (report.clients as any)?.companies?.name || 'N/A',
+      bomba_model: (report.pumps as any)?.model,
+      bomba_brand: (report.pumps as any)?.brand,
+      status: report.status
+    }));
+  } catch (error) {
+    console.error('Erro ao buscar faturamento detalhado por bomba:', error);
+    throw error;
+  }
 }
 
 /**
@@ -1172,14 +1720,23 @@ export async function getFaturamentoPorBomba() {
 
 /**
  * Busca estatísticas de pagamentos a receber
+ * NOVO: Aceita filtro de pump_prefix para filtrar por bomba específica
  */
-export async function getPagamentosReceberStats() {
+export async function getPagamentosReceberStats(filters?: { pump_prefix?: string }) {
   try {
-    console.log('🔍 [getPagamentosReceberStats] Buscando estatísticas de pagamentos a receber...');
+    console.log('🔍 [getPagamentosReceberStats] Buscando estatísticas de pagamentos a receber...', filters);
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('pagamentos_receber')
-      .select('status, valor_total, prazo_data');
+      .select('status, valor_total, prazo_data, pump_prefix');
+
+    // Aplicar filtro de bomba se fornecido
+    if (filters?.pump_prefix) {
+      console.log('🚛 [getPagamentosReceberStats] Filtrando por bomba:', filters.pump_prefix);
+      query = query.eq('pump_prefix', filters.pump_prefix);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar estatísticas de pagamentos a receber:', error);
@@ -1299,7 +1856,7 @@ export async function getPagamentosProximosVencimento() {
       .select('*')
       .lte('prazo_data', nextWeek.toISOString().split('T')[0])
       .gte('prazo_data', today.toISOString().split('T')[0])
-      .neq('status', 'pago')
+      .neq('status', 'PAGO')
       .order('prazo_data', { ascending: true })
       .limit(10);
 

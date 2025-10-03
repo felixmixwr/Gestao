@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { DatePicker } from '../../components/ui/date-picker';
 import { ExpenseCharts, CostTypeComparison, MonthlyTrend } from '../../components/financial/ExpenseCharts';
+import { ExpensesExportButton } from '../../components/financial/ExpensesExportButton';
 import { getExpenses, getFinancialStats, getPumpsForSelect, getCompaniesForSelect, getFaturamentoBrutoStats, getFaturamentoPorPeriodo } from '../../lib/financialApi';
 import { formatCurrency } from '../../types/financial';
 import type { ExpenseWithRelations, FinancialStats, ExpenseFilters } from '../../types/financial';
@@ -78,10 +79,6 @@ export function FinancialReports() {
     }
   };
 
-  const handleExport = () => {
-    // Implementar exportação
-    console.log('Exportando relatório...');
-  };
 
   const handlePeriodChange = (field: 'inicio' | 'fim', value: string) => {
     setReportPeriod(prev => ({
@@ -152,14 +149,14 @@ export function FinancialReports() {
             </div>
             
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={handleExport}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Exportar
-              </Button>
+              <ExpensesExportButton
+                expenses={expenses}
+                filters={{
+                  data_inicio: reportPeriod.inicio,
+                  data_fim: reportPeriod.fim
+                }}
+                disabled={loading || expenses.length === 0}
+              />
             </div>
           </div>
 

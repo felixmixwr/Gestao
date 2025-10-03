@@ -140,3 +140,4 @@ export async function integrarNFCanceladaSimples(numeroNota: string) {
     throw error
   }
 }
+

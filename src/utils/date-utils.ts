@@ -98,10 +98,11 @@ export function formatDateSafe(date: string | Date | null | undefined): string {
   if (!date) return ''
   
   try {
-    const dateObj = typeof date === 'string' ? new Date(date) : date
+    const dateObj = typeof date === 'string' ? new Date(date + 'T00:00:00') : date
     if (isNaN(dateObj.getTime())) return ''
     
-    return formatDateToLocalString(dateObj)
+    // Usar formato brasileiro para consistência visual
+    return toBrasiliaDateString(dateObj)
   } catch (error) {
     console.warn('Erro ao formatar data:', error)
     return ''
@@ -124,8 +125,37 @@ export function toBrasiliaDateString(date: Date): string {
  * @param dateString - String de data no formato DD/MM/YYYY
  */
 export function parseDateBR(dateString: string): Date {
-  const [day, month, year] = dateString.split('/').map(Number)
-  return new Date(year, month - 1, day)
+  try {
+    if (!dateString || typeof dateString !== 'string') {
+      console.error('❌ [parseDateBR] Data inválida:', dateString);
+      return new Date(); // Retorna data atual se inválida
+    }
+    
+    const [day, month, year] = dateString.split('/').map(Number);
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) {
+      console.error('❌ [parseDateBR] Erro ao converter números:', { day, month, year });
+      return new Date(); // Retorna data atual se conversão falhou
+    }
+    
+    if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000 || year > 2100) {
+      console.error('❌ [parseDateBR] Valores de data inválidos:', { day, month, year });
+      return new Date(); // Retorna data atual se valores inválidos
+    }
+    
+    const date = new Date(year, month - 1, day);
+    
+    if (isNaN(date.getTime())) {
+      console.error('❌ [parseDateBR] Data resultante inválida:', date);
+      return new Date(); // Retorna data atual se objeto Date inválido
+    }
+    
+    console.log('✅ [parseDateBR] Data válida:', { dateString, day, month, year, date });
+    return date;
+  } catch (error) {
+    console.error('❌ [parseDateBR] Erro geral:', error);
+    return new Date(); // Retorna data atual em caso de erro
+  }
 }
 
 /**

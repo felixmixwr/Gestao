@@ -7,6 +7,7 @@ interface CurrencyInputProps {
   className?: string;
   id?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export const CurrencyInput: React.FC<CurrencyInputProps> = ({
@@ -15,7 +16,8 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
   placeholder = "R$ 0,00",
   className = "",
   id,
-  required = false
+  required = false,
+  disabled = false
 }) => {
   const [displayValue, setDisplayValue] = useState("");
   const isInternalUpdate = useRef(false);
@@ -87,6 +89,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
       onChange={handleChange}
       placeholder={placeholder}
       className={className}
+      disabled={disabled}
     />
   );
 };

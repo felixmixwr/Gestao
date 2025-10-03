@@ -1,4 +1,4 @@
-import { createContext, useState, ReactNode, useEffect } from 'react'
+import { createContext, useState, ReactNode, useEffect, useContext } from 'react'
 import clsx from 'clsx'
 
 interface Toast {
@@ -136,4 +136,38 @@ function ToastItem({ toast, onRemove }: { toast: Toast, onRemove: (id: string) =
       </div>
     </div>
   )
+}
+
+// Hook para usar toast
+export function useToast() {
+  const context = useContext(ToastContext)
+  if (!context) {
+    throw new Error('useToast must be used within a ToastProvider')
+  }
+  return context
+}
+
+// Função utilitária para toast
+export const toast = {
+  success: (message: string) => {
+    // Fallback para alert se não estiver dentro do provider
+    if (typeof window !== 'undefined') {
+      alert(`✅ ${message}`)
+    }
+  },
+  error: (message: string) => {
+    if (typeof window !== 'undefined') {
+      alert(`❌ ${message}`)
+    }
+  },
+  warning: (message: string) => {
+    if (typeof window !== 'undefined') {
+      alert(`⚠️ ${message}`)
+    }
+  },
+  info: (message: string) => {
+    if (typeof window !== 'undefined') {
+      alert(`ℹ️ ${message}`)
+    }
+  }
 }

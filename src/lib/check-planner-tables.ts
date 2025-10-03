@@ -124,3 +124,4 @@ async function criarTabelaUserCalendarEvents(): Promise<void> {
 
   console.log('✅ Tabela user_calendar_events criada com sucesso')
 }
+

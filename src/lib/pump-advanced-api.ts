@@ -243,7 +243,7 @@ export class PumpAdvancedAPI {
         .insert({
           descricao: data.os_name,
           categoria: 'Manutenção' as ExpenseCategory,
-          valor: data.value,
+          valor: -Math.abs(data.value), // Garantir que seja negativo (saída de dinheiro)
           tipo_custo: 'variável' as const,
           data_despesa: data.date,
           pump_id: data.pump_id,
@@ -305,7 +305,7 @@ export class PumpAdvancedAPI {
         .from('expenses')
         .update({
           descricao: data.os_name,
-          valor: data.value,
+          valor: -Math.abs(data.value), // Garantir que seja negativo (saída de dinheiro)
           data_despesa: data.date,
           observacoes: data.description
         })
@@ -395,7 +395,7 @@ export class PumpAdvancedAPI {
         .insert({
           descricao: `Abastecimento de diesel - ${data.liters_filled}L (${data.payment_method === 'cartao' ? 'Cartão' : 'PIX'})`,
           categoria: 'Diesel' as ExpenseCategory,
-          valor: totalCost,
+          valor: -Math.abs(totalCost), // Garantir que seja negativo (saída de dinheiro)
           tipo_custo: 'variável' as const,
           data_despesa: data.date,
           pump_id: data.pump_id,
@@ -456,7 +456,7 @@ export class PumpAdvancedAPI {
         .from('expenses')
         .update({
           descricao: `Abastecimento de diesel - ${data.liters_filled || 0}L`,
-          valor: totalCost,
+          valor: -Math.abs(totalCost), // Garantir que seja negativo (saída de dinheiro)
           data_despesa: data.date,
           quilometragem_atual: data.current_mileage,
           quantidade_litros: data.liters_filled,
@@ -540,7 +540,7 @@ export class PumpAdvancedAPI {
         .insert({
           descricao: data.name,
           categoria: 'Outros' as ExpenseCategory, // Por enquanto, usar "Outros"
-          valor: data.value,
+          valor: -Math.abs(data.value), // Garantir que seja negativo (saída de dinheiro)
           tipo_custo: 'variável' as const,
           data_despesa: data.date,
           pump_id: data.pump_id,

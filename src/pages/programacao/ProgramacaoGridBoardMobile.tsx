@@ -13,7 +13,7 @@ import { DailyScheduleView } from '../../components/DailyScheduleView';
 import { ChevronLeft, ChevronRight, Calendar, Plus, Clock, MapPin, Users } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
-  'Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'
+  'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'
 ];
 
 export function ProgramacaoGridBoardMobile() {

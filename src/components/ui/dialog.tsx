@@ -25,6 +25,16 @@ interface DialogTitleProps {
   children: React.ReactNode
 }
 
+interface DialogDescriptionProps {
+  className?: string
+  children: React.ReactNode
+}
+
+interface DialogTriggerProps {
+  asChild?: boolean
+  children: React.ReactNode
+}
+
 const DialogContext = React.createContext<{
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -111,4 +121,44 @@ const DialogTitle = ({ className, children, ...props }: DialogTitleProps) => (
   </h2>
 )
 
-export { Dialog, DialogContent, DialogHeader, DialogTitle }
+const DialogDescription = ({ className, children, ...props }: DialogDescriptionProps) => (
+  <p
+    className={cn(
+      "text-sm text-muted-foreground",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </p>
+)
+
+const DialogTrigger = ({ asChild, children, ...props }: DialogTriggerProps) => {
+  const { onOpenChange } = React.useContext(DialogContext)
+  
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, {
+      ...props,
+      onClick: (e: React.MouseEvent) => {
+        onOpenChange(true)
+        if (children.props.onClick) {
+          children.props.onClick(e)
+        }
+      }
+    })
+  }
+  
+  return (
+    <button
+      {...props}
+      onClick={() => onOpenChange(true)}
+    >
+      {children}
+    </button>
+  )
+}
+
+export { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger }
+
+
+

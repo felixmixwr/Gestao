@@ -13,6 +13,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
+import { CurrencyInput } from '../ui/CurrencyInput';
 import { DatePicker } from '../ui/date-picker';
 import {
   Select,
@@ -30,7 +31,7 @@ import type {
   CreateExpenseData, 
   UpdateExpenseData
 } from '../../types/financial';
-import { EXPENSE_CATEGORY_OPTIONS, EXPENSE_TYPE_OPTIONS } from '../../types/financial';
+import { EXPENSE_CATEGORY_OPTIONS, EXPENSE_TYPE_OPTIONS, TRANSACTION_TYPE_OPTIONS } from '../../types/financial';
 
 // Schema de validação com Zod
 const expenseSchema = z.object({
@@ -41,6 +42,9 @@ const expenseSchema = z.object({
   valor: z.number().min(0.01, 'Valor deve ser maior que zero'),
   tipo_custo: z.enum(['fixo', 'variável'], {
     required_error: 'Selecione um tipo de custo'
+  }),
+  tipo_transacao: z.enum(['Entrada', 'Saída'], {
+    required_error: 'Selecione um tipo de transação'
   }),
   data_despesa: z.string().min(1, 'Data é obrigatória'),
   pump_id: z.string().min(1, 'Selecione uma bomba'),
@@ -87,6 +91,7 @@ export function ExpenseForm({
       categoria: expense?.categoria || 'Outros',
       valor: expense?.valor || 0,
       tipo_custo: expense?.tipo_custo || 'variável',
+      tipo_transacao: expense?.tipo_transacao || 'Saída',
       data_despesa: expense?.data_despesa || getCurrentDateString(),
       pump_id: expense?.pump_id || '',
       company_id: expense?.company_id || '',
@@ -250,13 +255,12 @@ export function ExpenseForm({
             {/* Valor */}
             <div className="space-y-2">
               <Label htmlFor="valor">Valor da Despesa (R$) *</Label>
-              <Input
+              <CurrencyInput
                 id="valor"
-                type="number"
-                step="0.01"
-                {...register('valor', { valueAsNumber: true })}
-                placeholder="0.00"
-                className={errors.valor ? 'border-red-500' : ''}
+                value={watch('valor') || 0}
+                onChange={(value) => setValue('valor', value)}
+                placeholder="R$ 0,00"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.valor ? 'border-red-500' : ''}`}
                 disabled={showFuelFields && quantidadeLitros > 0 && custoPorLitro > 0}
               />
               {errors.valor && (
@@ -293,6 +297,38 @@ export function ExpenseForm({
               {errors.tipo_custo && (
                 <p className="text-sm text-red-600">{errors.tipo_custo.message}</p>
               )}
+            </div>
+
+            {/* Tipo de Transação */}
+            <div className="space-y-2">
+              <Label>Tipo de Transação *</Label>
+              <Controller
+                name="tipo_transacao"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className={errors.tipo_transacao ? 'border-red-500' : ''}>
+                      <SelectValue placeholder="Selecione um tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TRANSACTION_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <span className="flex items-center gap-2">
+                            <span>{option.icon}</span>
+                            {option.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.tipo_transacao && (
+                <p className="text-sm text-red-600">{errors.tipo_transacao.message}</p>
+              )}
+              <p className="text-sm text-gray-600">
+                💡 <strong>Saída:</strong> Despesas e custos (valor negativo) | <strong>Entrada:</strong> Faturamento e receitas (valor positivo)
+              </p>
             </div>
 
             {/* Data da Despesa */}
@@ -471,8 +507,32 @@ export function ExpenseView({ expense, onEdit, onDelete, onClose }: ExpenseViewP
               </span>
             </div>
             <div>
-              <Label className="text-sm text-gray-600">Tipo</Label>
+              <Label className="text-sm text-gray-600">Tipo de Custo</Label>
               <p className="text-lg font-medium capitalize">{expense.tipo_custo}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm text-gray-600">Tipo de Transação</Label>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-base font-medium ${
+                expense.tipo_transacao === 'Entrada' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                <span className="flex items-center gap-1">
+                  <span>{expense.tipo_transacao === 'Entrada' ? '💰' : '💸'}</span>
+                  {expense.tipo_transacao}
+                </span>
+              </span>
+            </div>
+            <div>
+              <Label className="text-sm text-gray-600">Status</Label>
+              <span className={`inline-flex items-center px-3 py-1 rounded-full text-base font-medium ${
+                expense.status === 'pago' ? 'bg-green-100 text-green-800' : 
+                expense.status === 'pendente' ? 'bg-yellow-100 text-yellow-800' : 
+                'bg-red-100 text-red-800'
+              }`}>
+                {expense.status}
+              </span>
             </div>
           </div>
 

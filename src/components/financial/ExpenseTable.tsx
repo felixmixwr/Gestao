@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { formatCurrency, getCategoryColor, getExpenseIcon, EXPENSE_CATEGORY_OPTIONS } from '../../types/financial';
+import { formatCurrency, getCategoryColor, getExpenseIcon, getTransactionTypeColor, getTransactionTypeIcon, EXPENSE_CATEGORY_OPTIONS, TRANSACTION_TYPE_OPTIONS } from '../../types/financial';
 import type { ExpenseWithRelations, ExpenseFilters } from '../../types/financial';
 import { ChevronLeft, ChevronRight, Search, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
 import { DatePicker } from '../ui/date-picker';
@@ -66,6 +66,15 @@ export function ExpenseTable({
         ? undefined 
         : [category as any];
       onFiltersChange({ ...filters, categoria: categories });
+    }
+  };
+
+  const handleTransactionTypeFilter = (type: string) => {
+    if (onFiltersChange) {
+      const types = type === 'all' 
+        ? undefined 
+        : [type as any];
+      onFiltersChange({ ...filters, tipo_transacao: types });
     }
   };
 
@@ -128,24 +137,14 @@ export function ExpenseTable({
         </div>
 
         <div className="flex items-center gap-2">
-          {onExport && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onExport}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Exportar
-            </Button>
-          )}
+          {/* Botão de exportação removido - agora está no cabeçalho da seção */}
         </div>
       </div>
 
       {/* Filtros expandidos */}
       {showFilters && (
         <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Categoria</label>
               <Select onValueChange={handleCategoryFilter}>
@@ -157,6 +156,26 @@ export function ExpenseTable({
                   {EXPENSE_CATEGORY_OPTIONS.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Tipo de Transação</label>
+              <Select onValueChange={handleTransactionTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os tipos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  {TRANSACTION_TYPE_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <span className="flex items-center gap-2">
+                        <span>{option.icon}</span>
+                        {option.label}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -192,7 +211,8 @@ export function ExpenseTable({
               <TableHead className="w-[300px]">Descrição</TableHead>
               <TableHead className="w-[120px]">Categoria</TableHead>
               <TableHead className="w-[120px] text-right">Valor</TableHead>
-              <TableHead className="w-[80px]">Tipo</TableHead>
+              <TableHead className="w-[100px]">Tipo Transação</TableHead>
+              <TableHead className="w-[80px]">Tipo Custo</TableHead>
               <TableHead className="w-[100px]">Data</TableHead>
               <TableHead className="w-[80px]">Bomba</TableHead>
               <TableHead className="w-[120px]">Empresa</TableHead>
@@ -202,7 +222,7 @@ export function ExpenseTable({
           <TableBody>
             {expenses.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                   Nenhuma despesa encontrada
                 </TableCell>
               </TableRow>
@@ -232,9 +252,20 @@ export function ExpenseTable({
                   </TableCell>
                   
                   <TableCell className="w-[120px] text-right">
-                    <span className="font-semibold text-red-600">
+                    <span className={`font-semibold ${expense.valor >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatCurrency(expense.valor)}
                     </span>
+                  </TableCell>
+                  
+                  <TableCell className="w-[100px]">
+                    <div className="flex justify-center">
+                      <Badge className={getTransactionTypeColor(expense.tipo_transacao)}>
+                        <span className="flex items-center gap-1">
+                          <span>{getTransactionTypeIcon(expense.tipo_transacao)}</span>
+                          {expense.tipo_transacao}
+                        </span>
+                      </Badge>
+                    </div>
                   </TableCell>
                   
                   <TableCell className="w-[80px]">

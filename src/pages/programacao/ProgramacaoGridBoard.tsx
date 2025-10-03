@@ -12,7 +12,7 @@ import { getWeekBoundsBrasilia, getDayOfWeekBR, formatDateToLocalString } from '
 import { DailyScheduleView } from '../../components/DailyScheduleView';
 
 const DAYS_OF_WEEK = [
-  'Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'
+  'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'
 ];
 
 export function ProgramacaoGridBoard() {

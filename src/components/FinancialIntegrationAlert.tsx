@@ -29,6 +29,18 @@ export function FinancialIntegrationAlert({
   const [showAlert, setShowAlert] = useState(false)
   const [currentAlert, setCurrentAlert] = useState<FinancialAlert | null>(null)
 
+  const handleClose = () => {
+    if (currentAlert) {
+      // Marcar como lido
+      setAlerts(prev => prev.map(alert => 
+        alert.id === currentAlert.id ? { ...alert, read: true } : alert
+      ))
+    }
+    setShowAlert(false)
+    setCurrentAlert(null)
+    onClose?.()
+  }
+
   useEffect(() => {
     // Simular alertas de integração financeira
     // Em uma implementação real, isso viria de um sistema de notificações
@@ -72,7 +84,7 @@ export function FinancialIntegrationAlert({
     
     // Mostrar o primeiro alerta não lido
     const unreadAlert = mockAlerts.find(alert => !alert.read)
-    if (unreadAlert && (!pumpId || alert.pumpId === pumpId)) {
+    if (unreadAlert && (!pumpId || unreadAlert.pumpId === pumpId)) {
       setCurrentAlert(unreadAlert)
       setShowAlert(true)
     }
@@ -87,18 +99,6 @@ export function FinancialIntegrationAlert({
       return () => clearTimeout(timer)
     }
   }, [showAlert, autoHide, handleClose])
-
-  const handleClose = () => {
-    if (currentAlert) {
-      // Marcar como lido
-      setAlerts(prev => prev.map(alert => 
-        alert.id === currentAlert.id ? { ...alert, read: true } : alert
-      ))
-    }
-    setShowAlert(false)
-    setCurrentAlert(null)
-    onClose?.()
-  }
 
   const handleViewInFinancial = () => {
     // Em uma implementação real, isso navegaria para o módulo financeiro

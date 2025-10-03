@@ -322,3 +322,6 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
     </Dialog>
   )
 }
+
+
+

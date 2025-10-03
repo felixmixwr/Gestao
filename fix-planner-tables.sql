@@ -81,3 +81,4 @@ CREATE INDEX IF NOT EXISTS idx_user_calendar_events_user_id ON user_calendar_eve
 CREATE INDEX IF NOT EXISTS idx_user_calendar_events_start_date ON user_calendar_events(start_date);
 CREATE INDEX IF NOT EXISTS idx_user_calendar_events_category_id ON user_calendar_events(category_id);
 CREATE INDEX IF NOT EXISTS idx_task_categories_name ON task_categories(name);
+

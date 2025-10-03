@@ -41,9 +41,15 @@ export default function ProgramacaoBoard() {
     const today = new Date();
     const columns: BoardColumn[] = [];
 
+    // Calcular início da semana (segunda-feira)
+    const dayOfWeek = today.getDay(); // 0 = domingo, 1 = segunda, ..., 6 = sábado
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Se domingo, volta 6 dias; senão, calcula para segunda
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() + mondayOffset);
+
     for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      const date = new Date(startOfWeek);
+      date.setDate(startOfWeek.getDate() + i);
       const dateStr = date.toISOString().split('T')[0];
       
       const dayNames = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];

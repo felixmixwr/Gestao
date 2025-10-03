@@ -1,0 +1,398 @@
+/**
+ * Utilitários centralizados para manipulação de datas/horas com timezone Brasil
+ * Todas as funções garantem que datas sejam manipuladas no fuso horário America/Sao_Paulo
+ */
+
+import { 
+  format, 
+  parseISO, 
+  formatInTimeZone, 
+  zonedTimeToUtc, 
+  utcToZonedTime
+} from 'date-fns-tz';
+
+import {
+  startOfDay,
+  endOfDay,
+  addDays,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  isSameDay,
+  isToday,
+  isValid,
+  differenceInHours,
+  differenceInMinutes
+} from 'date-fns';
+
+// Timezone padrão do sistema
+export const TIMEZONE = 'America/Sao_Paulo';
+
+/**
+ * Formata uma data para exibição no padrão brasileiro (dd/MM/yyyy)
+ * @param date - Data como string ISO, Date ou null/undefined
+ * @returns String formatada como data brasileira ou 'N/A' se inválida
+ */
+export const formatDateBr = (date: string | Date | null | undefined): string => {
+  try {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    
+    if (!isValid(dateObj)) {
+      console.warn('Data inválida recebida:', date);
+      return 'Data inválida';
+    }
+    
+    // Converter para timezone Brasil e formatar
+    const zonedDate = utcToZonedTime(dateObj, TIMEZONE);
+    return format(zonedDate, 'dd/MM/yyyy', { timeZone: TIMEZONE });
+  } catch (error) {
+    console.error('Erro ao formatar data:', date, error);
+    return 'Erro na data';
+  }
+};
+
+/**
+ * Formata uma data com hora para exibição no padrão brasileiro (dd/MM/yyyy HH:mm)
+ * @param date - Data como string ISO, Date ou null/undefined
+ * @returns String formatada como data/hora brasileira ou 'N/A' se inválida
+ */
+export const formatDateTimeBr = (date: string | Date | null | undefined): string => {
+  try {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    
+    if (!isValid(dateObj)) {
+      console.warn('Data inválida recebida:', date);
+      return 'Data inválida';
+    }
+    
+    // Converter para timezone Brasil e formatar
+    const zonedDate = utcToZonedTime(dateObj, TIMEZONE);
+    return format(zonedDate, 'dd/MM/yyyy HH:mm', { timeZone: TIMEZONE });
+  } catch (error) {
+    console.error('Erro ao formatar data/hora:', date, error);
+    return 'Erro na data';
+  }
+};
+
+/**
+ * Formata apenas a hora no padrão brasileiro (HH:mm)
+ * @param date - Data como string ISO, Date ou null/undefined
+ * @returns String formatada como hora brasileira ou 'N/A' se inválida
+ */
+export const formatTimeBr = (date: string | Date | null | undefined): string => {
+  try {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    
+    if (!isValid(dateObj)) {
+      console.warn('Data inválida recebida:', date);
+      return 'Data inválida';
+    }
+    
+    // Converter para timezone Brasil e formatar
+    const zonedDate = utcToZonedTime(dateObj, TIMEZONE);
+    return format(zonedDate, 'HH:mm', { timeZone: TIMEZONE });
+  } catch (error) {
+    console.error('Erro ao formatar hora:', date, error);
+    return 'Erro na hora';
+  }
+};
+
+/**
+ * Converte uma data do timezone Brasil para UTC antes de salvar no banco
+ * @param date - Data no timezone Brasil
+ * @returns Date em UTC
+ */
+export const toUtcForDatabase = (date: Date): Date => {
+  return zonedTimeToUtc(date, TIMEZONE);
+};
+
+/**
+ * Converte uma data UTC do banco para timezone Brasil
+ * @param date - Data UTC do banco
+ * @returns Date no timezone Brasil
+ */
+export const fromUtcToBrasilia = (date: Date): Date => {
+  return utcToZonedTime(date, TIMEZONE);
+};
+
+/**
+ * Obtém a data atual no timezone Brasil
+ * @returns Date atual no timezone Brasil
+ */
+export const getCurrentDateInBrasilia = (): Date => {
+  return utcToZonedTime(new Date(), TIMEZONE);
+};
+
+/**
+ * Obtém a data atual formatada como string no padrão brasileiro
+ * @returns String da data atual no formato dd/MM/yyyy
+ */
+export const getCurrentDateStringBr = (): string => {
+  const now = getCurrentDateInBrasilia();
+  return format(now, 'dd/MM/yyyy', { timeZone: TIMEZONE });
+};
+
+/**
+ * Obtém a data atual formatada como string para inputs (YYYY-MM-DD)
+ * @returns String da data atual no formato YYYY-MM-DD
+ */
+export const getCurrentDateInputString = (): string => {
+  const now = getCurrentDateInBrasilia();
+  return format(now, 'yyyy-MM-dd', { timeZone: TIMEZONE });
+};
+
+/**
+ * Converte uma string de data brasileira (dd/MM/yyyy) para Date no timezone Brasil
+ * @param dateString - String no formato dd/MM/yyyy
+ * @returns Date no timezone Brasil
+ */
+export const parseDateBr = (dateString: string): Date => {
+  const [day, month, year] = dateString.split('/').map(Number);
+  const date = new Date(year, month - 1, day);
+  return utcToZonedTime(date, TIMEZONE);
+};
+
+/**
+ * Converte uma string de data para input (YYYY-MM-DD) para Date no timezone Brasil
+ * @param dateString - String no formato YYYY-MM-DD
+ * @returns Date no timezone Brasil
+ */
+export const parseInputDate = (dateString: string): Date => {
+  const date = parseISO(dateString);
+  return utcToZonedTime(date, TIMEZONE);
+};
+
+/**
+ * Formata uma data para string de input (YYYY-MM-DD) no timezone Brasil
+ * @param date - Data a ser formatada
+ * @returns String no formato YYYY-MM-DD
+ */
+export const formatDateForInput = (date: Date): string => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  return format(zonedDate, 'yyyy-MM-dd', { timeZone: TIMEZONE });
+};
+
+/**
+ * Formata uma data para string de input com hora (YYYY-MM-DDTHH:mm) no timezone Brasil
+ * @param date - Data a ser formatada
+ * @returns String no formato YYYY-MM-DDTHH:mm
+ */
+export const formatDateTimeForInput = (date: Date): string => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  return format(zonedDate, "yyyy-MM-dd'T'HH:mm", { timeZone: TIMEZONE });
+};
+
+/**
+ * Obtém o início do dia no timezone Brasil
+ * @param date - Data de referência
+ * @returns Date representando 00:00:00 no timezone Brasil
+ */
+export const getStartOfDayBr = (date: Date): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const startOfDayBr = startOfDay(zonedDate);
+  return zonedTimeToUtc(startOfDayBr, TIMEZONE);
+};
+
+/**
+ * Obtém o fim do dia no timezone Brasil
+ * @param date - Data de referência
+ * @returns Date representando 23:59:59.999 no timezone Brasil
+ */
+export const getEndOfDayBr = (date: Date): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const endOfDayBr = endOfDay(zonedDate);
+  return zonedTimeToUtc(endOfDayBr, TIMEZONE);
+};
+
+/**
+ * Obtém o início da semana (segunda-feira) no timezone Brasil
+ * @param date - Data de referência
+ * @returns Date representando o início da semana no timezone Brasil
+ */
+export const getStartOfWeekBr = (date: Date): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const startOfWeekBr = startOfWeek(zonedDate, { weekStartsOn: 1 }); // Segunda-feira
+  return zonedTimeToUtc(startOfWeekBr, TIMEZONE);
+};
+
+/**
+ * Obtém o fim da semana (domingo) no timezone Brasil
+ * @param date - Data de referência
+ * @returns Date representando o fim da semana no timezone Brasil
+ */
+export const getEndOfWeekBr = (date: Date): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const endOfWeekBr = endOfWeek(zonedDate, { weekStartsOn: 1 }); // Segunda-feira
+  return zonedTimeToUtc(endOfWeekBr, TIMEZONE);
+};
+
+/**
+ * Obtém o início do mês no timezone Brasil
+ * @param date - Data de referência
+ * @returns Date representando o início do mês no timezone Brasil
+ */
+export const getStartOfMonthBr = (date: Date): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const startOfMonthBr = startOfMonth(zonedDate);
+  return zonedTimeToUtc(startOfMonthBr, TIMEZONE);
+};
+
+/**
+ * Obtém o fim do mês no timezone Brasil
+ * @param date - Data de referência
+ * @returns Date representando o fim do mês no timezone Brasil
+ */
+export const getEndOfMonthBr = (date: Date): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const endOfMonthBr = endOfMonth(zonedDate);
+  return zonedTimeToUtc(endOfMonthBr, TIMEZONE);
+};
+
+/**
+ * Adiciona dias a uma data no timezone Brasil
+ * @param date - Data de referência
+ * @param days - Número de dias a adicionar
+ * @returns Nova Date com os dias adicionados no timezone Brasil
+ */
+export const addDaysBr = (date: Date, days: number): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const newDate = addDays(zonedDate, days);
+  return zonedTimeToUtc(newDate, TIMEZONE);
+};
+
+/**
+ * Subtrai dias de uma data no timezone Brasil
+ * @param date - Data de referência
+ * @param days - Número de dias a subtrair
+ * @returns Nova Date com os dias subtraídos no timezone Brasil
+ */
+export const subDaysBr = (date: Date, days: number): Date => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const newDate = subDays(zonedDate, days);
+  return zonedTimeToUtc(newDate, TIMEZONE);
+};
+
+/**
+ * Verifica se duas datas são o mesmo dia no timezone Brasil
+ * @param date1 - Primeira data
+ * @param date2 - Segunda data
+ * @returns true se forem o mesmo dia
+ */
+export const isSameDayBr = (date1: Date, date2: Date): boolean => {
+  const zonedDate1 = utcToZonedTime(date1, TIMEZONE);
+  const zonedDate2 = utcToZonedTime(date2, TIMEZONE);
+  return isSameDay(zonedDate1, zonedDate2);
+};
+
+/**
+ * Verifica se uma data é hoje no timezone Brasil
+ * @param date - Data a verificar
+ * @returns true se for hoje
+ */
+export const isTodayBr = (date: Date): boolean => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const today = getCurrentDateInBrasilia();
+  return isSameDay(zonedDate, today);
+};
+
+/**
+ * Calcula a diferença em horas entre duas datas no timezone Brasil
+ * @param startDate - Data inicial
+ * @param endDate - Data final
+ * @returns Diferença em horas
+ */
+export const getHoursDifferenceBr = (startDate: Date, endDate: Date): number => {
+  const zonedStart = utcToZonedTime(startDate, TIMEZONE);
+  const zonedEnd = utcToZonedTime(endDate, TIMEZONE);
+  return differenceInHours(zonedEnd, zonedStart);
+};
+
+/**
+ * Calcula a diferença em minutos entre duas datas no timezone Brasil
+ * @param startDate - Data inicial
+ * @param endDate - Data final
+ * @returns Diferença em minutos
+ */
+export const getMinutesDifferenceBr = (startDate: Date, endDate: Date): number => {
+  const zonedStart = utcToZonedTime(startDate, TIMEZONE);
+  const zonedEnd = utcToZonedTime(endDate, TIMEZONE);
+  return differenceInMinutes(zonedEnd, zonedStart);
+};
+
+/**
+ * Obtém o nome do dia da semana em português
+ * @param date - Data
+ * @returns Nome do dia da semana em português
+ */
+export const getDayOfWeekBr = (date: Date): string => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  return days[zonedDate.getDay()];
+};
+
+/**
+ * Obtém a abreviação do dia da semana em português
+ * @param date - Data
+ * @returns Abreviação do dia da semana em português
+ */
+export const getDayOfWeekAbbrBr = (date: Date): string => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  const days = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
+  return days[zonedDate.getDay()];
+};
+
+/**
+ * Formata uma data para relatórios (dd/MM/yyyy HH:mm:ss)
+ * @param date - Data a ser formatada
+ * @returns String formatada para relatórios
+ */
+export const formatDateForReport = (date: string | Date | null | undefined): string => {
+  try {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    
+    if (!isValid(dateObj)) {
+      console.warn('Data inválida recebida:', date);
+      return 'Data inválida';
+    }
+    
+    const zonedDate = utcToZonedTime(dateObj, TIMEZONE);
+    return format(zonedDate, 'dd/MM/yyyy HH:mm:ss', { timeZone: TIMEZONE });
+  } catch (error) {
+    console.error('Erro ao formatar data para relatório:', date, error);
+    return 'Erro na data';
+  }
+};
+
+/**
+ * Valida se uma string de data está no formato correto
+ * @param dateString - String de data para validar
+ * @returns true se a data for válida
+ */
+export const isValidDateString = (dateString: string): boolean => {
+  try {
+    const date = parseISO(dateString);
+    return isValid(date);
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Converte uma data para string ISO no timezone Brasil
+ * @param date - Data a ser convertida
+ * @returns String ISO no timezone Brasil
+ */
+export const toISOStringBr = (date: Date): string => {
+  const zonedDate = utcToZonedTime(date, TIMEZONE);
+  return formatInTimeZone(zonedDate, TIMEZONE, "yyyy-MM-dd'T'HH:mm:ss.SSSxxx");
+};

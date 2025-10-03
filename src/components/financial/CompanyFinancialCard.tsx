@@ -17,9 +17,10 @@ interface CompanyFinancialCardProps {
   data?: CompanyFinancialData;
   isPositive?: boolean;
   showAllCompanies?: boolean;
+  filters?: { pump_prefix?: string };
 }
 
-export function CompanyFinancialCard({ data, isPositive, showAllCompanies = false }: CompanyFinancialCardProps) {
+export function CompanyFinancialCard({ data, isPositive, showAllCompanies = false, filters }: CompanyFinancialCardProps) {
   const [companiesData, setCompaniesData] = useState<CompanyFinancialData[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -27,12 +28,12 @@ export function CompanyFinancialCard({ data, isPositive, showAllCompanies = fals
     if (showAllCompanies) {
       loadCompaniesData();
     }
-  }, [showAllCompanies]);
+  }, [showAllCompanies, filters]);
 
   const loadCompaniesData = async () => {
     setLoading(true);
     try {
-      const data = await getDadosFinanceirosPorEmpresa();
+      const data = await getDadosFinanceirosPorEmpresa(filters);
       setCompaniesData(data);
     } catch (error) {
       console.error('Erro ao carregar dados das empresas:', error);

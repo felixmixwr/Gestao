@@ -32,11 +32,19 @@ export function DailyExportButton({
     try {
       setExporting(true);
       
+      // Converter data ISO para objeto Date (sem usar parseDateBR que espera formato DD/MM/YYYY)
+      const selectedDateObj = new Date(selectedDate + 'T00:00:00');
+      
+      console.log('🔍 [DailyExportButton] Data selecionada:', selectedDate);
+      console.log('🔍 [DailyExportButton] selectedDateObj:', selectedDateObj);
+      console.log('🔍 [DailyExportButton] selectedDateObj.toISOString():', selectedDateObj.toISOString());
+      console.log('🔍 [DailyExportButton] selectedDateObj.toLocaleDateString():', selectedDateObj.toLocaleDateString('pt-BR'));
+      
       const exportData: ProgramacaoDailyExportData = {
         programacoes,
         bombas,
         colaboradores,
-        selectedDate: parseDateBR(selectedDate)
+        selectedDate: selectedDateObj
       };
 
       await ProgramacaoExporter.exportDailyToPDF(exportData);
@@ -91,7 +99,10 @@ export function DailyExportButton({
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => {
+                  console.log('🔍 [Modal] Input mudou para:', e.target.value);
+                  setSelectedDate(e.target.value);
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 max={new Date().toISOString().split('T')[0]} // Não permitir datas futuras
               />
@@ -105,7 +116,7 @@ export function DailyExportButton({
                 </label>
                 <div className="max-h-32 overflow-y-auto space-y-1">
                   {availableDates.map(date => {
-                    const dateObj = new Date(date);
+                    const dateObj = new Date(date + 'T00:00:00');
                     const isSelected = selectedDate === date;
                     const programacoesCount = programacoes.filter(p => {
                       if (!p.data) return false;
@@ -113,10 +124,17 @@ export function DailyExportButton({
                       return pDate === date;
                     }).length;
 
+                    console.log('🔍 [Modal] Data da lista:', date);
+                    console.log('🔍 [Modal] selectedDate:', selectedDate);
+                    console.log('🔍 [Modal] isSelected:', isSelected);
+
                     return (
                       <button
                         key={date}
-                        onClick={() => setSelectedDate(date)}
+                        onClick={() => {
+                          console.log('🔍 [Modal] Cliquei na data:', date);
+                          setSelectedDate(date);
+                        }}
                         className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
                           isSelected
                             ? 'bg-blue-100 text-blue-800 border border-blue-300'

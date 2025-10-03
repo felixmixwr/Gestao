@@ -3,14 +3,16 @@
 export type ExpenseCategory = 'Mão de obra' | 'Diesel' | 'Manutenção' | 'Imposto' | 'Outros';
 export type ExpenseType = 'fixo' | 'variável';
 export type ExpenseStatus = 'pendente' | 'pago' | 'cancelado';
+export type TransactionType = 'Entrada' | 'Saída';
 
-// Interface principal da despesa
+// Interface principal da transação financeira (despesa ou faturamento)
 export interface Expense {
   id: string;
   descricao: string;
   categoria: ExpenseCategory;
   valor: number;
   tipo_custo: ExpenseType;
+  tipo_transacao: TransactionType; // Nova classificação: Entrada ou Saída
   data_despesa: string; // YYYY-MM-DD format
   pump_id: string;
   company_id: string;
@@ -19,26 +21,29 @@ export interface Expense {
   quantidade_litros?: number; // Para despesas de diesel
   custo_por_litro?: number; // Para despesas de diesel
   nota_fiscal_id?: string; // Link para nota fiscal se aplicável
+  relatorio_id?: string; // Link para relatório de faturamento se aplicável
   observacoes?: string;
   created_at: string;
   updated_at: string;
 }
 
-// Interface para despesa com dados relacionados
+// Interface para transação financeira com dados relacionados
 export interface ExpenseWithRelations extends Expense {
   bomba_prefix?: string;
   bomba_model?: string;
   bomba_brand?: string;
   company_name?: string;
   nota_fiscal_numero?: string;
+  relatorio_numero?: string; // Número do relatório para faturamento
 }
 
-// Interface para criar despesa
+// Interface para criar transação financeira
 export interface CreateExpenseData {
   descricao: string;
   categoria: ExpenseCategory;
   valor: number;
   tipo_custo: ExpenseType;
+  tipo_transacao: TransactionType; // Nova classificação obrigatória
   data_despesa: string;
   pump_id: string;
   company_id: string;
@@ -47,6 +52,7 @@ export interface CreateExpenseData {
   quantidade_litros?: number;
   custo_por_litro?: number;
   nota_fiscal_id?: string;
+  relatorio_id?: string; // Para faturamento
   observacoes?: string;
 }
 
@@ -55,12 +61,13 @@ export interface UpdateExpenseData extends Partial<CreateExpenseData> {
   id: string;
 }
 
-// Interface para filtros de despesas
+// Interface para filtros de transações financeiras
 export interface ExpenseFilters {
   company_id?: string;
   pump_id?: string;
   categoria?: ExpenseCategory[];
   tipo_custo?: ExpenseType[];
+  tipo_transacao?: TransactionType[]; // Nova opção de filtro
   status?: ExpenseStatus[];
   data_inicio?: string;
   data_fim?: string;
@@ -155,6 +162,11 @@ export const EXPENSE_STATUS_OPTIONS: { value: ExpenseStatus; label: string; colo
   { value: 'cancelado', label: 'Cancelado', color: 'bg-red-100 text-red-800' }
 ];
 
+export const TRANSACTION_TYPE_OPTIONS: { value: TransactionType; label: string; color: string; icon: string }[] = [
+  { value: 'Entrada', label: 'Entrada', color: 'bg-green-100 text-green-800', icon: '💰' },
+  { value: 'Saída', label: 'Saída', color: 'bg-red-100 text-red-800', icon: '💸' }
+];
+
 // Funções utilitárias
 export function formatCurrency(value: number): string {
   // Usar formatação nativa que já inclui o sinal de menos no lugar correto
@@ -184,6 +196,16 @@ export function getCategoryColor(categoria: ExpenseCategory): string {
 export function getStatusColor(status: ExpenseStatus): string {
   const statusOption = EXPENSE_STATUS_OPTIONS.find(s => s.value === status);
   return statusOption?.color || 'bg-gray-100 text-gray-800';
+}
+
+export function getTransactionTypeColor(tipo: TransactionType): string {
+  const typeOption = TRANSACTION_TYPE_OPTIONS.find(t => t.value === tipo);
+  return typeOption?.color || 'bg-gray-100 text-gray-800';
+}
+
+export function getTransactionTypeIcon(tipo: TransactionType): string {
+  const typeOption = TRANSACTION_TYPE_OPTIONS.find(t => t.value === tipo);
+  return typeOption?.icon || '📦';
 }
 
 export function calculateFuelTotal(quantidade_litros: number, custo_por_litro: number): number {
