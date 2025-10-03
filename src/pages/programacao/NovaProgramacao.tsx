@@ -4,7 +4,7 @@ import { ProgramacaoAPI } from '../../lib/programacao-api';
 import { useViaCep } from '../../lib/viacep-api';
 import { ProgramacaoFormData } from '../../types/programacao';
 import { toast } from '../../lib/toast-hooks';
-// import { toBrasiliaISOString } from '../../utils/date-utils';
+import { getCurrentDateString } from '../../utils/date-utils';
 import { Layout } from '../../components/Layout';
 import { Loading } from '../../components/Loading';
 import { Button } from '../../components/Button';
@@ -59,7 +59,7 @@ function NovaProgramacaoContent() {
 
   const [formData, setFormData] = useState<ProgramacaoFormData>({
     prefixo_obra: '',
-    data: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
+    data: getCurrentDateString(), // Data atual no formato YYYY-MM-DD
     horario: '',
     cliente_id: '',
     cliente: '', // Nome do cliente para compatibilidade
@@ -351,7 +351,7 @@ function NovaProgramacaoContent() {
       console.log('🔍 [NovaProgramacao] Dados do formulário:', formData);
       console.log('🔍 [NovaProgramacao] Company ID:', formData.company_id);
       console.log('🔍 [NovaProgramacao] Data selecionada:', formData.data);
-      console.log('🔍 [NovaProgramacao] Data atual do sistema:', new Date().toISOString().split('T')[0]);
+      console.log('🔍 [NovaProgramacao] Data atual do sistema:', getCurrentDateString());
       
       // Enviar dados como estão - a data já está no formato correto (YYYY-MM-DD)
       if (isEditing && id) {

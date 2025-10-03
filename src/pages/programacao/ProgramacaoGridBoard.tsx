@@ -8,7 +8,7 @@ import { Button } from '../../components/Button';
 import { toast } from '../../lib/toast-hooks';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { ExportButtons } from '../../components/ExportButtons';
-import { getWeekBoundsBrasilia, getDayOfWeekBR } from '../../utils/date-utils';
+import { getWeekBoundsBrasilia, getDayOfWeekBR, formatDateToLocalString } from '../../utils/date-utils';
 import { DailyScheduleView } from '../../components/DailyScheduleView';
 
 const DAYS_OF_WEEK = [
@@ -60,8 +60,8 @@ export function ProgramacaoGridBoard() {
       const { start, end } = getWeekBounds(currentWeek);
       
       // Usar datas simples no formato YYYY-MM-DD
-      const startDate = start.toISOString().split('T')[0];
-      const endDate = end.toISOString().split('T')[0];
+      const startDate = formatDateToLocalString(start);
+      const endDate = formatDateToLocalString(end);
       
       const data = await ProgramacaoAPI.getByPeriod(startDate, endDate);
       setProgramacoes(data);
@@ -93,7 +93,8 @@ export function ProgramacaoGridBoard() {
   // Obter programações para uma bomba e dia específicos
   const getProgramacoesForBombaAndDay = (bombaId: string, dayOfWeek: number) => {
     return programacoes.filter(p => {
-      const programacaoDayOfWeek = getDayOfWeekBR(p.data);
+      const programacaoDate = new Date(p.data);
+      const programacaoDayOfWeek = programacaoDate.getDay();
       return p.bomba_id === bombaId && programacaoDayOfWeek === dayOfWeek;
     });
   };
