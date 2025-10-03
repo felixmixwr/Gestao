@@ -404,8 +404,8 @@ export class PumpAdvancedAPI {
           quantidade_litros: data.liters_filled,
           custo_por_litro: data.cost_per_liter,
           payment_method: data.payment_method,
-          discount_type: data.discount_type,
-          discount_value: data.discount_value,
+          discount_type: data.discount_type || null,
+          discount_value: data.discount_value || null,
           observacoes: data.notes
         })
         .select()
