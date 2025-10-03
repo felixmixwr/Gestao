@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { RequireAuth } from '../components/RequireAuth'
 import { GenericError } from '../pages/errors/GenericError'
+import { Suspense } from 'react'
 
 // Import components directly to avoid lazy loading issues
 import { Login } from '../pages/auth/LoginSimple'
@@ -46,16 +47,32 @@ import TestAPI from '../pages/programacao/TestAPI'
 // Import do módulo financeiro
 import { FinancialModule } from '../pages/financial'
 
-// Import do módulo planner
-import PlannerMain from '../pages/planner/PlannerMain'
-import PlannerCalendar from '../pages/planner/PlannerCalendar'
-import PlannerAgenda from '../pages/planner/PlannerAgenda'
-import PlannerDia from '../pages/planner/PlannerDia'
-import PlannerHorario from '../pages/planner/PlannerHorario'
-import PlannerAulas from '../pages/planner/PlannerAulas'
-import PlannerAnos from '../pages/planner/PlannerAnos'
-import PlannerConfiguracoes from '../pages/planner/PlannerConfiguracoes'
-import NovaTarefa from '../pages/planner/NovaTarefa'
+// Import do módulo planner (lazy loading)
+import { lazy } from 'react'
+
+const PlannerMain = lazy(() => import('../pages/planner/PlannerMain'))
+const PlannerCalendar = lazy(() => import('../pages/planner/PlannerCalendar'))
+const PlannerAgenda = lazy(() => import('../pages/planner/PlannerAgenda'))
+const PlannerDia = lazy(() => import('../pages/planner/PlannerDia'))
+const PlannerHorario = lazy(() => import('../pages/planner/PlannerHorario'))
+const PlannerAulas = lazy(() => import('../pages/planner/PlannerAulas'))
+const PlannerAnos = lazy(() => import('../pages/planner/PlannerAnos'))
+const PlannerConfiguracoes = lazy(() => import('../pages/planner/PlannerConfiguracoes'))
+const NovaTarefa = lazy(() => import('../pages/planner/NovaTarefa'))
+
+// Componente de loading para lazy components
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+  </div>
+)
+
+// Wrapper para componentes lazy com Suspense
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<LoadingSpinner />}>
+    {children}
+  </Suspense>
+)
 
 export const router = createBrowserRouter([
   {
@@ -441,7 +458,9 @@ export const router = createBrowserRouter([
     path: '/planner',
     element: (
       <RequireAuth>
-        <PlannerMain />
+        <LazyWrapper>
+          <PlannerMain />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -450,7 +469,9 @@ export const router = createBrowserRouter([
     path: '/planner/calendario',
     element: (
       <RequireAuth>
-        <PlannerCalendar />
+        <LazyWrapper>
+          <PlannerCalendar />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -459,7 +480,9 @@ export const router = createBrowserRouter([
     path: '/planner/agenda',
     element: (
       <RequireAuth>
-        <PlannerAgenda />
+        <LazyWrapper>
+          <PlannerAgenda />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -468,7 +491,9 @@ export const router = createBrowserRouter([
     path: '/planner/dia',
     element: (
       <RequireAuth>
-        <PlannerDia />
+        <LazyWrapper>
+          <PlannerDia />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -477,7 +502,9 @@ export const router = createBrowserRouter([
     path: '/planner/horario',
     element: (
       <RequireAuth>
-        <PlannerHorario />
+        <LazyWrapper>
+          <PlannerHorario />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -486,7 +513,9 @@ export const router = createBrowserRouter([
     path: '/planner/aulas',
     element: (
       <RequireAuth>
-        <PlannerAulas />
+        <LazyWrapper>
+          <PlannerAulas />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -495,7 +524,9 @@ export const router = createBrowserRouter([
     path: '/planner/anos',
     element: (
       <RequireAuth>
-        <PlannerAnos />
+        <LazyWrapper>
+          <PlannerAnos />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -504,7 +535,9 @@ export const router = createBrowserRouter([
     path: '/planner/configuracoes',
     element: (
       <RequireAuth>
-        <PlannerConfiguracoes />
+        <LazyWrapper>
+          <PlannerConfiguracoes />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
@@ -513,7 +546,9 @@ export const router = createBrowserRouter([
     path: '/planner/nova-tarefa',
     element: (
       <RequireAuth>
-        <NovaTarefa />
+        <LazyWrapper>
+          <NovaTarefa />
+        </LazyWrapper>
       </RequireAuth>
     ),
     errorElement: <GenericError />
