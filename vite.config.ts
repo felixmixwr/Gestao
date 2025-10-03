@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 5173,
     host: true,
     strictPort: true,
     headers: {
@@ -21,7 +21,7 @@ export default defineConfig({
     },
     middlewareMode: false,
     hmr: {
-      port: 3000,
+      port: 5173,
     },
     fs: {
       allow: ['..']
