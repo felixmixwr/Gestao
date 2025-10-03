@@ -92,6 +92,15 @@ export const formatCurrency = (value?: number | null): string => {
 // Função para formatar data
 export const formatDate = (date?: string | null): string => {
   if (!date) return 'Sem data'
+  
+  // Se for formato ISO (YYYY-MM-DD), usar conversão segura para evitar diferenças de fuso horário
+  if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
+    return localDate.toLocaleDateString('pt-BR');
+  }
+  
+  // Para outros formatos, usar conversão normal
   return new Date(date).toLocaleDateString('pt-BR')
 }
 

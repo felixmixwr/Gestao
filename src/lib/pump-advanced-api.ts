@@ -372,6 +372,10 @@ export class PumpAdvancedAPI {
   // Criar novo abastecimento de diesel
   static async createDieselEntry(data: CreateDieselEntryData): Promise<DieselEntry> {
     try {
+      console.log('🔍 [createDieselEntry] Data recebida:', data);
+      console.log('🔍 [createDieselEntry] data.date específica:', data.date);
+      console.log('🔍 [createDieselEntry] typeof data.date:', typeof data.date);
+      
       // Calcular total com desconto
       const subtotal = data.liters_filled * data.cost_per_liter
       const discountAmount = data.discount_type && data.discount_value ? 
@@ -390,12 +394,12 @@ export class PumpAdvancedAPI {
       if (pumpError) throw pumpError
 
       // Criar despesa no financeiro
-      const { data: expense, error: expenseError } = await supabase
-        .from('expenses')
-        .insert({
+      console.log('🔍 [createDieselEntry] Inserindo despesa com data:', data.date);
+      
+      const expenseData = {
           descricao: `Abastecimento de diesel - ${data.liters_filled}L (${data.payment_method === 'cartao' ? 'Cartão' : 'PIX'})`,
           categoria: 'Diesel' as ExpenseCategory,
-          valor: -Math.abs(totalCost), // Garantir que seja negativo (saída de dinheiro)
+          valor: -Math.abs(totalCost), // Garantir que sea negativo (saída de dinheiro)
           tipo_custo: 'variável' as const,
           data_despesa: data.date,
           pump_id: data.pump_id,
@@ -408,7 +412,13 @@ export class PumpAdvancedAPI {
           discount_type: data.discount_type || null,
           discount_value: data.discount_value || null,
           observacoes: data.notes
-        })
+        };
+        
+      console.log('🔍 [createDieselEntry] expenseData completo:', expenseData);
+      
+      const { data: expense, error: expenseError } = await supabase
+        .from('expenses')
+        .insert(expenseData)
         .select()
         .single()
 

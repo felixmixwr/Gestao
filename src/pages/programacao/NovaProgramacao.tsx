@@ -220,6 +220,29 @@ function NovaProgramacaoContent() {
         }
       }
       
+      // Se mudou a bomba_id, preencher automaticamente a empresa do serviço
+      if (field === 'bomba_id' && typeof value === 'string') {
+        const bomba = bombas.find(b => b.id === value);
+        if (bomba && bomba.empresa_nome) {
+          // Buscar a empresa correspondente em empresas pelo nome
+          const empresaCorrespondente = empresas.find(e => e.name === bomba.empresa_nome);
+          if (empresaCorrespondente) {
+            newData.company_id = empresaCorrespondente.id;
+            console.log('🔧 Empresa preenchida automaticamente:', {
+              bomba: bomba.prefix,
+              empresa: bomba.empresa_nome,
+              company_id: empresaCorrespondente.id
+            });
+          }
+        } else if (bomba) {
+          console.log('🔍 Bomba selecionada sem empresa_nome:', {
+            bomba: bomba.prefix,
+            empresa_nome: bomba.empresa_nome,
+            is_terceira: bomba.is_terceira
+          });
+        }
+      }
+      
       return newData;
     });
     

@@ -589,6 +589,7 @@ export class ProgramacaoExporter {
           'Motorista/Operador': motoristaNome,
           'Auxiliares': auxiliaresNomes,
           'Bomba': this.getBombaName(p.bomba_id, data.bombas),
+          'Empresa do Serviço': this.getBombaEmpresa(p.bomba_id, data.bombas),
           'Criado em': createdObj.toLocaleDateString('pt-BR'),
           'Atualizado em': updatedObj.toLocaleDateString('pt-BR')
         };
@@ -612,6 +613,7 @@ export class ProgramacaoExporter {
           'Motorista/Operador': p.motorista_operador || '',
           'Auxiliares': p.auxiliares_bomba?.join(', ') || '',
           'Bomba': this.getBombaName(p.bomba_id, data.bombas),
+          'Empresa do Serviço': this.getBombaEmpresa(p.bomba_id, data.bombas),
           'Criado em': 'Data inválida',
           'Atualizado em': 'Data inválida'
         };
@@ -655,6 +657,15 @@ export class ProgramacaoExporter {
     if (!bombaId) return '';
     const bomba = bombas.find(b => b.id === bombaId);
     return bomba ? `${bomba.prefix} - ${bomba.model}` : '';
+  }
+
+  /**
+   * Busca o nome da empresa da bomba baseado no ID
+   */
+  private static getBombaEmpresa(bombaId: string | undefined, bombas: BombaOption[]): string {
+    if (!bombaId) return '';
+    const bomba = bombas.find(b => b.id === bombaId);
+    return bomba?.empresa_nome || '';
   }
 
   private static getColaboradorName(colaboradorId: string | undefined, colaboradores: Array<{ id: string; nome: string; funcao: string }>): string {
