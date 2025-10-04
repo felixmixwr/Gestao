@@ -246,7 +246,11 @@ export default function NewReport() {
 
       // Combinar bombas internas e de terceiros
       const allPumps = [
-        ...(pumpsData || []).map(pump => ({ ...pump, is_terceira: false })),
+        ...(pumpsData || []).map(pump => ({ 
+          ...pump, 
+          is_terceira: false,
+          empresa_nome: 'Félix Mix' // Bombas internas pertencem à Félix Mix
+        })),
         ...bombasTerceirasFormatted
       ]
 
@@ -309,21 +313,35 @@ export default function NewReport() {
     const pump = pumps.find(p => p.id === pumpId)
     setSelectedPump(pump || null)
     
+    console.log('🔍 [DEBUG] Bomba selecionada:', {
+      pumpId,
+      pump: pump,
+      empresa_nome: pump?.empresa_nome,
+      is_terceira: pump?.is_terceira
+    })
+    
     // Limpar campos de equipe se for bomba terceira
     const isThirdPartyPump = pump?.is_terceira || false
     
     // Buscar empresa do serviço baseada na empresa da bomba
     let serviceCompanyId = ''
     if (pump?.empresa_nome) {
+      console.log('🔍 [DEBUG] Buscando empresa:', pump.empresa_nome)
+      console.log('🔍 [DEBUG] Companies disponíveis:', companies.map(c => ({ id: c.id, name: c.name })))
+      
       const serviceCompany = companies.find(c => c.name === pump.empresa_nome)
       if (serviceCompany) {
         serviceCompanyId = serviceCompany.id
-        console.log('🔧 Empresa do serviço preenchida automaticamente:', {
+        console.log('✅ Empresa do serviço preenchida automaticamente:', {
           bomba: pump.prefix,
           empresa: pump.empresa_nome,
           company_id: serviceCompanyId
         })
+      } else {
+        console.log('❌ Empresa não encontrada na lista de companies:', pump.empresa_nome)
       }
+    } else {
+      console.log('❌ Bomba não tem empresa_nome definida')
     }
     
     setFormData(prev => ({
