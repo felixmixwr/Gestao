@@ -312,11 +312,26 @@ export default function NewReport() {
     // Limpar campos de equipe se for bomba terceira
     const isThirdPartyPump = pump?.is_terceira || false
     
+    // Buscar empresa do serviço baseada na empresa da bomba
+    let serviceCompanyId = ''
+    if (pump?.empresa_nome) {
+      const serviceCompany = companies.find(c => c.name === pump.empresa_nome)
+      if (serviceCompany) {
+        serviceCompanyId = serviceCompany.id
+        console.log('🔧 Empresa do serviço preenchida automaticamente:', {
+          bomba: pump.prefix,
+          empresa: pump.empresa_nome,
+          company_id: serviceCompanyId
+        })
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       pump_id: pumpId,
       pump_prefix: pump?.prefix || '',
       pump_owner_company_id: pump?.owner_company_id || '',
+      service_company_id: serviceCompanyId,
       // Limpar campos de equipe para bombas terceiras
       driver_id: isThirdPartyPump ? '' : prev.driver_id,
       assistants: isThirdPartyPump ? [] : prev.assistants

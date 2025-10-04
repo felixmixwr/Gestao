@@ -221,7 +221,32 @@ export default function ReportEdit() {
   }
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value }
+      
+      // Se mudou a bomba, preencher automaticamente prefixo e empresa do serviço
+      if (field === 'pump_id') {
+        const pump = pumps.find(p => p.id === value)
+        if (pump) {
+          newData.pump_prefix = pump.prefix || ''
+          
+          // Buscar empresa do serviço baseada na empresa da bomba
+          if (pump.empresa_nome) {
+            const serviceCompany = companies.find(c => c.name === pump.empresa_nome)
+            if (serviceCompany) {
+              newData.service_company_id = serviceCompany.id
+              console.log('🔧 Empresa do serviço preenchida automaticamente (edição):', {
+                bomba: pump.prefix,
+                empresa: pump.empresa_nome,
+                company_id: serviceCompany.id
+              })
+            }
+          }
+        }
+      }
+      
+      return newData
+    })
   }
 
   if (loading) {
