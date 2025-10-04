@@ -216,10 +216,20 @@ export default function NewReport() {
 
   const loadPumps = async () => {
     try {
-      // Carregar bombas internas
+      // Carregar bombas internas com dados da empresa
       const { data: pumpsData, error: pumpsError } = await supabase
         .from('pumps')
-        .select('id, prefix, model, brand, owner_company_id')
+        .select(`
+          id, 
+          prefix, 
+          model, 
+          brand, 
+          owner_company_id,
+          companies!pumps_owner_company_id_fkey (
+            id,
+            name
+          )
+        `)
         .order('prefix')
 
       if (pumpsError) throw pumpsError
@@ -249,7 +259,7 @@ export default function NewReport() {
         ...(pumpsData || []).map(pump => ({ 
           ...pump, 
           is_terceira: false,
-          empresa_nome: 'Félix Mix' // Bombas internas pertencem à Félix Mix
+          empresa_nome: (pump.companies as any)?.name || ''
         })),
         ...bombasTerceirasFormatted
       ]
@@ -326,8 +336,10 @@ export default function NewReport() {
     // Buscar empresa do serviço baseada na empresa da bomba
     let serviceCompanyId = ''
     if (pump?.empresa_nome) {
-      console.log('🔍 [DEBUG] Buscando empresa:', pump.empresa_nome)
-      console.log('🔍 [DEBUG] Companies disponíveis:', companies.map(c => ({ id: c.id, name: c.name })))
+      console.log('🔍 [DEBUG] Buscando empresa:', {
+        empresa_nome: pump.empresa_nome,
+        companies: companies.map(c => ({ id: c.id, name: c.name }))
+      })
       
       const serviceCompany = companies.find(c => c.name === pump.empresa_nome)
       if (serviceCompany) {

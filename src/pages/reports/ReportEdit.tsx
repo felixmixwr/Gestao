@@ -163,48 +163,18 @@ export default function ReportEdit() {
         .order('name')
       setClients(clientsData || [])
 
-      // Carregar bombas internas
+      // Carregar bombas
       const { data: pumpsData } = await supabase
         .from('pumps')
-        .select('id, prefix, model, brand, owner_company_id')
+        .select('id, prefix')
         .order('prefix')
+      setPumps(pumpsData || [])
 
-      // Carregar bombas de terceiros
-      const { data: bombasTerceirasData } = await supabase
-        .from('view_bombas_terceiras_com_empresa')
-        .select('*')
-        .order('prefixo')
-
-      // Transformar bombas de terceiros para o formato esperado
-      const bombasTerceirasFormatted = (bombasTerceirasData || []).map((bomba: any) => ({
-        id: bomba.id,
-        prefix: bomba.prefixo,
-        model: bomba.modelo,
-        brand: `${bomba.empresa_nome_fantasia} - R$ ${bomba.valor_diaria || 0}/dia`,
-        owner_company_id: bomba.empresa_id,
-        is_terceira: true,
-        empresa_nome: bomba.empresa_nome_fantasia,
-        valor_diaria: bomba.valor_diaria
-      }))
-
-      // Combinar bombas internas e de terceiros
-      const allPumps = [
-        ...(pumpsData || []).map(pump => ({ 
-          ...pump, 
-          is_terceira: false,
-          empresa_nome: 'Félix Mix' // Bombas internas pertencem à Félix Mix
-        })),
-        ...bombasTerceirasFormatted
-      ]
-
-      setPumps(allPumps)
-
-      // Carregar empresas
-      const { data: companiesData } = await supabase
-        .from('companies')
-        .select('id, name')
-        .order('name')
-      setCompanies(companiesData || [])
+      // Carregar empresas (comentado - não utilizado no momento)
+      // const { data: companiesData } = await supabase
+      //   .from('companies')
+      //   .select('id, name')
+      //   .order('name')
     } catch (error) {
       console.error('Erro ao carregar dados relacionados:', error)
     }
