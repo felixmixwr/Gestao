@@ -23,11 +23,10 @@ export const exportToXLSXSimple = (data: ExportData, options: ExportOptions = { 
       ['Total de Registros:', data.totalRecords.toString()],
       [''],
       // Cabeçalho da tabela
-      ['Nº', 'ID Relatório', 'Data', 'Cliente', 'Bomba', 'Volume (m³)', 'Valor (R$)', 'Status'],
+      ['Nº', 'Data', 'Cliente', 'Bomba', 'Volume (m³)', 'Valor (R$)', 'Status'],
       // Dados dos relatórios
       ...data.reports.map((report, index) => [
         index + 1,
-        report.report_number || 'N/A',
         report.date ? formatDateBR(report.date) : 'N/A',
         report.clients?.name || report.client_rep_name || 'N/A',
         report.pumps?.prefix || report.pump_prefix || 'N/A',
@@ -56,6 +55,10 @@ export const exportToXLSXSimple = (data: ExportData, options: ExportOptions = { 
     throw new Error(`Erro ao exportar XLSX: ${error.message}`)
   }
 }
+
+
+
+
 
 
 

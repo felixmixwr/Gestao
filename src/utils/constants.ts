@@ -31,6 +31,7 @@ export const APP_CONFIG = {
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  FELIX_IA: '/felix-ia',
   CLIENTS: '/clients',
   CLIENT_NEW: '/clients/new',
   CLIENT_DETAIL: '/clients/:id',

@@ -1,105 +1,98 @@
 /**
- * Utilitários para manipulação de datas sem problemas de fuso horário
+ * Utilitários para manipulação de datas com fuso horário America/Sao_Paulo
+ * Padronizado para o sistema WorldRental – Felix Mix
  */
 
+import { format, formatInTimeZone, toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { parseISO, startOfDay, endOfDay, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isSameDay, isToday, isValid } from 'date-fns';
+
+// Timezone padrão do sistema
+export const TIMEZONE = 'America/Sao_Paulo';
+
 /**
- * Obtém a data atual no formato YYYY-MM-DD no fuso horário local
+ * Obtém a data atual no formato YYYY-MM-DD no fuso horário America/Sao_Paulo
  * Evita problemas de fuso horário que ocorrem com toISOString()
  */
 export function getCurrentDateString(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  const now = toZonedTime(new Date(), TIMEZONE)
+  return format(now, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Converte uma data para string no formato YYYY-MM-DD no fuso horário local
+ * Converte uma data para string no formato YYYY-MM-DD no fuso horário America/Sao_Paulo
  * @param date - Data a ser convertida
  */
 export function formatDateToLocalString(date: Date): string {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  const zonedDate = toZonedTime(date, TIMEZONE)
+  return format(zonedDate, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Converte uma string de data YYYY-MM-DD para Date no fuso horário local
+ * Converte uma string de data YYYY-MM-DD para Date no fuso horário America/Sao_Paulo
  * @param dateString - String de data no formato YYYY-MM-DD
  */
 export function parseLocalDateString(dateString: string): Date {
-  const [year, month, day] = dateString.split('-').map(Number)
-  return new Date(year, month - 1, day)
+  const date = parseISO(dateString)
+  return toZonedTime(date, TIMEZONE)
 }
 
 /**
- * Adiciona dias a uma data e retorna no formato YYYY-MM-DD
+ * Adiciona dias a uma data e retorna no formato YYYY-MM-DD no timezone America/Sao_Paulo
  * @param date - Data base
  * @param days - Número de dias a adicionar (pode ser negativo)
  */
 export function addDaysToDateString(date: Date, days: number): string {
-  const newDate = new Date(date)
-  newDate.setDate(newDate.getDate() + days)
-  return formatDateToLocalString(newDate)
+  const zonedDate = toZonedTime(date, TIMEZONE)
+  const newDate = addDays(zonedDate, days)
+  return format(newDate, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Obtém o primeiro dia do mês atual no formato YYYY-MM-DD
+ * Obtém o primeiro dia do mês atual no formato YYYY-MM-DD no timezone America/Sao_Paulo
  */
 export function getFirstDayOfCurrentMonth(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  return `${year}-${month}-01`
+  const now = toZonedTime(new Date(), TIMEZONE)
+  const startOfMonthDate = startOfMonth(now)
+  return format(startOfMonthDate, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Obtém o último dia do mês atual no formato YYYY-MM-DD
+ * Obtém o último dia do mês atual no formato YYYY-MM-DD no timezone America/Sao_Paulo
  */
 export function getLastDayOfCurrentMonth(): string {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
-  const lastDay = new Date(year, month, 0).getDate()
-  return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  const now = toZonedTime(new Date(), TIMEZONE)
+  const endOfMonthDate = endOfMonth(now)
+  return format(endOfMonthDate, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Obtém o primeiro dia da semana atual (segunda-feira) no formato YYYY-MM-DD
+ * Obtém o primeiro dia da semana atual (segunda-feira) no formato YYYY-MM-DD no timezone America/Sao_Paulo
  */
 export function getFirstDayOfCurrentWeek(): string {
-  const now = new Date()
-  const dayOfWeek = now.getDay()
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Se domingo, volta 6 dias; senão, calcula para segunda
-  const monday = new Date(now)
-  monday.setDate(now.getDate() + mondayOffset)
-  return formatDateToLocalString(monday)
+  const now = toZonedTime(new Date(), TIMEZONE)
+  const startOfWeekDate = startOfWeek(now, { weekStartsOn: 1 }) // Segunda-feira
+  return format(startOfWeekDate, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Obtém o último dia da semana atual (domingo) no formato YYYY-MM-DD
+ * Obtém o último dia da semana atual (domingo) no formato YYYY-MM-DD no timezone America/Sao_Paulo
  */
 export function getLastDayOfCurrentWeek(): string {
-  const now = new Date()
-  const dayOfWeek = now.getDay()
-  const sundayOffset = dayOfWeek === 0 ? 0 : 7 - dayOfWeek // Se domingo, não move; senão, vai para domingo
-  const sunday = new Date(now)
-  sunday.setDate(now.getDate() + sundayOffset)
-  return formatDateToLocalString(sunday)
+  const now = toZonedTime(new Date(), TIMEZONE)
+  const endOfWeekDate = endOfWeek(now, { weekStartsOn: 1 }) // Segunda-feira
+  return format(endOfWeekDate, 'yyyy-MM-dd', { timeZone: TIMEZONE })
 }
 
 /**
- * Formata uma data de forma segura, retornando string vazia se inválida
+ * Formata uma data de forma segura, retornando string vazia se inválida no timezone America/Sao_Paulo
  * @param date - Data a ser formatada (pode ser string ou Date)
  */
 export function formatDateSafe(date: string | Date | null | undefined): string {
   if (!date) return ''
   
   try {
-    const dateObj = typeof date === 'string' ? new Date(date + 'T00:00:00') : date
-    if (isNaN(dateObj.getTime())) return ''
+    const dateObj = typeof date === 'string' ? parseISO(date) : date
+    if (!isValid(dateObj)) return ''
     
     // Usar formato brasileiro para consistência visual
     return toBrasiliaDateString(dateObj)
@@ -110,78 +103,73 @@ export function formatDateSafe(date: string | Date | null | undefined): string {
 }
 
 /**
- * Converte uma data para string no formato brasileiro (DD/MM/YYYY)
+ * Converte uma data para string no formato brasileiro (DD/MM/YYYY) no timezone America/Sao_Paulo
  * @param date - Data a ser convertida
  */
 export function toBrasiliaDateString(date: Date): string {
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
+  const zonedDate = toZonedTime(date, TIMEZONE)
+  return format(zonedDate, 'dd/MM/yyyy', { timeZone: TIMEZONE })
 }
 
 /**
- * Converte uma string de data no formato brasileiro (DD/MM/YYYY) para Date
+ * Converte uma string de data no formato brasileiro (DD/MM/YYYY) para Date no timezone America/Sao_Paulo
  * @param dateString - String de data no formato DD/MM/YYYY
  */
 export function parseDateBR(dateString: string): Date {
   try {
     if (!dateString || typeof dateString !== 'string') {
       console.error('❌ [parseDateBR] Data inválida:', dateString);
-      return new Date(); // Retorna data atual se inválida
+      return toZonedTime(new Date(), TIMEZONE); // Retorna data atual se inválida
     }
     
     const [day, month, year] = dateString.split('/').map(Number);
     
     if (isNaN(day) || isNaN(month) || isNaN(year)) {
       console.error('❌ [parseDateBR] Erro ao converter números:', { day, month, year });
-      return new Date(); // Retorna data atual se conversão falhou
+      return toZonedTime(new Date(), TIMEZONE); // Retorna data atual se conversão falhou
     }
     
     if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000 || year > 2100) {
       console.error('❌ [parseDateBR] Valores de data inválidos:', { day, month, year });
-      return new Date(); // Retorna data atual se valores inválidos
+      return toZonedTime(new Date(), TIMEZONE); // Retorna data atual se valores inválidos
     }
     
     const date = new Date(year, month - 1, day);
     
     if (isNaN(date.getTime())) {
       console.error('❌ [parseDateBR] Data resultante inválida:', date);
-      return new Date(); // Retorna data atual se objeto Date inválido
+      return toZonedTime(new Date(), TIMEZONE); // Retorna data atual se objeto Date inválido
     }
     
     console.log('✅ [parseDateBR] Data válida:', { dateString, day, month, year, date });
-    return date;
+    return toZonedTime(date, TIMEZONE);
   } catch (error) {
     console.error('❌ [parseDateBR] Erro geral:', error);
-    return new Date(); // Retorna data atual em caso de erro
+    return toZonedTime(new Date(), TIMEZONE); // Retorna data atual em caso de erro
   }
 }
 
 /**
- * Obtém os limites da semana (segunda a domingo) para uma data específica
+ * Obtém os limites da semana (segunda a domingo) para uma data específica no timezone America/Sao_Paulo
  * @param date - Data de referência
  */
 export function getWeekBoundsBrasilia(date: Date): { start: Date; end: Date } {
-  const dayOfWeek = date.getDay()
-  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek // Se domingo, volta 6 dias; senão, calcula para segunda
+  const zonedDate = toZonedTime(date, TIMEZONE)
+  const start = startOfWeek(zonedDate, { weekStartsOn: 1 }) // Segunda-feira
+  const end = endOfWeek(zonedDate, { weekStartsOn: 1 }) // Domingo
   
-  const start = new Date(date)
-  start.setDate(date.getDate() + mondayOffset)
-  start.setHours(0, 0, 0, 0)
-  
-  const end = new Date(start)
-  end.setDate(start.getDate() + 6)
-  end.setHours(23, 59, 59, 999)
-  
-  return { start, end }
+  return { 
+    start: fromZonedTime(start, TIMEZONE), 
+    end: fromZonedTime(end, TIMEZONE) 
+  }
 }
 
 /**
- * Obtém o nome do dia da semana em português
+ * Obtém o nome do dia da semana em português no timezone America/Sao_Paulo
  * @param date - Data
  */
 export function getDayOfWeekBR(date: Date): string {
+  const zonedDate = toZonedTime(date, TIMEZONE)
   const days = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado']
-  return days[date.getDay()]
+  return days[zonedDate.getDay()]
 }

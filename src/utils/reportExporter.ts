@@ -184,11 +184,10 @@ export const exportToXLSX = (data: ExportData, options: ExportOptions = { format
       ['Total de Registros:', data.totalRecords.toString()],
       [''],
       // Cabeçalho da tabela
-      ['Nº', 'ID Relatório', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume (m³)', 'Valor (R$)', 'Status'],
+      ['Nº', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume (m³)', 'Valor (R$)', 'Status'],
       // Dados dos relatórios
       ...data.reports.map((report, index) => [
         index + 1,
-        report.report_number || 'N/A',
         safeFormatDate(report.date),
         report.clients?.name || report.client_rep_name || 'N/A',
         report.work_address || 'N/A',
@@ -316,8 +315,8 @@ export const exportToPDF = (data: ExportData, options: ExportOptions = { format:
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2])
     doc.setFont('helvetica', 'bold')
     
-    const headers = ['Nº', 'ID', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume', 'Valor', 'Status']
-    const colWidths = [12, 25, 20, 30, 35, 18, 20, 25, 20]
+    const headers = ['Nº', 'Data', 'Cliente', 'Endereço', 'Bomba', 'Volume', 'Valor', 'Status']
+    const colWidths = [15, 25, 35, 40, 25, 25, 30, 25]
     const startX = margin
     let currentX = startX
     
@@ -349,10 +348,9 @@ export const exportToPDF = (data: ExportData, options: ExportOptions = { format:
       
       const rowData = [
         (index + 1).toString(),
-        report.report_number || 'N/A',
         safeFormatDate(report.date),
-        (report.clients?.name || report.client_rep_name || 'N/A').substring(0, 12),
-        (report.work_address || 'N/A').substring(0, 18),
+        (report.clients?.name || report.client_rep_name || 'N/A').substring(0, 15),
+        (report.work_address || 'N/A').substring(0, 20),
         report.pumps?.prefix || report.pump_prefix || 'N/A',
         (report.realized_volume || 0).toFixed(2),
         safeFormatCurrency(report.total_value),
