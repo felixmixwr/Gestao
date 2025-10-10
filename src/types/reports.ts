@@ -21,6 +21,7 @@ export interface Report {
   assistant2_name: string | null
   service_company_id: string | null
   paid_at: string | null
+  pdf_url: string | null
 }
 
 export interface ReportWithRelations extends Report {
