@@ -50,6 +50,9 @@ import { FinancialModule } from '../pages/financial'
 // Import do módulo planner (lazy loading)
 import { lazy } from 'react'
 
+// Import da página FELIX IA
+import FelixIAPage from '../pages/felix-ia'
+
 const PlannerMain = lazy(() => import('../pages/planner/PlannerMain'))
 const PlannerCalendar = lazy(() => import('../pages/planner/PlannerCalendar'))
 const PlannerAgenda = lazy(() => import('../pages/planner/PlannerAgenda'))
@@ -549,6 +552,16 @@ export const router = createBrowserRouter([
         <LazyWrapper>
           <NovaTarefa />
         </LazyWrapper>
+      </RequireAuth>
+    ),
+    errorElement: <GenericError />
+  },
+  // Rota da FELIX IA
+  {
+    path: '/felix-ia',
+    element: (
+      <RequireAuth>
+        <FelixIAPage />
       </RequireAuth>
     ),
     errorElement: <GenericError />

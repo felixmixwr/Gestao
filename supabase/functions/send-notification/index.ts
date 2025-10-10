@@ -2,6 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import webpush from 'https://esm.sh/web-push@3.6.6'
 
+// Configurar timezone para America/Sao_Paulo
+Deno.env.set('TZ', 'America/Sao_Paulo')
+
 // VAPID Keys - substitua pelas suas chaves
 const VAPID_PUBLIC_KEY = 'BDt2hT6Ec-UakV-tAoO7ka2TrwcSXopaQzqXokawxm4xtPbj8YenBDYUcI2XOmtleMb8y732w25PLD3lzUekoHI'
 const VAPID_PRIVATE_KEY = 'RB7G3TF1XYtizmaQa1lVCmx2dbNoEb3hrg3LukmYFqc'
@@ -155,6 +158,7 @@ serve(async (req) => {
       data: {
         type: notification_type,
         timestamp: new Date().toISOString(),
+        timezone: 'America/Sao_Paulo',
         ...data
       }
     }

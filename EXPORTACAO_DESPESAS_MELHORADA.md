@@ -185,3 +185,8 @@ const colors = [
 **Data**: Janeiro 2025  
 **Compatibilidade**: Todas as despesas do sistema
 
+
+
+
+
+

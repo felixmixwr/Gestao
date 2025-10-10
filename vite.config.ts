@@ -41,7 +41,7 @@ export default defineConfig({
           supabase: ['@supabase/supabase-js'],
           charts: ['recharts'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
-          utils: ['date-fns', 'uuid', 'clsx'],
+          utils: ['date-fns', 'date-fns-tz', 'uuid', 'clsx'],
         },
       },
     },
@@ -51,6 +51,8 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
+    // Configuração de timezone para o build
+    'process.env.TZ': JSON.stringify('America/Sao_Paulo'),
   },
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.svg', '**/*.ico'],
 })

@@ -103,13 +103,13 @@ export function DashboardCard({
         </div>
 
         {subtitle && (
-          <p className="text-sm text-gray-500">
+          <div className="text-sm text-gray-500">
             {loading ? (
               <div className="h-3 bg-gray-300 rounded w-1/3 animate-pulse" />
             ) : (
               subtitle
             )}
-          </p>
+          </div>
         )}
 
         {/* Botão de ação */}

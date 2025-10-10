@@ -52,3 +52,8 @@ SELECT
     SUM(valor) as saldo_final
 FROM expenses;
 
+
+
+
+
+

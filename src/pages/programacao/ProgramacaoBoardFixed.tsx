@@ -280,33 +280,50 @@ export default function ProgramacaoBoardFixed() {
                   </h3>
                   
                   <div className="min-h-96 space-y-3">
-                    {column.programacoes.map((programacao) => (
-                      <div
-                        key={programacao.id}
-                        className="bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500"
-                      >
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-start">
-                            <h4 className="font-semibold text-gray-900 text-sm">
-                              {programacao.prefixo_obra}
-                            </h4>
-                            <div className="flex space-x-1">
-                              <button
-                                onClick={() => handleEditProgramacao(programacao)}
-                                className="text-blue-600 hover:text-blue-800 text-xs"
-                                title="Editar"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProgramacao(programacao)}
-                                className="text-red-600 hover:text-red-800 text-xs"
-                                title="Excluir"
-                              >
-                                🗑️
-                              </button>
+                    {column.programacoes.map((programacao) => {
+                      // Determinar cores baseadas no status_bombeamento
+                      let bgColor = 'bg-white';
+                      let borderColor = 'border-blue-500';
+                      let badge = null;
+
+                      if (programacao.status_bombeamento === 'confirmado') {
+                        bgColor = 'bg-green-50';
+                        borderColor = 'border-green-500';
+                        badge = <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">✓ Concluído</span>;
+                      } else if (programacao.status_bombeamento === 'cancelado') {
+                        bgColor = 'bg-red-50';
+                        borderColor = 'border-red-500';
+                        badge = <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">✗ Cancelado</span>;
+                      }
+
+                      return (
+                        <div
+                          key={programacao.id}
+                          className={`${bgColor} rounded-lg shadow-md p-4 border-l-4 ${borderColor}`}
+                        >
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-start">
+                              <h4 className="font-semibold text-gray-900 text-sm">
+                                {programacao.prefixo_obra}
+                              </h4>
+                              <div className="flex space-x-1 items-center">
+                                {badge}
+                                <button
+                                  onClick={() => handleEditProgramacao(programacao)}
+                                  className="text-blue-600 hover:text-blue-800 text-xs ml-2"
+                                  title="Editar"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProgramacao(programacao)}
+                                  className="text-red-600 hover:text-red-800 text-xs"
+                                  title="Excluir"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
                             </div>
-                          </div>
                           
                           <div className="text-sm text-gray-600">
                             <p className="font-medium">{programacao.cliente}</p>
@@ -343,7 +360,8 @@ export default function ProgramacaoBoardFixed() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                     
                     {column.programacoes.length === 0 && (
                       <div className="text-center text-gray-400 py-8">

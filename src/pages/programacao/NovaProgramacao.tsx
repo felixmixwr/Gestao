@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ProgramacaoAPI } from '../../lib/programacao-api';
 import { useViaCep } from '../../lib/viacep-api';
-import { ProgramacaoFormData } from '../../types/programacao';
+import { ProgramacaoFormData, Programacao } from '../../types/programacao';
 import { toast } from '../../lib/toast-hooks';
 import { getCurrentDateString } from '../../utils/date-utils';
 import { Layout } from '../../components/Layout';
@@ -14,6 +14,8 @@ import { ColaboradorOption, BombaOption, EmpresaOption, ClienteOption } from '..
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuth } from '../../lib/auth-hooks';
 import { supabase } from '../../lib/supabase';
+import { ConfirmarBombeamentoModal } from '../../components/programacao/ConfirmarBombeamentoModal';
+import { CancelarBombeamentoModal } from '../../components/programacao/CancelarBombeamentoModal';
 
 const BritaOptions = [
   { value: '0', label: '0' },
@@ -64,6 +66,7 @@ function NovaProgramacaoContent() {
     cliente_id: '',
     cliente: '', // Nome do cliente para compatibilidade
     responsavel: '',
+    telefone: '', // Telefone do cliente
     cep: '',
     endereco: '',
     numero: '',
@@ -82,6 +85,9 @@ function NovaProgramacaoContent() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [programacaoCompleta, setProgramacaoCompleta] = useState<Programacao | null>(null);
+  const [showConfirmarModal, setShowConfirmarModal] = useState(false);
+  const [showCancelarModal, setShowCancelarModal] = useState(false);
 
   const isEditing = Boolean(id);
 
@@ -164,6 +170,9 @@ function NovaProgramacaoContent() {
     try {
       const data = await ProgramacaoAPI.getById(programacaoId);
       if (data) {
+        // Salvar programação completa para uso nos modais
+        setProgramacaoCompleta(data);
+
         // Buscar nome do cliente se temos cliente_id
         let clienteNome = '';
         if (data.cliente_id) {
@@ -178,6 +187,7 @@ function NovaProgramacaoContent() {
           cliente_id: data.cliente_id || data.cliente || '', // Compatibilidade com dados antigos
           cliente: clienteNome || data.cliente || '', // Nome do cliente para compatibilidade
           responsavel: data.responsavel || '',
+          telefone: data.telefone || '', // Telefone do cliente
           cep: data.cep,
           endereco: data.endereco,
           numero: data.numero,
@@ -212,11 +222,12 @@ function NovaProgramacaoContent() {
     setFormData(prev => {
       const newData = { ...prev, [field]: value };
       
-      // Se mudou o cliente_id, preencher automaticamente o nome do cliente
+      // Se mudou o cliente_id, preencher automaticamente o nome do cliente e telefone
       if (field === 'cliente_id' && typeof value === 'string') {
         const cliente = clientes.find(c => c.id === value);
         if (cliente) {
           newData.cliente = cliente.company_name || cliente.name;
+          newData.telefone = cliente.phone || '';
         }
       }
       
@@ -304,6 +315,38 @@ function NovaProgramacaoContent() {
       setErrors(prev => ({ ...prev, cep: 'Erro ao buscar CEP' }));
     } finally {
       setLoadingCEP(false);
+    }
+  };
+
+  const handleConfirmarBombeamento = async (volumeRealizado: number, valorCobrado: number) => {
+    if (!id || !user?.id) return;
+
+    try {
+      const result = await ProgramacaoAPI.confirmBombeamento(id, volumeRealizado, valorCobrado, user.id);
+      toast.success(result.message);
+      
+      // Redirecionar para o relatório criado
+      navigate(`/reports/${result.reportId}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao confirmar bombeamento';
+      toast.error(errorMessage);
+      throw error;
+    }
+  };
+
+  const handleCancelarBombeamento = async (motivo?: string) => {
+    if (!id) return;
+
+    try {
+      const result = await ProgramacaoAPI.cancelBombeamento(id, motivo);
+      toast.success(result.message);
+      
+      // Recarregar programação para mostrar status atualizado
+      loadProgramacao(id);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao cancelar bombeamento';
+      toast.error(errorMessage);
+      throw error;
     }
   };
 
@@ -474,6 +517,23 @@ function NovaProgramacaoContent() {
                 />
                 {errors.responsavel && (
                   <p className="mt-1 text-sm text-red-600">{errors.responsavel}</p>
+                )}
+              </div>
+
+              {/* Telefone */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefone
+                </label>
+                <input
+                  type="tel"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={formData.telefone}
+                  onChange={(e) => handleInputChange('telefone', e.target.value)}
+                  placeholder="(00) 00000-0000"
+                />
+                {errors.telefone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.telefone}</p>
                 )}
               </div>
 
@@ -918,6 +978,61 @@ function NovaProgramacaoContent() {
             </div>
           </div>
 
+          {/* Seção de Ações de Bombeamento - Somente quando editando */}
+          {isEditing && programacaoCompleta && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Controle de Bombeamento
+              </h3>
+              
+              <div className="flex gap-4">
+                {programacaoCompleta.status_bombeamento === 'confirmado' ? (
+                  <div className="flex items-center gap-3 text-green-700 bg-green-50 px-4 py-3 rounded-lg border border-green-200 flex-1">
+                    <span className="text-2xl">✓</span>
+                    <div>
+                      <p className="font-semibold">Bombeamento Confirmado</p>
+                      <p className="text-sm text-green-600">Relatório criado com sucesso</p>
+                    </div>
+                  </div>
+                ) : programacaoCompleta.status_bombeamento === 'cancelado' ? (
+                  <div className="flex items-center gap-3 text-red-700 bg-red-50 px-4 py-3 rounded-lg border border-red-200 flex-1">
+                    <span className="text-2xl">✗</span>
+                    <div>
+                      <p className="font-semibold">Bombeamento Cancelado</p>
+                      <p className="text-sm text-red-600">Este bombeamento não foi realizado</p>
+                      {programacaoCompleta.motivo_cancelamento && (
+                        <p className="text-sm text-red-600 mt-1">
+                          Motivo: {programacaoCompleta.motivo_cancelamento}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="primary"
+                      onClick={() => setShowConfirmarModal(true)}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <span className="mr-2">✓</span>
+                      Confirmar Bombeamento
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={() => setShowCancelarModal(true)}
+                      className="flex-1"
+                    >
+                      <span className="mr-2">✗</span>
+                      Bombeamento Cancelado
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Botões */}
           <div className="flex justify-end space-x-4">
             <Button
@@ -936,6 +1051,38 @@ function NovaProgramacaoContent() {
             </Button>
           </div>
         </form>
+
+        {/* Modals */}
+        {programacaoCompleta && (
+          <>
+            <ConfirmarBombeamentoModal
+              isOpen={showConfirmarModal}
+              onClose={() => setShowConfirmarModal(false)}
+              onConfirm={handleConfirmarBombeamento}
+              programacao={{
+                cliente: programacaoCompleta.cliente,
+                data: programacaoCompleta.data,
+                endereco: programacaoCompleta.endereco,
+                numero: programacaoCompleta.numero,
+                bairro: programacaoCompleta.bairro,
+                cidade: programacaoCompleta.cidade,
+                volume_previsto: programacaoCompleta.volume_previsto,
+              }}
+            />
+
+            <CancelarBombeamentoModal
+              isOpen={showCancelarModal}
+              onClose={() => setShowCancelarModal(false)}
+              onConfirm={handleCancelarBombeamento}
+              programacao={{
+                cliente: programacaoCompleta.cliente,
+                data: programacaoCompleta.data,
+                endereco: programacaoCompleta.endereco,
+                numero: programacaoCompleta.numero,
+              }}
+            />
+          </>
+        )}
       </div>
     </Layout>
   );

@@ -206,3 +206,8 @@ ORDER BY total_faturado DESC;
 
 SELECT '=== VIEWS DE FATURAMENTO POR BOMBA CRIADAS COM SUCESSO ===' as info;
 
+
+
+
+
+

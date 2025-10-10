@@ -114,9 +114,34 @@ export function ProgramacaoGridBoard() {
     return parts.join(', ');
   };
 
-  // Obter classes CSS baseadas no status da programação
-  const getProgramacaoClasses = (status: string) => {
-    // Verificação mais robusta para status reservado
+  // Obter classes CSS baseadas no status da programação e bombeamento
+  const getProgramacaoClasses = (programacao: Programacao) => {
+    const { status, status_bombeamento } = programacao;
+    
+    // Prioridade: Status de bombeamento > Status de programação
+    if (status_bombeamento === 'confirmado') {
+      return {
+        card: 'bg-green-50 border border-green-500 rounded-lg p-3 cursor-pointer hover:bg-green-100 transition-colors relative',
+        hora: 'text-sm font-semibold text-green-800 mb-1',
+        cliente: 'text-sm font-medium text-gray-900 mb-1 truncate',
+        volume: 'text-xs text-gray-600 mb-1',
+        local: 'text-xs text-gray-500 truncate',
+        badge: 'absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full'
+      };
+    }
+    
+    if (status_bombeamento === 'cancelado') {
+      return {
+        card: 'bg-red-50 border border-red-500 rounded-lg p-3 cursor-pointer hover:bg-red-100 transition-colors relative',
+        hora: 'text-sm font-semibold text-red-800 mb-1',
+        cliente: 'text-sm font-medium text-gray-900 mb-1 truncate',
+        volume: 'text-xs text-gray-600 mb-1',
+        local: 'text-xs text-gray-500 truncate',
+        badge: 'absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full'
+      };
+    }
+    
+    // Verificação para status reservado
     const isReservado = status && status.toLowerCase().trim() === 'reservado';
     
     if (isReservado) {
@@ -306,13 +331,20 @@ export function ProgramacaoGridBoard() {
                         <td key={dayIndex} className="w-48 p-2 border-r border-gray-200 last:border-r-0 align-top print-cell">
                           <div className="space-y-2 min-h-[100px]">
                             {dayProgramacoes.map((programacao) => {
-                              const classes = getProgramacaoClasses(programacao.status);
+                              const classes = getProgramacaoClasses(programacao);
                               return (
                                 <div
                                   key={programacao.id}
                                   className={`${classes.card} print-programacao`}
                                   onClick={() => navigate(`/programacao/${programacao.id}`)}
                                 >
+                                  {/* Badge de status de bombeamento */}
+                                  {classes.badge && programacao.status_bombeamento && (
+                                    <div className={classes.badge}>
+                                      {programacao.status_bombeamento === 'confirmado' ? '✓' : '✗'}
+                                    </div>
+                                  )}
+                                  
                                   {/* Hora */}
                                   <div className={classes.hora}>
                                     {formatTime(programacao.horario)}

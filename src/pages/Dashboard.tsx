@@ -5,6 +5,7 @@ import { NextBombaCard } from '../components/NextBombaCard'
 import { StatusCard } from '../components/StatusCard'
 import { ExpenseCategoryCard } from '../components/ExpenseCategoryCard'
 import { PlannerDashboardCards } from '../components/planner/PlannerDashboardCards'
+import FelixInsights from '../components/dashboard/FelixInsights'
 import { Link } from 'react-router-dom'
 import { DashboardApi, DashboardStats } from '../lib/dashboard-api'
 import { GenericError } from './errors/GenericError'
@@ -50,6 +51,13 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
+
+        {/* FELIX Insights - Análise Inteligente */}
+        {!error && (
+          <div className="mb-6">
+            <FelixInsights />
+          </div>
+        )}
 
         {/* Próxima Bomba - Card especial */}
         {!error && (

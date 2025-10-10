@@ -166,3 +166,8 @@ await ExpensesExporter.exportToPDF(expensesData, options);
 **Versão**: 1.0  
 **Compatibilidade**: Todas as despesas do sistema
 
+
+
+
+
+

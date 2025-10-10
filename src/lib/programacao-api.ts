@@ -407,7 +407,7 @@ export class ProgramacaoAPI {
       
       const { data: programacoesData } = await supabase
         .from('programacao')
-        .select('bomba_id, bomba_prefixo')
+        .select('bomba_id')
         .gte('data', today.toISOString().split('T')[0])
         .lte('data', endDate.toISOString().split('T')[0]);
 
@@ -415,7 +415,6 @@ export class ProgramacaoAPI {
       const bombasComProgramacao = new Set<string>();
       programacoesData?.forEach(p => {
         if (p.bomba_id) bombasComProgramacao.add(p.bomba_id);
-        if (p.bomba_prefixo) bombasComProgramacao.add(p.bomba_prefixo);
       });
 
       // Combinar as bombas internas e terceiras
@@ -464,10 +463,10 @@ export class ProgramacaoAPI {
 
   // Buscar empresas do usuário
   // Buscar clientes disponíveis
-  static async getClientes(): Promise<Array<{ id: string; name: string; company_name: string | null }>> {
+  static async getClientes(): Promise<Array<{ id: string; name: string; company_name: string | null; phone?: string | null }>> {
     const { data, error } = await supabase
       .from('clients')
-      .select('id, name, company_name')
+      .select('id, name, company_name, phone')
       .order('name');
 
     if (error) {
@@ -515,6 +514,193 @@ export class ProgramacaoAPI {
     }
 
     return (conflict && conflict.length > 0);
+  }
+
+  // Confirmar bombeamento e criar relatório
+  static async confirmBombeamento(
+    programacaoId: string,
+    volumeRealizado: number,
+    valorCobrado: number,
+    userId: string
+  ): Promise<{ success: boolean; reportId: string; message: string }> {
+    try {
+      // 1. Buscar programação completa com dados relacionados
+      const { data: programacao, error: programacaoError } = await supabase
+        .from('programacao')
+        .select(`
+          *,
+          clients (
+            id,
+            name,
+            phone
+          ),
+          pumps (
+            id,
+            prefix,
+            owner_company_id
+          )
+        `)
+        .eq('id', programacaoId)
+        .single();
+
+      if (programacaoError || !programacao) {
+        throw new Error(`Erro ao buscar programação: ${programacaoError?.message || 'Programação não encontrada'}`);
+      }
+
+      // Verificar se já foi confirmado
+      if (programacao.status_bombeamento === 'confirmado') {
+        throw new Error('Este bombeamento já foi confirmado anteriormente');
+      }
+
+      // 2. Preparar dados para criar o relatório
+      const bomba = Array.isArray(programacao.pumps) ? programacao.pumps[0] : programacao.pumps;
+      const cliente = Array.isArray(programacao.clients) ? programacao.clients[0] : programacao.clients;
+
+      const enderecoCompleto = `${programacao.endereco}, ${programacao.numero}${programacao.bairro ? ` - ${programacao.bairro}` : ''}${programacao.cidade ? `, ${programacao.cidade}` : ''}${programacao.estado ? `/${programacao.estado}` : ''}`;
+
+      // Gerar número do relatório usando a função utilitária
+      const { generateReportNumber } = await import('../utils/reportNumberGenerator');
+      const reportNumber = await generateReportNumber(programacao.data);
+
+      // Concatenar motorista e auxiliares para o campo team
+      let team = programacao.motorista_operador || '';
+      if (programacao.auxiliares_bomba && programacao.auxiliares_bomba.length > 0) {
+        const auxiliares = programacao.auxiliares_bomba.join(', ');
+        team = team ? `${team}, ${auxiliares}` : auxiliares;
+      }
+
+      // Criar relatório com INSERT direto (igual ao NewReport.tsx)
+      const reportData = {
+        report_number: reportNumber,
+        date: programacao.data,
+        client_id: programacao.cliente_id || cliente?.id,
+        client_rep_name: programacao.responsavel || programacao.cliente || cliente?.name,
+        whatsapp_digits: programacao.telefone || cliente?.phone,
+        work_address: enderecoCompleto,
+        pump_id: programacao.bomba_id,
+        pump_prefix: bomba?.prefix || '',
+        planned_volume: programacao.volume_previsto,
+        realized_volume: volumeRealizado,
+        total_value: valorCobrado,
+        status: 'ENVIADO_FINANCEIRO',
+        observations: programacao.peca_concretada,
+        driver_name: programacao.motorista_operador,
+        assistant1_name: null, // Auxiliar 1 (não temos na programação)
+        assistant2_name: null, // Auxiliar 2 (não temos na programação)
+        service_company_id: bomba?.owner_company_id,
+        company_id: programacao.company_id
+      };
+
+      console.log('📊 Criando relatório com dados:', reportData);
+
+      // 3. Inserir relatório diretamente (SEM RPC)
+      const { data: reportResult, error: reportError } = await supabase
+        .from('reports')
+        .insert(reportData)
+        .select('id, report_number')
+        .single();
+
+      if (reportError) {
+        throw new Error(`Erro ao criar relatório: ${reportError.message}`);
+      }
+
+      const reportId = reportResult?.id;
+
+      if (!reportId) {
+        throw new Error('Relatório criado mas ID não retornado');
+      }
+
+      console.log('✅ Relatório criado com sucesso:', { id: reportId, number: reportResult.report_number });
+
+      // 4. Atualizar total_billed da bomba (somente bombas internas)
+      try {
+        const { data: bombaInterna } = await supabase
+          .from('pumps')
+          .select('total_billed')
+          .eq('id', programacao.bomba_id)
+          .single();
+
+        if (bombaInterna) {
+          const newTotal = (bombaInterna.total_billed || 0) + valorCobrado;
+          await supabase
+            .from('pumps')
+            .update({ total_billed: newTotal })
+            .eq('id', programacao.bomba_id);
+          console.log('✅ Total faturado da bomba atualizado:', newTotal);
+        }
+      } catch (error) {
+        console.log('ℹ️ Bomba terceira detectada - total_billed não atualizado');
+      }
+
+      // 5. Atualizar programação com status confirmado e report_id
+      const { error: updateError } = await supabase
+        .from('programacao')
+        .update({
+          status_bombeamento: 'confirmado',
+          report_id: reportId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', programacaoId);
+
+      if (updateError) {
+        throw new Error(`Erro ao atualizar programação: ${updateError.message}`);
+      }
+
+      return {
+        success: true,
+        reportId,
+        message: 'Bombeamento confirmado e relatório criado com sucesso!'
+      };
+    } catch (error) {
+      console.error('Erro ao confirmar bombeamento:', error);
+      throw error;
+    }
+  }
+
+  // Cancelar bombeamento
+  static async cancelBombeamento(
+    programacaoId: string,
+    motivo?: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // Verificar se programação existe
+      const { data: programacao, error: checkError } = await supabase
+        .from('programacao')
+        .select('id, status_bombeamento')
+        .eq('id', programacaoId)
+        .single();
+
+      if (checkError || !programacao) {
+        throw new Error(`Erro ao buscar programação: ${checkError?.message || 'Programação não encontrada'}`);
+      }
+
+      // Verificar se já foi confirmado
+      if (programacao.status_bombeamento === 'confirmado') {
+        throw new Error('Não é possível cancelar um bombeamento já confirmado');
+      }
+
+      // Atualizar status para cancelado
+      const { error: updateError } = await supabase
+        .from('programacao')
+        .update({
+          status_bombeamento: 'cancelado',
+          motivo_cancelamento: motivo,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', programacaoId);
+
+      if (updateError) {
+        throw new Error(`Erro ao cancelar bombeamento: ${updateError.message}`);
+      }
+
+      return {
+        success: true,
+        message: 'Bombeamento cancelado com sucesso'
+      };
+    } catch (error) {
+      console.error('Erro ao cancelar bombeamento:', error);
+      throw error;
+    }
   }
 }
 

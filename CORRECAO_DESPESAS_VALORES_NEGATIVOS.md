@@ -91,3 +91,8 @@ Para verificar se a correção funcionou:
 **Responsável**: Sistema de Gestão de Bombas  
 **Prioridade**: Alta - Corrige cálculos financeiros críticos
 
+
+
+
+
+

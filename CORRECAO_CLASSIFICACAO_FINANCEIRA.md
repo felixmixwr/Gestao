@@ -72,3 +72,8 @@ Execute o arquivo `update_financial_classification.sql` no Supabase SQL Editor p
 - O sistema evita duplicação de faturamento dos relatórios
 - A sincronização pode ser executada múltiplas vezes sem problemas
 
+
+
+
+
+

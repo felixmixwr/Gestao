@@ -337,37 +337,54 @@ export default function ProgramacaoBoard() {
                               draggableId={programacao.id}
                               index={index}
                             >
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={`bg-white rounded-lg shadow-md p-4 border-l-4 border-blue-500 cursor-move ${
-                                    snapshot.isDragging ? 'shadow-lg' : ''
-                                  }`}
-                                >
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between items-start">
-                                      <h4 className="font-semibold text-gray-900 text-sm">
-                                        {programacao.prefixo_obra}
-                                      </h4>
-                                      <div className="flex space-x-1">
-                                        <button
-                                          onClick={() => handleEditProgramacao(programacao)}
-                                          className="text-blue-600 hover:text-blue-800 text-xs"
-                                          title="Editar"
-                                        >
-                                          ✏️
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteProgramacao(programacao)}
-                                          className="text-red-600 hover:text-red-800 text-xs"
-                                          title="Excluir"
-                                        >
-                                          🗑️
-                                        </button>
+                              {(provided, snapshot) => {
+                                // Determinar cores baseadas no status_bombeamento
+                                let bgColor = 'bg-white';
+                                let borderColor = 'border-blue-500';
+                                let badge = null;
+
+                                if (programacao.status_bombeamento === 'confirmado') {
+                                  bgColor = 'bg-green-50';
+                                  borderColor = 'border-green-500';
+                                  badge = <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">✓ Concluído</span>;
+                                } else if (programacao.status_bombeamento === 'cancelado') {
+                                  bgColor = 'bg-red-50';
+                                  borderColor = 'border-red-500';
+                                  badge = <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full">✗ Cancelado</span>;
+                                }
+
+                                return (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`${bgColor} rounded-lg shadow-md p-4 border-l-4 ${borderColor} cursor-move ${
+                                      snapshot.isDragging ? 'shadow-lg' : ''
+                                    }`}
+                                  >
+                                    <div className="space-y-2">
+                                      <div className="flex justify-between items-start">
+                                        <h4 className="font-semibold text-gray-900 text-sm">
+                                          {programacao.prefixo_obra}
+                                        </h4>
+                                        <div className="flex space-x-1 items-center">
+                                          {badge}
+                                          <button
+                                            onClick={() => handleEditProgramacao(programacao)}
+                                            className="text-blue-600 hover:text-blue-800 text-xs ml-2"
+                                            title="Editar"
+                                          >
+                                            ✏️
+                                          </button>
+                                          <button
+                                            onClick={() => handleDeleteProgramacao(programacao)}
+                                            className="text-red-600 hover:text-red-800 text-xs"
+                                            title="Excluir"
+                                          >
+                                            🗑️
+                                          </button>
+                                        </div>
                                       </div>
-                                    </div>
                                     
                                     <div className="text-sm text-gray-600">
                                       <p className="font-medium">{programacao.cliente}</p>
@@ -404,7 +421,8 @@ export default function ProgramacaoBoard() {
                                     </div>
                                   </div>
                                 </div>
-                              )}
+                              );
+                              }}
                             </Draggable>
                           ))}
                           

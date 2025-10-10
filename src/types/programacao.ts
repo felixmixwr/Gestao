@@ -8,6 +8,7 @@ export interface Programacao {
   cliente_id?: string; // Mudou para cliente_id
   cliente?: string; // Para compatibilidade com dados antigos
   responsavel?: string;
+  telefone?: string; // Telefone do cliente
   cep: string;
   endereco: string;
   numero: string;
@@ -24,6 +25,9 @@ export interface Programacao {
   auxiliares_bomba?: string[]; // Array de IDs dos auxiliares
   bomba_id?: string;
   status: ProgramacaoStatus; // Status da programação
+  status_bombeamento?: 'confirmado' | 'cancelado' | null; // Status do bombeamento
+  report_id?: string; // ID do relatório vinculado
+  motivo_cancelamento?: string; // Motivo do cancelamento
   company_id: string;
   created_at: string;
   updated_at: string;
@@ -36,6 +40,7 @@ export interface ProgramacaoFormData {
   cliente_id: string; // Mudou para cliente_id
   cliente?: string; // Nome do cliente para compatibilidade
   responsavel?: string;
+  telefone?: string; // Telefone do cliente
   cep: string;
   endereco: string;
   numero: string;
@@ -115,6 +120,7 @@ export interface ClienteOption {
   id: string;
   name: string;
   company_name: string | null;
+  phone?: string | null;
 }
 
 export interface EmpresaOption {

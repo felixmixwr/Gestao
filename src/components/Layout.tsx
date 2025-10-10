@@ -20,7 +20,8 @@ import {
   CalendarDays,
   Clock,
   GraduationCap,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  Bot
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -34,6 +35,11 @@ const navigation = [
     name: 'Dashboard', 
     href: '/', 
     icon: <LayoutDashboard className="text-white h-5 w-5 flex-shrink-0" />
+  },
+  { 
+    name: 'FELIX IA', 
+    href: '/felix-ia', 
+    icon: <Bot className="text-white h-5 w-5 flex-shrink-0" />
   },
   { 
     name: 'Programação', 

@@ -63,3 +63,8 @@ LIMIT 10;
 -- 4. Faça backup do banco antes de executar o UPDATE
 -- =============================================
 
+
+
+
+
+
