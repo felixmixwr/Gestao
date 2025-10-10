@@ -845,78 +845,163 @@ const handleWhatsApp = (report: ReportWithRelations) => {
         </div>
 
         {/* Cards de KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* Faturamento Total */}
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="px-2.5 py-1 bg-blue-50 rounded-md">
+                  <span className="text-xs font-semibold text-blue-700">Total</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Faturamento</p>
+                <p className="text-2xl font-bold text-gray-900 mb-2">{formatCurrency(kpis.totalFaturamento)}</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-500">{kpis.quantidadeRelatorios} {kpis.quantidadeRelatorios === 1 ? 'relatório' : 'relatórios'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Período selecionado</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
-            <p className="text-sm font-medium opacity-90 mb-1">Faturamento Total</p>
-            <p className="text-2xl font-bold">{formatCurrency(kpis.totalFaturamento)}</p>
-            <p className="text-xs opacity-75 mt-2">
-              {kpis.quantidadeRelatorios} relatório{kpis.quantidadeRelatorios !== 1 ? 's' : ''}
-            </p>
           </div>
 
           {/* Volume Total */}
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="px-2.5 py-1 bg-emerald-50 rounded-md">
+                  <span className="text-xs font-semibold text-emerald-700">m³</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Volume Bombeado</p>
+                <p className="text-2xl font-bold text-gray-900 mb-2">
+                  {kpis.volumeTotal.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m³
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                    </svg>
+                    <span className="text-sm text-gray-500">Média: {(kpis.volumeTotal / (kpis.quantidadeRelatorios || 1)).toFixed(1)} m³</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Por relatório</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
-            <p className="text-sm font-medium opacity-90 mb-1">Volume Bombeado</p>
-            <p className="text-2xl font-bold">{kpis.volumeTotal.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m³</p>
-            <p className="text-xs opacity-75 mt-2">
-              Média: {(kpis.volumeTotal / (kpis.quantidadeRelatorios || 1)).toFixed(1)} m³/relatório
-            </p>
           </div>
 
           {/* Ticket Médio */}
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-violet-50 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="px-2.5 py-1 bg-violet-50 rounded-md">
+                  <span className="text-xs font-semibold text-violet-700">AVG</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Ticket Médio</p>
+                <p className="text-2xl font-bold text-gray-900 mb-2">{formatCurrency(kpis.ticketMedio)}</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-500">Por serviço</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">Valor médio faturado</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                 </svg>
               </div>
             </div>
-            <p className="text-sm font-medium opacity-90 mb-1">Ticket Médio</p>
-            <p className="text-2xl font-bold">{formatCurrency(kpis.ticketMedio)}</p>
-            <p className="text-xs opacity-75 mt-2">
-              Por relatório
-            </p>
           </div>
 
           {/* Status Financeiro */}
-          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg shadow-lg p-6 text-white">
-            <div className="flex items-center justify-between mb-2">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="px-2.5 py-1 bg-amber-50 rounded-md">
+                  <span className="text-xs font-semibold text-amber-700">Status</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-1">Pagos / Pendentes</p>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-2xl font-bold text-emerald-600">{kpis.relatoriosPagos}</span>
+                  <span className="text-lg text-gray-400">/</span>
+                  <span className="text-2xl font-bold text-amber-600">{kpis.quantidadeRelatorios - kpis.relatoriosPagos}</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2 mb-3">
+                  <div 
+                    className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(kpis.relatoriosPagos / (kpis.quantidadeRelatorios || 1)) * 100}%` }}
+                  />
+                </div>
               </div>
             </div>
-            <p className="text-sm font-medium opacity-90 mb-1">Pagos / Pendentes</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-2xl font-bold">{kpis.relatoriosPagos}</p>
-              <span className="text-lg opacity-75">/</span>
-              <p className="text-lg opacity-90">{kpis.quantidadeRelatorios - kpis.relatoriosPagos}</p>
-            </div>
-            <div className="mt-2 pt-2 border-t border-white border-opacity-20">
-              <div className="flex justify-between text-xs">
-                <span className="opacity-75">Pago:</span>
-                <span className="font-semibold">{formatCurrency(kpis.valorPago)}</span>
-              </div>
-              <div className="flex justify-between text-xs mt-1">
-                <span className="opacity-75">Pendente:</span>
-                <span className="font-semibold">{formatCurrency(kpis.valorPendente)}</span>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 rounded-b-xl">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Recebido</p>
+                  <p className="text-sm font-semibold text-emerald-600">{formatCurrency(kpis.valorPago)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 mb-1">Pendente</p>
+                  <p className="text-sm font-semibold text-amber-600">{formatCurrency(kpis.valorPendente)}</p>
+                </div>
               </div>
             </div>
           </div>
