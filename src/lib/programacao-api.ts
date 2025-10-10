@@ -521,7 +521,8 @@ export class ProgramacaoAPI {
     programacaoId: string,
     volumeRealizado: number,
     valorCobrado: number,
-    userId: string
+    userId: string,
+    pdfUrl?: string
   ): Promise<{ success: boolean; reportId: string; message: string }> {
     try {
       // 1. Buscar programação completa com dados relacionados
@@ -588,7 +589,8 @@ export class ProgramacaoAPI {
         assistant1_name: null, // Auxiliar 1 (não temos na programação)
         assistant2_name: null, // Auxiliar 2 (não temos na programação)
         service_company_id: bomba?.owner_company_id,
-        company_id: programacao.company_id
+        company_id: programacao.company_id,
+        pdf_url: pdfUrl || null // URL do PDF escaneado
       };
 
       console.log('📊 Criando relatório com dados:', reportData);

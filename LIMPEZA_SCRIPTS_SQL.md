@@ -80,3 +80,4 @@ mv db/migrations/015_*.sql _backup_scripts_nao_usados/
 
 **Resumo:** A solução final NÃO usa RPC, então todos os scripts de correção de RPC são desnecessários.
 
+

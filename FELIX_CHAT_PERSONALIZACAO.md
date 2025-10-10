@@ -85,3 +85,4 @@ await supabase
 
 **Vou implementar agora!** 🔧
 
+

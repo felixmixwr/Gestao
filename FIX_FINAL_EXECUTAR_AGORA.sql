@@ -142,3 +142,4 @@ BEGIN
   RAISE NOTICE '🔄 AGORA: Recarregue seu aplicativo (F5) e teste!';
 END $$;
 
+

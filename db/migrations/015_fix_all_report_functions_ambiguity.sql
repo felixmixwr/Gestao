@@ -211,3 +211,4 @@ $$;
 COMMENT ON FUNCTION create_report_with_number IS 'Cria um relatório com número único gerado automaticamente. CORRIGIDO: ambiguidade removida.';
 COMMENT ON FUNCTION create_bombing_report IS 'Cria um relatório de bombeamento com validações e geração automática de número único. CORRIGIDO: ambiguidade removida.';
 
+

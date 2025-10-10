@@ -182,3 +182,4 @@ A função agora usa os IDs reais das empresas e tem um sistema de fallback inte
 
 
 
+

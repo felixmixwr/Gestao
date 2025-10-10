@@ -14,3 +14,4 @@
 \echo ''
 \echo 'A função create_bombing_report agora funciona corretamente!'
 
+

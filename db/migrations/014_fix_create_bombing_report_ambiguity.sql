@@ -120,3 +120,4 @@ $$;
 -- Comentário
 COMMENT ON FUNCTION create_bombing_report IS 'Cria um relatório de bombeamento com validações e geração automática de número único. Corrigido para evitar ambiguidade de colunas.';
 
+

@@ -106,3 +106,4 @@ WHERE proname = 'create_bombing_report';
 **Data da correção:** 2025-10-10  
 **Versão:** Final
 
+

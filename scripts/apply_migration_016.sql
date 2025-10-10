@@ -6,3 +6,4 @@
 
 -- Ou copie e cole o conteúdo completo do arquivo 016_create_felix_chat_per_user.sql
 
+

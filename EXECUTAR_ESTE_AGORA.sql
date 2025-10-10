@@ -119,3 +119,4 @@ SELECT
 FROM pg_proc 
 WHERE proname = 'create_bombing_report';
 
+

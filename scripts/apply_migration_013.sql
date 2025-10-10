@@ -13,3 +13,4 @@
 \echo '- report_id (UUID): Vinculação com relatório criado'
 \echo '- motivo_cancelamento (TEXT): Motivo quando cancelado'
 
+

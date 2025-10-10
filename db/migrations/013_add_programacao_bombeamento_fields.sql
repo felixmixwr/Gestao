@@ -30,3 +30,4 @@ COMMENT ON COLUMN programacao.status_bombeamento IS 'Status do bombeamento: conf
 COMMENT ON COLUMN programacao.report_id IS 'ID do relatório gerado quando bombeamento é confirmado';
 COMMENT ON COLUMN programacao.motivo_cancelamento IS 'Motivo do cancelamento quando status_bombeamento = cancelado';
 
+

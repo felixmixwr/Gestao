@@ -170,3 +170,4 @@ A correção garante que a FELIX IA funcione corretamente com a API OpenAI, reto
 
 
 
+

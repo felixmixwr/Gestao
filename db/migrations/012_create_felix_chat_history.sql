@@ -76,3 +76,4 @@ COMMENT ON COLUMN felix_chat_history.updated_at IS 'Data da última atualizaçã
 
 
 
+

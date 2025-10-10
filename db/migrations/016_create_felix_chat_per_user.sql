@@ -74,3 +74,4 @@ BEGIN
   RAISE NOTICE '✅ Índices criados para performance';
 END $$;
 
+

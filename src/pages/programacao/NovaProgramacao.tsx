@@ -318,11 +318,11 @@ function NovaProgramacaoContent() {
     }
   };
 
-  const handleConfirmarBombeamento = async (volumeRealizado: number, valorCobrado: number) => {
+  const handleConfirmarBombeamento = async (volumeRealizado: number, valorCobrado: number, pdfUrl?: string) => {
     if (!id || !user?.id) return;
 
     try {
-      const result = await ProgramacaoAPI.confirmBombeamento(id, volumeRealizado, valorCobrado, user.id);
+      const result = await ProgramacaoAPI.confirmBombeamento(id, volumeRealizado, valorCobrado, user.id, pdfUrl);
       toast.success(result.message);
       
       // Redirecionar para o relatório criado

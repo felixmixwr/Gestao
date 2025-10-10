@@ -97,3 +97,4 @@ Baseado no `NewReport.tsx` e na estrutura do Supabase:
 **Data:** 2025-10-10  
 **Status:** ✅ CORRIGIDO
 
+
