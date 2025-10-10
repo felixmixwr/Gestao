@@ -808,6 +808,17 @@ const handleWhatsApp = (report: ReportWithRelations) => {
     }
   ]
 
+  // Calcular KPIs baseados nos relatórios filtrados
+  const kpis = {
+    totalFaturamento: reports.reduce((sum, r) => sum + (r.total_value || 0), 0),
+    volumeTotal: reports.reduce((sum, r) => sum + (r.realized_volume || 0), 0),
+    quantidadeRelatorios: reports.length,
+    ticketMedio: reports.length > 0 ? reports.reduce((sum, r) => sum + (r.total_value || 0), 0) / reports.length : 0,
+    relatoriosPagos: reports.filter(r => r.status === 'PAGO').length,
+    valorPago: reports.filter(r => r.status === 'PAGO').reduce((sum, r) => sum + (r.total_value || 0), 0),
+    valorPendente: reports.filter(r => r.status !== 'PAGO').reduce((sum, r) => sum + (r.total_value || 0), 0),
+  }
+
   return (
     <Layout>
       <div className="space-y-4">
@@ -830,6 +841,84 @@ const handleWhatsApp = (report: ReportWithRelations) => {
             >
               Novo Relatório
             </Button>
+          </div>
+        </div>
+
+        {/* Cards de KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Faturamento Total */}
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-sm font-medium opacity-90 mb-1">Faturamento Total</p>
+            <p className="text-2xl font-bold">{formatCurrency(kpis.totalFaturamento)}</p>
+            <p className="text-xs opacity-75 mt-2">
+              {kpis.quantidadeRelatorios} relatório{kpis.quantidadeRelatorios !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          {/* Volume Total */}
+          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-sm font-medium opacity-90 mb-1">Volume Bombeado</p>
+            <p className="text-2xl font-bold">{kpis.volumeTotal.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m³</p>
+            <p className="text-xs opacity-75 mt-2">
+              Média: {(kpis.volumeTotal / (kpis.quantidadeRelatorios || 1)).toFixed(1)} m³/relatório
+            </p>
+          </div>
+
+          {/* Ticket Médio */}
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-sm font-medium opacity-90 mb-1">Ticket Médio</p>
+            <p className="text-2xl font-bold">{formatCurrency(kpis.ticketMedio)}</p>
+            <p className="text-xs opacity-75 mt-2">
+              Por relatório
+            </p>
+          </div>
+
+          {/* Status Financeiro */}
+          <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <div className="bg-white bg-opacity-20 p-3 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-sm font-medium opacity-90 mb-1">Pagos / Pendentes</p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-2xl font-bold">{kpis.relatoriosPagos}</p>
+              <span className="text-lg opacity-75">/</span>
+              <p className="text-lg opacity-90">{kpis.quantidadeRelatorios - kpis.relatoriosPagos}</p>
+            </div>
+            <div className="mt-2 pt-2 border-t border-white border-opacity-20">
+              <div className="flex justify-between text-xs">
+                <span className="opacity-75">Pago:</span>
+                <span className="font-semibold">{formatCurrency(kpis.valorPago)}</span>
+              </div>
+              <div className="flex justify-between text-xs mt-1">
+                <span className="opacity-75">Pendente:</span>
+                <span className="font-semibold">{formatCurrency(kpis.valorPendente)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
