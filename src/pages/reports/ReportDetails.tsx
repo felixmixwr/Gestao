@@ -674,8 +674,6 @@ const handleWhatsApp = () => {
           </div>
         </div>
       )}
-
-      </div>
     </Layout>
   )
 }
